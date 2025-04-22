@@ -1,0 +1,236 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: complete-dep-demo-2
+  namespace: dep-demo-2
+  labels:
+    app: dep-demo-2
+    environment: production
+    tier: backend
+    type: comprehensive
+  annotations:
+    description: Complete affinity options demonstration
+    version: '1.0'
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: dep-demo-2
+  template:
+    metadata:
+      labels:
+        app: dep-demo-2
+        environment: production
+        tier: backend
+        type: comprehensive
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/os
+                operator: In
+                values:
+                - linux
+              - key: node-type
+                operator: In
+                values:
+                - worker_gpu
+              - key: gpu-type
+                operator: Exists
+              - key: temp-node
+                operator: DoesNotExist
+            - matchExpressions:
+              - key: gpu.nvidia.com/class
+                operator: In
+                values:
+                - highend
+                - ultra
+              - key: gpu.memory
+                operator: Gt
+                values:
+                - '32'
+              - key: gpu.count
+                operator: Lt
+                values:
+                - '8'
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - topologyKey: kubernetes.io/hostname
+            labelSelector:
+              matchExpressions:
+              - key: service
+                operator: In
+                values:
+                - cache
+                - database
+            namespaceSelector:
+              matchLabels:
+                type: backend-deps
+          - topologyKey: topology.kubernetes.io/zone
+            labelSelector:
+              matchExpressions:
+              - key: security
+                operator: In
+                values:
+                - S1
+      containers:
+      - name: main-app
+        image: dep-demo-2:1.0
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: '2'
+            memory: 4Gi
+            nvidia.com/gpu: '1'
+          limits:
+            cpu: '4'
+            memory: 8Gi
+            nvidia.com/gpu: '1'
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        - name: metrics
+          containerPort: 9090
+          protocol: TCP
+        - name: debug
+          containerPort: 5000
+          protocol: TCP
+        command: ["/bin/sh"]
+        args: ["-c", "echo Starting application && exec java -jar /app/application.jar"]
+        workingDir: /app
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: TOPOLOGY_ZONE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['topology.kubernetes.io/zone']
+        - name: API_KEY
+          valueFrom:
+            secretKeyRef:
+              key: api-key
+              name: api-secrets
+        - name: CACHE_URL
+          valueFrom:
+            configMapKeyRef:
+              key: cache-url
+              name: app-config
+        - name: APP_MODE
+          value: production
+        envFrom:
+        - configMapRef:
+            name: app-config
+            optional: true
+        - secretRef:
+            name: app-secrets
+            optional: true
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/config
+          readOnly: true
+        - name: data-volume
+          mountPath: /data
+          subPath: mydata
+        lifecycle:
+          postStart:
+            exec:
+              command: ["/bin/sh", "-c", "echo Container started > /tmp/started"]
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "echo Shutting down && sleep 10"]
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: http
+            scheme: HTTPS
+            httpHeaders:
+            - name: Custom-Header
+              value: ReadinessCheck
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8080
+            scheme: HTTP
+            httpHeaders:
+            - name: Custom-Header
+              value: LivenessCheck
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        startupProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          failureThreshold: 30
+        securityContext:
+          capabilities:
+            add:
+            - NET_ADMIN
+            drop:
+            - ALL
+          privileged: false
+          runAsUser: 1000
+          runAsGroup: 3000
+          runAsNonRoot: true
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+      volumes:
+      - name: config-volume
+        configMap:
+          name: app-config
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: data-pvc
+      imagePullSecrets:
+      - name: registry-secret
+      serviceAccountName: app-service-account
+      automountServiceAccountToken: true
+      nodeSelector:
+        gpu: "true"
+        disk: "ssd"
+      hostNetwork: false
+      dnsPolicy: ClusterFirst
+      dnsConfig:
+        nameservers:
+        - 8.8.8.8
+        searches:
+        - ns1.svc.cluster.local
+        options:
+        - name: ndots
+          value: "5"
+      hostAliases:
+      - ip: "10.1.2.3"
+        hostnames:
+        - "internal.service"
+        - "service.local"
+      terminationGracePeriodSeconds: 60
+      priorityClassName: high-priority
+      restartPolicy: Always
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app: dep-demo-2

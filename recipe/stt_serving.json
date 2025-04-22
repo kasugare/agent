@@ -1,0 +1,49 @@
+{
+  "name": "API Workflow DAG",
+  "version": "1.0",
+  "metadata": {
+    "description": "API based workflow with parallel processing support",
+    "type": "api-workflow"
+  },
+  "nodes": {
+    "node_a": {
+      "id": "node_a",
+      "type": "start",
+      "role": "api-gateway",
+      "config": {
+        "api": {
+          "type": "http",
+          "method": "POST",
+          "url": "http://127.0.0.1:10001",
+          "route": "/workflow/start",
+          "params": "workflow_id",
+          "timeout": 30000
+        }
+      },
+      "prev_nodes": [],
+      "next_nodes": [
+        "node_z"
+      ]
+    },
+    "node_z": {
+      "id": "node_z",
+      "type": "end",
+      "role": "result-aggregator",
+      "config": {
+        "aggregation": {
+          "type": "merge",
+          "sourceNodes": [
+          ],
+          "responseMapping": {
+            "template": "result_template_v1"
+          }
+        }
+      },
+      "prev_nodes": [
+        "node_a"
+      ],
+      "next_nodes": []
+    }
+  },
+  "edges": []
+}

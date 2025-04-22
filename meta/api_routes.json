@@ -1,0 +1,7 @@
+{
+  "ServingProvider": {
+    "prefix": "/api/v1",
+    "module_name": "api.serving.serving_api",
+    "class_name": "ServingProvider"
+  }
+}

@@ -1,0 +1,626 @@
+{
+	"name": "Serving Workflow for STTs",
+	"version": "1.0",
+	"metadata": {
+		"description": "STT Serving Workflow",
+		"type": "stt_dag"
+	},
+	"nodes": [
+		{
+			"node_id": "stt_start_node",
+			"node_type": "rest-api",
+			"role": "start",
+			"location": "inner",
+			"containable": "false",
+			"api_keys": [""],
+
+			"source_node": {
+				"id": "stt_engine",
+				"code": "STTENGN",
+				"version": "1.0.23",
+				"title": "STT Serving Engine",
+				"desc": "STT Serving Engine"
+			},
+
+			"services": [
+				{
+					"service_id": "start",
+					"name": "start_api",
+					"url": "http://127.0.0.1:18000/v1/stt_start",
+					"method": "GET",
+					"params": {
+						"format": "json",
+						"input": [
+							{
+								"key": "request_id",
+								"type": "string"
+							},
+							{
+								"key": "src_stt",
+								"type": "string"
+							}
+						]
+					},
+					"header": {},
+					"body": {},
+					"result":{
+						"format": "json",
+						"output": [
+							{
+								"key": "src_stt",
+								"type": "string"
+							}
+						]
+					}
+				}
+			]
+		},
+		{
+			"node_id": "test_node",
+			"node_type": "rest-api",
+			"role": "injection",
+			"location": "outer",
+			"containable": "true",
+			"api_keys": [""],
+
+			"source_node": {
+				"id": "test_node",
+				"code": "TEST",
+				"version": "2.0.23",
+				"title": "Test Node",
+				"desc": "Test Node"
+			},
+
+			"services": [
+				{
+					"service_id": "test_service_id",
+					"name": "test_api",
+					"url": "http://127.0.0.1:18000/v1/test",
+					"method": "GET",
+					"params": {
+						"format": "json",
+						"input": [
+							{
+								"key": "input_key_1",
+								"type": "string"
+							},
+							{
+								"key": "input_key_2",
+								"type": "string"
+							}
+						]
+					},
+					"header": {},
+					"body": {},
+					"result":{
+						"format": "json",
+						"output": [
+							{
+								"key": "result_key",
+								"type": "string"
+							}
+						]
+					}
+				}
+			]
+		},
+		{
+			"node_id": "stt_summary_model_node",
+			"node_type": "rest-api",
+			"role": "model_inference",
+			"location": "outer",
+			"containable": "false",
+			"api_keys": [""],
+
+			"source_node": {
+				"id": "stt_summary",
+				"code": "TXTSUM",
+				"version": "1.0.23",
+				"title": "summerization model for STT",
+				"desc": "summerization STT for telecommunication with customer"
+			},
+
+			"services": [
+				{
+					"service_id": "health_check",
+					"name": "api health check",
+					"url": "http://127.0.0.1:20000/v2/helath/ready",
+					"method": "GET",
+					"params": {},
+					"header": {},
+					"body": {},
+					"result":{
+						"format": "json",
+						"output": [
+							{
+								"key": "status",
+								"type": "integer"
+							}
+						]
+					}
+				},
+				{
+					"service_id": "deploy_model_check",
+					"name": "depling model check",
+					"url": "http://127.0.0.1:20000/v2/repository/index",
+					"method": "POST",
+					"params": {},
+					"header": {},
+					"body": {},
+					"result":{
+						"format": "json",
+						"output": [
+							{
+								"key": "result",
+								"type": "list"
+							}
+						]
+					}
+				},
+				{
+					"service_id": "sum_stt",
+					"name": "stt summerization",
+					"url": "http://127.0.0.1:20000/v2/models/stt/generate",
+					"method": "POST",
+					"params": {
+						"format": "json",
+						"input": [
+							{
+								"key": "text_input",
+								"type": "string"
+							},
+							{
+								"key": "max_tokens",
+								"type": "integer"
+							}
+						]
+					},
+					"header": {},
+					"body": {},
+					"result":{
+						"format": "json",
+						"output": [
+							{
+								"key": "model_name",
+								"type": "string"
+							},
+							{
+								"key": "model_version",
+								"type": "string"
+							},
+							{
+								"key": "text_output",
+								"type": "string"
+							}
+						]
+					}
+				}
+			]
+		},
+		{
+			"node_id": "classification_model_node",
+			"node_type": "rest-api",
+			"role": "model_inference",
+			"location": "outer",
+			"containable": "false",
+			"api_keys": [""],
+
+			"source_node": {
+				"id": "classification_model",
+				"code": "CLSSTT",
+				"version": "0.2.23",
+				"title": "classification model for STT",
+				"desc": "classification STT for summerized telecommunication"
+			},
+
+			"services": [
+				{
+					"service_id": "health_check",
+					"name": "api health check",
+					"url": "http://127.0.0.1:20010/v2/helath/ready",
+					"method": "GET",
+					"params": {},
+					"header": {},
+					"body": {},
+					"result":{
+						"format": "json",
+						"output": [
+							{
+								"key": "status",
+								"type": "integer"
+							}
+						]
+					}
+				},
+				{
+					"service_id": "deploy_model_check",
+					"name": "depling model check",
+					"url": "http://127.0.0.1:20010/v2/repository/index",
+					"method": "POST",
+					"params": {},
+					"header": {},
+					"body": {},
+					"result":{
+						"format": "json",
+						"output": [
+							{
+								"key": "result",
+								"type": "list"
+							}
+						]
+					}
+				},
+				{
+					"service_id": "class_stt",
+					"name": "stt classification",
+					"url": "http://127.0.0.1:20010/v2/models/vert_base_smry_cls/infer",
+					"method": "POST",
+					"params": {
+						"format": "json",
+						"input": [
+							{
+								"key": "name",
+								"type": "string"
+							},
+							{
+								"key": "shape",
+								"type": "list"
+							},
+							{
+								"key": "datatype",
+								"type": "bytes"
+							},
+							{
+								"key": "data",
+								"type": "string"
+							}
+						]
+					},
+					"header": {},
+					"body": {},
+					"result": {
+						"format": "json",
+						"output": [
+							{
+								"key": "model_name",
+								"type": "string"
+							},
+							{
+								"key": "model_version",
+								"type": "string"
+							},
+							{
+								"key": "data",
+								"type": "string"
+							}
+						]
+					}
+				}
+			]
+		},
+		{
+			"node_id": "stt_aggregator",
+			"node_type": "rest-api",
+			"role": "aggregation",
+			"location": "outer",
+			"containable": "false",
+			"api_keys": [""],
+
+			"source_node": {
+				"id": "aggregator",
+				"code": "AGGRES",
+				"version": "1.1.3",
+				"title": "result aggreator",
+				"desc": "result aggreator"
+			},
+
+			"services": [
+				{
+					"service_id": "aggregation",
+					"name": "result aggregator",
+					"url": "http://127.0.0.1:18000/v1/result/aggregator",
+					"method": "POST",
+					"params": {
+						"format": "json",
+						"input": [
+							{
+								"key": "summery_stt",
+								"type": "string"
+							},
+							{
+								"key": "cls_code",
+								"type": "string"
+							}
+						]
+					},
+					"header": {},
+					"body": {},
+					"result": {
+						"format": "json",
+						"output": [
+							{
+								"key": "result_data",
+								"type": "string"
+							}
+						]
+					}
+				}
+			]
+		},
+		{
+			"node_id": "test_aggregator",
+			"node_type": "rest-api",
+			"role": "aggregation",
+			"location": "outer",
+			"containable": "false",
+			"api_keys": [""],
+
+			"source_node": {
+				"id": "aggregation",
+				"code": "AGGRES",
+				"version": "1.1.3",
+				"title": "result aggreator",
+				"desc": "result aggreator"
+			},
+
+			"services": [
+				{
+					"service_id": "aggregation",
+					"name": "result aggregation",
+					"url": "http://127.0.0.1:18000/v1/result/test_aggregator",
+					"method": "POST",
+					"params": {
+						"format": "json",
+						"input": [
+							{
+								"key": "agg_result",
+								"type": "dict"
+							},
+							{
+								"key": "test_aggr",
+								"type": "string"
+							}
+						]
+					},
+					"header": {},
+					"body": {},
+					"result": {
+						"format": "json",
+						"output": [
+							{
+								"key": "result_all_data",
+								"type": "string"
+							}
+						]
+					}
+				}
+			]
+		},
+		{
+
+			"node_id": "stt_end_node",
+			"node_type": "rest-api",
+			"role": "END",
+			"location": "inner",
+			"containable": "false",
+			"api_keys": [""],
+
+			"source_node": {
+				"id": "stt",
+				"code": "STTENGN",
+				"version": "1.0.23",
+				"title": "STT Serving Engine",
+				"desc": "STT Serving Engine"
+			},
+
+			"services": [
+				{
+					"service_id": "end",
+					"name": "end_api",
+					"url": "http://127.0.0.1:18000/v1/stt_start",
+					"method": "GET",
+					"params": {
+						"format": "json",
+						"input": [
+							{
+								"key": "result",
+								"type": "json"
+							}
+						]
+					},
+					"header": {},
+					"body": {},
+					"result":{
+						"format": "json",
+						"output": [
+							{
+								"key": "result",
+								"type": "json"
+							}
+						]
+					}
+				}
+			]
+		}
+	],
+	"edges": [
+		{
+			"source": "stt_start_node.start",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"target": "stt_summary_model_node.sum_stt",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"data_mapper": [
+				{
+					"input_type": "refer",
+					"src": "stt_start_node.start.src_stt",
+					"tar": "stt_summary_model_node.sum_stt.text_input"
+				},
+				{
+					"input_type": "value",
+					"src": 1,
+					"tar": "stt_summary_model_node.sum_stt.max_tokens"
+				}
+			]
+		},
+		{
+			"source": "stt_start_node.start",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"target": "test_node.test_service_id",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"data_mapper": [
+				{
+					"input_type": "refer",
+					"src": "stt_start_node.start.src_stt",
+					"tar": "test_node.test_service_id.input_key_1"
+				},
+				{
+					"input_type": "value",
+					"src": "1",
+					"tar": "test_node.test_service_id.input_key_2"
+				}
+			]
+		},
+		{
+			"source": "stt_summary_model_node.sum_stt",
+			"source_handler": {
+				"type": "parallel",
+				"conditions": {}
+			},
+			"target": "classification_model_node.class_stt",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"data_mapper": [
+				{
+					"input_type": "value",
+					"src": "text",
+					"tar": "classification_model_node.class_stt.name"
+				},
+				{
+					"input_type": "value",
+					"src": "1",
+					"tar": "classification_model_node.class_stt.shape"
+				},
+				{
+					"input_type": "value",
+					"src": "BYTES",
+					"tar": "classification_model_node.class_stt.datatype"
+				},
+				{
+					"input_type": "refer",
+					"src": "stt_summary_model_node.sum_stt.text_output",
+					"tar": "classification_model_node.class_stt.data"
+				}
+			]
+		},
+		{
+			"source": "classification_model_node.class_stt",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"target": "stt_aggregator.aggregation",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"data_mapper": [
+				{
+					"input_type": "refer",
+					"src": "classification_model_node.class_stt.data",
+					"tar": "stt_aggregator.aggregation.summery_stt"
+				},
+				{
+					"input_type": "refer",
+					"src": "stt_summary_model_node.sum_stt.text_output",
+					"tar": "stt_aggregator.aggregation.cls_code"
+				}
+			]
+		},
+		{
+			"source": "stt_aggregator.aggregation",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"target": "test_aggregator.aggregation",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"data_mapper": [
+				{
+					"input_type": "refer",
+					"src": "stt_aggregator.aggregation.result_data",
+					"tar": "test_aggregator.aggregation.agg_result"
+				},
+				{
+					"input_type": "refer",
+					"src": "test_node.test_service_id.result_key",
+					"tar": "test_aggregator.aggregation.test_aggr"
+				}
+			]
+		},
+		{
+			"source": "test_node.test_service_id",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"target": "test_aggregator.aggregation",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"data_mapper": [
+				{
+					"input_type": "refer",
+					"src": "stt_aggregator.aggregation.result_data",
+					"tar": "test_aggregator.aggregation.agg_result"
+				},
+				{
+					"input_type": "refer",
+					"src": "test_node.test_service_id.result_key",
+					"tar": "test_aggregator.aggregation.test_aggr"
+				}
+			]
+		},
+		{
+			"source": "test_aggregator.aggregation",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"target": "END",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"data_mapper": [
+				{
+					"input_type": "refer",
+					"src": "test_aggregator.aggregation.agg_result",
+					"tar": "stt_end_node.end.result"
+				}
+			]
+		}
+	],
+	"resources": {
+		"node_a": {
+		}
+	}
+}
+
