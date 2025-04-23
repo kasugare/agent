@@ -29,21 +29,11 @@ class DagMetaController:
             'wf_description': wf_config['metadata'].get('description'),
             'wf_type': wf_config['metadata'].get('stt_dag')
         }
-        self._logger.error("# Workflow Common meta")
-        self._logger.debug(wf_comm_meta)
         return wf_comm_meta
 
     def get_wf_to_nodes(self, wf_config: Dict) -> Dict:
         nodes = wf_config.get('nodes')
-        nodes_meta = {}
-
-        self._logger.error("# Nodes meta")
-        for node in nodes:
-            node_id = node.get('node_id')
-            nodes_meta[node_id] = node
-
-        for k, v in nodes_meta.items():
-            self._logger.debug(f" - {k} : {v}")
+        nodes_meta = {node.get('node_id'): node for node in nodes if node.get('node_id')}
         return nodes_meta
 
     def cvt_wf_to_service_pool(self, nodes_meta: Dict) -> Dict:
@@ -57,17 +47,10 @@ class DagMetaController:
                 service_pool[node_service_id] = service_info
                 for node_key in add_node_keys:
                     service_pool[node_service_id][node_key] = node_info[node_key]
-
-
-        self._logger.error("# Services Pool")
-        for k, v in service_pool.items():
-            self._logger.debug(f" - {k} : {v}")
         return service_pool
 
     def get_wf_to_edges(self, wf_config: Dict, wf_service_pool: Dict) -> List:
         edges_meta = self._edge_transformer.cvt_service_edges(wf_config, wf_service_pool)
-        self._logger.error("# Edges meta")
-        self._logger.debug(edges_meta)
         return edges_meta
 
     def cvt_edge_to_grape(self, edges_meta: List) -> Dict:
@@ -79,9 +62,6 @@ class DagMetaController:
                 edge_grape[curr_node].append(next_node)
             else:
                 edge_grape[curr_node] = [next_node]
-        self._logger.error("# Edges Grape meta")
-        for k, v in edge_grape.items():
-            self._logger.debug(f" - {k} : {v}")
         return edge_grape
 
     def get_edges_to_prev_nodes(self, edges_meta: List) -> Dict:
@@ -93,15 +73,10 @@ class DagMetaController:
                 prev_edge_grape[curr_node].append(prev_node)
             else:
                 prev_edge_grape[curr_node] = [prev_node]
-        self._logger.error("# Previous Edges meta")
-        for k, v in prev_edge_grape.items():
-            self._logger.debug(f" - {k} : {v}")
         return prev_edge_grape
 
     def get_wf_to_resources(self, wf_config: Dict) -> Dict:
         resources = wf_config.get('resources')
-        self._logger.error("# Resources meta")
-        self._logger.debug(resources)
         return resources
 
 
@@ -141,7 +116,4 @@ class DagMetaController:
         for node in edge_map:
             reachable_nodes.update(edge_map[node])
         start_nodes = all_nodes - reachable_nodes
-        self._logger.error("# Start Node")
-        for node in start_nodes:
-            self._logger.debug(f"{node}")
         return sorted(list(start_nodes))

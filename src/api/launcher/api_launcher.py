@@ -29,6 +29,7 @@ class BaseHandler:
         self._routes_file_path = f"{route_dir_path}/api_routes.json"
         self._init_service_path(route_dir_path)
 
+
         # FastAPI 시작 시 파일 감시 시작
         @app.on_event("startup")
         async def startup_event():

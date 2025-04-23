@@ -25,7 +25,7 @@ class EdgeTransformer:
         for data_map in mapper_info:
             if data_map.get('key') == key:
                 data_type = data_map.get('type')
-                print(f"- [{find_type}]", splited_param_id, ":\t\t", data_map, "\t", data_type)
+                # print(f"- [{find_type}]", splited_param_id, ":\t\t", data_map, "\t", data_type)
                 return data_type
         return None
 
@@ -56,7 +56,6 @@ class EdgeTransformer:
             service_info = wf_service_pool.get(service_id)
             return service_info
 
-        self._logger.critical("-" * 100)
         edges_map = {}
         edges_meta = wf_config.get('edges')
         for edge_info in edges_meta:
@@ -70,7 +69,7 @@ class EdgeTransformer:
             data_mapper = edge_info.get('data_mapper')
             self._add_data_type_on_data_mapper(data_mapper, wf_service_pool)
 
-        self._print_edges_map(edges_map)
+        # self._print_edges_map(edges_map)
         self._gen_params(edges_map)
         return edges_map
 
@@ -102,7 +101,7 @@ class EdgeTransformer:
                 elif input_type == 'value':
                     value = data_map.get('src')
                     param_map[param_name] = self._cvt_type_casting(param_type, value)
-            print(edge_id, param_map)
+            # print(edge_id, param_map)
 
     def _print_edges_map(self, edges_map: Dict) -> None:
         for k, v in edges_map.items():
