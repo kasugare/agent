@@ -8,15 +8,16 @@ import threading
 
 
 class WorkflowExecutionController:
-    def __init__(self, logger, nodes_info, service_pool, edges_info, dag_grape, prev_nodes_grape, start_node):
+    def __init__(self, logger, meta_pack):
         self._logger = logger
-        self._node_info = nodes_info
-        self._service_pool = service_pool
-        self._edges_info = edges_info
-        self._dag_grape = dag_grape
-        self._prev_nodes_grape = prev_nodes_grape
-        self._start_node = start_node
+        self._node_info = meta_pack["nodes_info"]
+        self._service_pool = meta_pack["service_pool"]
+        self._edges_info = meta_pack["edges_info"]
+        self._edges_grape = meta_pack["edges_grape"]
+        self._prev_edges_grape = meta_pack["prev_edges_grape"]
+        self._start_node = meta_pack["start_node"]
         self._executorQ = Queue()
+
         self._input_params_map = {}
         self._output_result_map = {}
         self._result_map = {}
@@ -26,7 +27,7 @@ class WorkflowExecutionController:
             input_id = f"{node_service_id}"
             self._input_params_map[input_id] = None
         else:
-            for param_name, value  in input_params.items():
+            for param_name, value in input_params.items():
                 input_id = f"{node_service_id}.{param_name}"
                 self._input_params_map[input_id] = value
 
@@ -110,13 +111,11 @@ class WorkflowExecutionController:
         except Exception as e:
             self._logger.error(e)
 
-
     def _cvt_edge_id(self, src_id: str, tar_id: str) -> str:
         edge_id = f"{src_id}_{tar_id}"
         return edge_id
 
     def start_job_order(self, params):
-
         node_service_id = self._start_node
         self._set_input_params(node_service_id, params)
         self._set_output_result(node_service_id, params)
@@ -127,11 +126,9 @@ class WorkflowExecutionController:
 
             self.set_job_orders(next_node_service_id, params_map)
 
-
-
     def set_job_orders(self, node_ids: List, dag_meta: Dict) -> None:
-        for node_service_id in self._start_nodes:
-            node_info = dag_meta[node_service_id]
+        for node_id in self._start_nodes:
+            node_info = dag_meta[node_id]
             node_role = node_info['role']
 
             self._logger.debug(f"{node_id} - {node_role}")

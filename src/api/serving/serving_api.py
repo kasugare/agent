@@ -54,17 +54,9 @@ class ServingProvider(BaseRouter):
             else:
                 request_id = "AUTO_%X" %(int(time.time() * 10000))
             print(request_id)
-            nodes_info = self._dag_loader.get_nodes_meta()
-            service_pool = self._dag_loader.get_node_service_pool()
-            edges_info = self._dag_loader.get_edges_meta()
-            dag_grape = self._dag_loader.get_edges_grape_meta()
-            prev_nodes_grape = self._dag_loader.get_prev_edges_grpae_meta()
-            start_node = self._dag_loader.get_start_node_meta()
 
-            print(start_node)
-
-            workflow_engine = WorkflowExecutionService(self._logger, nodes_info, service_pool,
-                                                       edges_info, dag_grape, prev_nodes_grape, start_node)
+            meta_pack = self._dag_loader.get_meta_pack()
+            workflow_engine = WorkflowExecutionService(self._logger, meta_pack)
 
             input_params = workflow_engine.extract_params(request)
             # workflow_engine.check_start_params(request)
@@ -72,7 +64,7 @@ class ServingProvider(BaseRouter):
 
             return {"result": ""}
 
-            if dag_grape:
+            if edges_grape:
                 input_params = {"request_id": "1234567890", "src_stt": "test stt input data!!"}
                 result = workflow_engine.run_workflow(input_params)
                 result_set = []

@@ -95,6 +95,17 @@ class DagLoader:
         self.set_start_node_meta(start_node)
         self._thread_lock.release()
 
+    def get_meta_pack(self):
+        meta_pack = {
+            "start_node": self.get_start_node_meta(),
+            "nodes_info": self.get_nodes_meta(),
+            "service_pool": self.get_node_service_pool(),
+            "edges_info": self.get_edges_meta(),
+            "edges_grape": self.get_edges_grape_meta(),
+            "prev_edges_grape": self.get_prev_edges_grpae_meta()
+        }
+        return meta_pack
+
 
 class DagLoadService(DagLoader):
     def __init__(self, logger):

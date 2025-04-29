@@ -6,17 +6,11 @@ from typing import Dict, List, Any
 
 
 class WorkflowExecutionService:
-    def __init__(self, logger, nodes_info, service_pool, edges_info, dag_grape, prev_nodes_grape, start_node):
-        # super().__init__(logger, nodes_info, service_pool, edges_info, dag_grape, prev_nodes_grape, start_nodes)
+    def __init__(self, logger, meta_pack):
         self._logger = logger
-        self._node_info = nodes_info
-        self._service_pool = service_pool
-        self._edges_info = edges_info
-        self._dag_grape = dag_grape
-        self._prev_nodes_grape = prev_nodes_grape
-        self._start_node = start_node
-        self._engine_controller = WorkflowExecutionController(logger, nodes_info, service_pool,
-                                                              edges_info, dag_grape, prev_nodes_grape, start_node)
+        self._service_pool = meta_pack["service_pool"]
+        self._start_node = meta_pack["start_node"]
+        self._engine_controller = WorkflowExecutionController(logger, meta_pack)
 
     def check_start_params(self, request_params):
         valid_params = self._engine_controller.valid_start_input_params(request_params)
@@ -40,6 +34,7 @@ class WorkflowExecutionService:
                 else:
                     opt_params.append(param_info.get('key'))
             return req_params, opt_params
+
         if not node_params:
             node_params = self.get_start_params()
 
@@ -53,7 +48,6 @@ class WorkflowExecutionService:
             if value:
                 input_params[param_key] = value
         return input_params
-
 
     def get_result(self) -> Dict:
         result_map = self._engine_controller.get_result()
