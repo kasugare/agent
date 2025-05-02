@@ -24,10 +24,11 @@ class DagMetaController:
 
     def get_wf_common_info(self, wf_config: Dict) -> Dict:
         wf_comm_meta = {
+            'wf_id': wf_config.get('workflow_id'),
             'wf_name': wf_config.get('name'),
             'wf_version': wf_config.get('version'),
-            'wf_description': wf_config['metadata'].get('description'),
-            'wf_type': wf_config['metadata'].get('stt_dag')
+            'wf_description': wf_config.get('description'),
+            'run_type': wf_config.get('run_mode')
         }
         return wf_comm_meta
 
@@ -42,8 +43,8 @@ class DagMetaController:
         for node_id, node_info in nodes_meta.items():
             services = node_info.get('services')
             for service_info in services:
-                service_id = service_info.get('service_id')
-                node_service_id = f"{node_id}.{service_id}"
+                service_name = service_info.get('name')
+                node_service_id = f"{node_id}.{service_name}"
                 service_pool[node_service_id] = service_info
                 for node_key in add_node_keys:
                     service_pool[node_service_id][node_key] = node_info[node_key]

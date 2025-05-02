@@ -2,11 +2,8 @@
 	"workflow_id": "202504291351_workflow_test_project",
 	"name": "Serving Workflow for STTs",
 	"version": "1.0",
-	"meta_info": {
-		"description": "STT Serving Workflow",
-		"type": "stt_dag"
-	},
-	"execution_type": "ALL"
+	"description": "STT Serving Workflow",
+	"run_mode": "ALL",
 	"nodes": [
 		{
 			"node_id": "stt_start_node_202504291319",
@@ -426,10 +423,9 @@
 			]
 		},
 		{
-
 			"node_id": "stt_end_node_202504291319",
 			"node_type": "rest-api",
-			"role": "END",
+			"role": "end",
 			"location": "inner",
 			"containable": false,
 			"api_keys": [""],
@@ -447,7 +443,7 @@
 					"name": "end",
 					"desc": "end_api",
 					"type": "end",
-					"url": "http://127.0.0.1:18000/v1/stt_start",
+					"url": "http://127.0.0.1:18000/v1/stt_end",
 					"method": "GET",
 					"header": {},
 					"body": {},
@@ -488,13 +484,13 @@
 			},
 			"data_mapper": [
 				{
-					"input_type": "refer",
-					"key": "text_input",
-					"value": "stt_start_node.start.src_stt"
+					"call_method": "refer",
+					"key": "stt_summary_model_node_202504291319.sum_stt.text_input",
+					"value": "stt_start_node_202504291319.start.src_stt"
 				},
 				{
-					"input_type": "value",
-					"key": "max_tokens",
+					"call_method": "value",
+					"key": "stt_summary_model_node_202504291319.sum_stt.max_tokens",
 					"value": 1
 				}
 			]
@@ -512,13 +508,13 @@
 			},
 			"data_mapper": [
 				{
-					"input_type": "refer",
-					"key": "input_key_1",
+					"call_method": "refer",
+					"key": "test_node_202504291319.test_name.input_key_1",
 					"value": "stt_start_node_202504291319.start.src_stt"
 				},
 				{
-					"input_type": "value",
-					"key": "input_key_2",
+					"call_method": "value",
+					"key": "test_node_202504291319.test_name.input_key_2",
 					"value": "1"
 				}
 			]
@@ -536,23 +532,23 @@
 			},
 			"data_mapper": [
 				{
-					"input_type": "value",
-					"key": "name",
+					"call_method": "value",
+					"key": "classification_model_node_202504291319.class_stt.name",
 					"value": "text"
 				},
 				{
-					"input_type": "value",
-					"key": "shape",
+					"call_method": "value",
+					"key": "classification_model_node_202504291319.class_stt.shape",
 					"value": "1"
 				},
 				{
-					"input_type": "value",
-					"key": "datatype",
+					"call_method": "value",
+					"key": "classification_model_node_202504291319.class_stt.datatype",
 					"value": "BYTES"
 				},
 				{
-					"input_type": "refer",
-					"key": "data",
+					"call_method": "refer",
+					"key": "classification_model_node_202504291319.class_stt.data",
 					"value": "stt_summary_model_node_202504291319.sum_stt.text_output"
 				}
 			]
@@ -570,14 +566,14 @@
 			},
 			"data_mapper": [
 				{
-					"input_type": "refer",
-					"key": "summery_stt",
+					"call_method": "refer",
+					"key": "stt_aggregator_202504291319.aggregation.summery_stt",
 					"value": "classification_model_node_202504291319.class_stt.data"
 					
 				},
 				{
-					"input_type": "refer",
-					"key": "cls_code",
+					"call_method": "refer",
+					"key": "stt_aggregator_202504291319.aggregation.cls_code",
 					"value": "stt_summary_model_node_202504291319.sum_stt.text_output"
 				}
 			]
@@ -595,13 +591,13 @@
 			},
 			"data_mapper": [
 				{
-					"input_type": "refer",
-					"key": "agg_result",
+					"call_method": "refer",
+					"key": "test_aggregator_202504291319.aggregation.agg_result",
 					"value": "stt_aggregator_202504291319.aggregation.result_data"
 				},
 				{
-					"input_type": "refer",
-					"key": "test_aggr",
+					"call_method": "refer",
+					"key": "test_aggregator_202504291319.aggregation.test_aggr",
 					"value": "test_node_202504291319.test_name.result_key"
 				}
 			]
@@ -619,13 +615,13 @@
 			},
 			"data_mapper": [
 				{
-					"input_type": "refer",
-					"key": "agg_result",
+					"call_method": "refer",
+					"key": "test_aggregator_202504291319.aggregation.agg_result",
 					"value": "stt_aggregator_202504291319.aggregation.result_data"
 				},
 				{
-					"input_type": "refer",
-					"key": "test_aggr",
+					"call_method": "refer",
+					"key": "test_aggregator_202504291319.aggregation.test_aggr",
 					"value": "test_node_202504291319.test_name.result_key"
 				}
 			]
@@ -636,15 +632,15 @@
 				"type": "sequence",
 				"conditions": {}
 			},
-			"target": "END",
+			"target": "stt_end_node_202504291319.end",
 			"target_handler": {
 				"type": "sequence",
 				"conditions": {}
 			},
 			"data_mapper": [
 				{
-					"input_type": "refer",
-					"key": "result",
+					"call_method": "refer",
+					"key": "stt_end_node_202504291319.end.result",
 					"value": "test_aggregator_202504291319.aggregation.result_all_data"
 				}
 			]

@@ -158,19 +158,25 @@ class DagLoadService(DagLoader):
 
         self._logger.error("# [DAG Loader] Step 1. Extract Common Info")
         wf_comm_meta = self._dag_meta_controller.get_wf_common_info(wf_config)
+        # print(wf_comm_meta)
 
         self._logger.error("# [DAG Loader] Step 2. Extract Nodes")
         wf_nodes_meta = self._dag_meta_controller.get_wf_to_nodes(wf_config)
         # for k, v in wf_nodes_meta.items():
-        #     self._logger.debug(f" - {k} : {v}")
+            # self._logger.debug(f" - {k} : {v}")
+            # print("  -", k, ":", v)
 
         self._logger.error("# [DAG Loader] Step 3. Extract Service Pool")
         wf_service_pool = self._dag_meta_controller.cvt_wf_to_service_pool(wf_nodes_meta)
         # for k, v in wf_service_pool.items():
-        #     self._logger.debug(f" - {k} : {v}")
+            # self._logger.debug(f" - {k} : {v}")
+            # print("  -", k, ":", v)
 
         self._logger.error("# [DAG Loader] Step 4. Extract Edges")
         wf_edges_meta = self._dag_meta_controller.get_wf_to_edges(wf_config, wf_service_pool)
+        for k, v in wf_edges_meta.items():
+            # self._logger.debug(f" - {k} : {v}")
+            print("  -", k, ":", v)
 
         self._logger.error("# [DAG Loader] Step 5. Extract Grape")
         wf_edges_grape = self._dag_meta_controller.cvt_edge_to_grape(wf_edges_meta)
