@@ -21,8 +21,8 @@
 				"desc": "STT Serving Engine"
 			},
 
-			"services": [
-				{
+			"services": {
+				"start": {
 					"name": "start",
 					"desc": "start_api",
 					"type": "start_node",
@@ -59,7 +59,7 @@
 						]
 					}
 				}
-			]
+			}
 		},
 		{
 			"node_id": "test_node_202504291319",
@@ -77,8 +77,8 @@
 				"desc": "Test Node"
 			},
 
-			"services": [
-				{
+			"services": {
+				"test_name": {
 					"name": "test_name",
 					"desc": "test_api",
 					"type": "function",
@@ -111,7 +111,7 @@
 						]
 					}
 				}
-			]
+			}
 		},
 		{
 			"node_id": "stt_summary_model_node_202504291319",
@@ -129,8 +129,8 @@
 				"desc": "summerization STT for telecommunication with customer"
 			},
 
-			"services": [
-				{
+			"services": {
+				"health_check": {
 					"name": "health_check",
 					"desc": "api health check",
 					"type": "check",
@@ -149,7 +149,7 @@
 						]
 					}
 				},
-				{
+				"deploy_model_check": {
 					"name": "deploy_model_check",
 					"desc": "depling model check",
 					"type": "check",
@@ -168,7 +168,7 @@
 						]
 					}
 				},
-				{
+				"sum_stt": {
 					"name": "sum_stt",
 					"desc": "stt summerization",
 					"type": "inference",
@@ -209,7 +209,7 @@
 						]
 					}
 				}
-			]
+			}
 		},
 		{
 			"node_id": "classification_model_node_202504291319",
@@ -227,8 +227,8 @@
 				"desc": "classification STT for summerized telecommunication"
 			},
 
-			"services": [
-				{
+			"services": {
+				"health_check": {
 					"name": "health_check",
 					"desc": "api health check",
 					"type": "check",
@@ -247,7 +247,7 @@
 						]
 					}
 				},
-				{
+				"deploy_model_check": {
 					"name": "deploy_model_check",
 					"desc": "depling model check",
 					"type": "check",
@@ -266,7 +266,7 @@
 						]
 					}
 				},
-				{
+				"class_stt": {
 					"name": "class_stt",
 					"desc": "stt classification",
 					"type": "inference",
@@ -320,7 +320,7 @@
 						]
 					}
 				}
-			]
+			}
 		},
 		{
 			"node_id": "stt_aggregator_202504291319",
@@ -338,8 +338,8 @@
 				"desc": "result aggreator"
 			},
 
-			"services": [
-				{
+			"services": {
+				"aggregation": {
 					"name": "aggregation",
 					"desc": "result aggregator",
 					"type": "inference",
@@ -372,7 +372,7 @@
 						]
 					}
 				}
-			]
+			}
 		},
 		{
 			"node_id": "test_aggregator_202504291319",
@@ -390,8 +390,8 @@
 				"desc": "result aggreator"
 			},
 
-			"services": [
-				{
+			"services": {
+				"aggregation": {
 					"name": "aggregation",
 					"desc": "result aggregation",
 					"type": "fucntion",
@@ -424,7 +424,7 @@
 						]
 					}
 				}
-			]
+			}
 		},
 		{
 			"node_id": "stt_end_node_202504291319",
@@ -442,8 +442,8 @@
 				"desc": "STT Serving Engine"
 			},
 
-			"services": [
-				{
+			"services": {
+				"end": {
 					"name": "end",
 					"desc": "end_api",
 					"type": "end",
@@ -471,7 +471,7 @@
 						]
 					}
 				}
-			]
+			}
 		}
 	],
 	"edges": [

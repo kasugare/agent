@@ -42,8 +42,7 @@ class DagMetaController:
         add_node_keys = ['node_type', 'role', 'location', 'api_keys', 'containable']
         for node_id, node_info in nodes_meta.items():
             services = node_info.get('services')
-            for service_info in services:
-                service_name = service_info.get('name')
+            for service_name, service_info in services.items():
                 node_service_id = f"{node_id}.{service_name}"
                 service_pool[node_service_id] = service_info
                 for node_key in add_node_keys:

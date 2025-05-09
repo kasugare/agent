@@ -122,8 +122,8 @@ class JobTaskExecutor:
         return tar_params
 
 
-    def _set_node_params(self, node_id, params):
-        node_io_data_map = self._io_data_pool.get(node_id)
+    def _set_node_params(self, service_id, params):
+        node_io_data_map = self._io_data_pool.get(service_id)
         if node_io_data_map:
             input_node_data_map = node_io_data_map.get('input')
             if input_node_data_map:
@@ -131,13 +131,13 @@ class JobTaskExecutor:
             else:
                 input_node_data_map = {"intput": params}
             node_io_data_map.update(input_node_data_map)
-            self._io_data_pool[node_id] = node_io_data_map
+            self._io_data_pool[service_id] = node_io_data_map
         else:
             node_io_data_map = {"input": params}
-            self._io_data_pool[node_id] = node_io_data_map
+            self._io_data_pool[service_id] = node_io_data_map
 
-    def _set_node_result(self, node_id, result):
-        node_io_data_map = self._io_data_pool.get(node_id)
+    def _set_node_result(self, service_id, result):
+        node_io_data_map = self._io_data_pool.get(service_id)
         if node_io_data_map:
             output_node_data_map = node_io_data_map.get('output')
             if output_node_data_map:
@@ -147,8 +147,24 @@ class JobTaskExecutor:
             node_io_data_map.update(output_node_data_map)
         else:
             node_io_data_map = {"output": result}
-            self._io_data_pool[node_id] = node_io_data_map
+            self._io_data_pool[service_id] = node_io_data_map
         print(node_io_data_map)
+
+    def _get_node_connection_info(self, service_id, node_info):
+        splited_service_id = service_id.split(".")
+        node_id = splited_service_id[0]
+        service_name = splited_service_id[1]
+
+    def _extract_api_info(self, service_id):
+        node_info = self._get_node_info(service_id)
+        url_info = {
+            'url': node_info.get('url'),
+            'method': node_info.get('method'),
+            'header': node_info.get('header'),
+            'body': node_info.get('body')
+        }
+        return url_info
+
 
     def _prepare_execution(self, request_params, service_id):
         def gen_edge_id(curr_node_id, next_node_id):
@@ -180,12 +196,15 @@ class JobTaskExecutor:
             self._logger.debug(f"   - {tar_params}")
 
             self._logger.debug(f" # Step 7: Save target params")
-            tar_node_id = edge_info.get('target')
-            self._set_node_params(tar_node_id, tar_params)
+            tar_service_id = edge_info.get('target')
+            self._set_node_params(tar_service_id, tar_params)
+            self._print_data_pool()
 
-            self._logger.debug(f" # Step 8: get service node info")
+            self._logger.debug(f" # Step 8: get service url info")
+            tar_api_url_info = self._extract_api_info(tar_service_id)
+            tar_api_url_info['params'] = tar_params
+            self._logger.debug(f"   - {tar_api_url_info}")
 
-        self._print_data_pool()
 
     def _print_data_pool(self):
         for k , v in self._io_data_pool.items():
