@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from api.serving.service.task_io_service import TaskIOService
 from api.serving.service.dag_meta_service import DagLoadService
 from api.serving.service.workflow_execution_service import WorkflowExecutionService
+from api.serving.service.JobTaskExecutor import JobTaskExecutor
 from typing import List, Dict, Optional, Any
 from abc import ABC, abstractmethod
 from fastapi import APIRouter
@@ -35,7 +37,8 @@ class ServingProvider(BaseRouter):
 
     def __init__(self, logger=None, db_conn=None):
         super().__init__(logger, tags=['serving'])
-        self._dag_loader = DagLoadService(logger)
+        self._io_manager = TaskIOService(logger)
+        self._dag_loader = DagLoadService(logger, self._io_manager)
         self._dag_loader.start_background_loop()
 
     def setup_routes(self):
@@ -47,20 +50,19 @@ class ServingProvider(BaseRouter):
 
         @self.router.post(path='/call_api')
         async def call_chained_model_service(request: Dict[str, Any]):
-            print(request)
-            request.pop('request_id')
             if request and 'request_id' in list(request.keys()):
                 request_id = request.pop('request_id')
             else:
                 request_id = "AUTO_%X" %(int(time.time() * 10000))
-            print(request_id)
+            request['request_id'] = request_id
 
             meta_pack = self._dag_loader.get_meta_pack()
-            workflow_engine = WorkflowExecutionService(self._logger, meta_pack)
+            workflow_engine = JobTaskExecutor(self._logger, meta_pack)
+            workflow_engine.do_process(request)
+            # workflow_engine = WorkflowExecutionService(self._logger, meta_pack)
 
-            input_params = workflow_engine.extract_params(request)
+            # input_params = workflow_engine.extract_params(request)
             # workflow_engine.check_start_params(request)
-            print(input_params)
 
             return {"result": ""}
 

@@ -26,7 +26,7 @@
 					"name": "start",
 					"desc": "start_api",
 					"type": "start_node",
-					"url": "http://127.0.0.1:18000/v1/stt_start",
+					"url": "http://127.0.0.1:20001/v1/stt_start",
 					"method": "GET",
 					"header": {},
 					"body": {},
@@ -40,7 +40,7 @@
 							},
 							{
 								"required": true,
-								"key": "src_stt",
+								"key": "text_input",
 								"type": "string"
 							}
 						]
@@ -49,7 +49,11 @@
 						"format": "json",
 						"output": [
 							{
-								"key": "src_stt",
+								"key": "request_id",
+								"type": "string"
+							},
+							{
+								"key": "text_input",
 								"type": "string"
 							}
 						]
@@ -78,7 +82,7 @@
 					"name": "test_name",
 					"desc": "test_api",
 					"type": "function",
-					"url": "http://127.0.0.1:18000/v1/test",
+					"url": "http://127.0.0.1:20002/v1/test",
 					"method": "GET",
 					"header": {},
 					"body": {},
@@ -93,7 +97,7 @@
 							{
 								"required": true,
 								"key": "input_key_2",
-								"type": "string"
+								"type": "double"
 							}
 						]
 					},
@@ -130,7 +134,7 @@
 					"name": "health_check",
 					"desc": "api health check",
 					"type": "check",
-					"url": "http://127.0.0.1:20000/v2/helath/ready",
+					"url": "http://127.0.0.1:20003/v2/helath/ready",
 					"method": "GET",
 					"header": {},
 					"body": {},
@@ -149,7 +153,7 @@
 					"name": "deploy_model_check",
 					"desc": "depling model check",
 					"type": "check",
-					"url": "http://127.0.0.1:20000/v2/repository/index",
+					"url": "http://127.0.0.1:20003/v2/repository/index",
 					"method": "POST",
 					"params": {},
 					"header": {},
@@ -168,7 +172,7 @@
 					"name": "sum_stt",
 					"desc": "stt summerization",
 					"type": "inference",
-					"url": "http://127.0.0.1:20000/v2/models/stt/generate",
+					"url": "http://127.0.0.1:20003/v2/models/stt/generate",
 					"method": "POST",
 					"header": {},
 					"body": {},
@@ -228,7 +232,7 @@
 					"name": "health_check",
 					"desc": "api health check",
 					"type": "check",
-					"url": "http://127.0.0.1:20010/v2/helath/ready",
+					"url": "http://127.0.0.1:20004/v2/helath/ready",
 					"method": "GET",
 					"header": {},
 					"body": {},
@@ -247,7 +251,7 @@
 					"name": "deploy_model_check",
 					"desc": "depling model check",
 					"type": "check",
-					"url": "http://127.0.0.1:20010/v2/repository/index",
+					"url": "http://127.0.0.1:20004/v2/repository/index",
 					"method": "POST",
 					"header": {},
 					"body": {},
@@ -266,7 +270,7 @@
 					"name": "class_stt",
 					"desc": "stt classification",
 					"type": "inference",
-					"url": "http://127.0.0.1:20010/v2/models/vert_base_smry_cls/infer",
+					"url": "http://127.0.0.1:20004/v2/models/vert_base_smry_cls/infer",
 					"method": "POST",
 					"header": {},
 					"body": {},
@@ -339,7 +343,7 @@
 					"name": "aggregation",
 					"desc": "result aggregator",
 					"type": "inference",
-					"url": "http://127.0.0.1:18000/v1/result/aggregator",
+					"url": "http://127.0.0.1:20005/v1/result/aggregator",
 					"method": "POST",
 					"header": {},
 					"body": {},
@@ -391,7 +395,7 @@
 					"name": "aggregation",
 					"desc": "result aggregation",
 					"type": "fucntion",
-					"url": "http://127.0.0.1:18000/v1/result/test_aggregator",
+					"url": "http://127.0.0.1:20006/v1/result/test_aggregator",
 					"method": "POST",
 					"header": {},
 					"body": {},
@@ -443,7 +447,7 @@
 					"name": "end",
 					"desc": "end_api",
 					"type": "end",
-					"url": "http://127.0.0.1:18000/v1/stt_end",
+					"url": "http://127.0.0.1:20007/v1/stt_end",
 					"method": "GET",
 					"header": {},
 					"body": {},
@@ -486,7 +490,7 @@
 				{
 					"call_method": "refer",
 					"key": "stt_summary_model_node_202504291319.sum_stt.text_input",
-					"value": "stt_start_node_202504291319.start.src_stt"
+					"value": "stt_start_node_202504291319.start.text_input"
 				},
 				{
 					"call_method": "value",
@@ -510,12 +514,12 @@
 				{
 					"call_method": "refer",
 					"key": "test_node_202504291319.test_name.input_key_1",
-					"value": "stt_start_node_202504291319.start.src_stt"
+					"value": "stt_start_node_202504291319.start.request_id"
 				},
 				{
 					"call_method": "value",
 					"key": "test_node_202504291319.test_name.input_key_2",
-					"value": "1"
+					"value": "110000"
 				}
 			]
 		},

@@ -28,7 +28,6 @@ class WorkflowExecutionService:
             req_params = []
             opt_params = []
             for param_info in node_params:
-                print(param_info)
                 if param_info.get('required'):
                     req_params.append(param_info.get('key'))
                 else:

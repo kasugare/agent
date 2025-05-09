@@ -118,3 +118,7 @@ class DagMetaController:
             reachable_nodes.update(edge_map[node])
         start_nodes = all_nodes - reachable_nodes
         return sorted(list(start_nodes))
+
+    def find_end_nodes(self, prev_edge_map: Dict) -> List:
+        end_nodes = self.find_start_nodes(prev_edge_map)
+        return sorted(list(end_nodes))

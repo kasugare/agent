@@ -29,7 +29,8 @@ class DagLoader:
         self._wf_edges_grape = {}
         self._wf_prev_edge_grape = {}
         self._wf_resources_meta = {}
-        self._start_node = None
+        self._start_nodes = []
+        self._end_nodes = []
 
     def set_comm_meta(self, wf_comm_meta: Dict) -> None:
         self._wf_comm_meta = wf_comm_meta
@@ -52,8 +53,11 @@ class DagLoader:
     def set_resources_meta(self, wf_resources_meta: Dict) -> None:
         self._wf_resources_meta = wf_resources_meta
 
-    def set_start_node_meta(self, start_node: str) -> None:
-        self._start_node = start_node
+    def set_start_nodes_meta(self, start_nodes: str) -> None:
+        self._start_nodes = start_nodes
+
+    def set_end_nodes_meta(self, end_nodes: str) -> None:
+        self._end_nodes = end_nodes
 
     def get_dag(self) -> Dict:
         return self._dag_meta
@@ -79,11 +83,14 @@ class DagLoader:
     def get_resources_meta(self) -> Dict:
         return self._wf_resources_meta
 
-    def get_start_node_meta(self) -> str:
-        return self._start_node
+    def get_start_nodes_meta(self) -> str:
+        return self._start_nodes
+
+    def get_end_nodes_meta(self) -> str:
+        return self._end_nodes
 
     def set_metas(self, wf_comm_meta, wf_nodes_meta, wf_service_pool, wf_edges_meta,
-                  wf_edges_grape, wf_prev_edge_grape, wf_resources_meta, start_node):
+                  wf_edges_grape, wf_prev_edge_grape, wf_resources_meta, start_nodes, end_nodes):
         self._thread_lock.acquire()
         self.set_comm_meta(wf_comm_meta)
         self.set_nodes_meta(wf_nodes_meta)
@@ -92,12 +99,14 @@ class DagLoader:
         self.set_edges_grape_meta(wf_edges_grape)
         self.set_prev_edge_grape_meta(wf_prev_edge_grape)
         self.set_resources_meta(wf_resources_meta)
-        self.set_start_node_meta(start_node)
+        self.set_start_nodes_meta(start_nodes)
+        self.set_end_nodes_meta(end_nodes)
         self._thread_lock.release()
 
     def get_meta_pack(self):
         meta_pack = {
-            "start_node": self.get_start_node_meta(),
+            "start_nodes": self.get_start_nodes_meta(),
+            "end_nodes": self.get_end_nodes_meta(),
             "nodes_info": self.get_nodes_meta(),
             "service_pool": self.get_node_service_pool(),
             "edges_info": self.get_edges_meta(),
@@ -108,9 +117,10 @@ class DagLoader:
 
 
 class DagLoadService(DagLoader):
-    def __init__(self, logger):
+    def __init__(self, logger, io_manager):
         super().__init__(logger)
         self._logger = logger
+        self._io_manager = io_manager
         self._dag_meta_controller = DagMetaController(logger)
         self.init_dag_meta()
 
@@ -158,46 +168,46 @@ class DagLoadService(DagLoader):
 
         self._logger.error("# [DAG Loader] Step 1. Extract Common Info")
         wf_comm_meta = self._dag_meta_controller.get_wf_common_info(wf_config)
-        # print(wf_comm_meta)
+        self._print_debug_data(wf_comm_meta)
 
         self._logger.error("# [DAG Loader] Step 2. Extract Nodes")
         wf_nodes_meta = self._dag_meta_controller.get_wf_to_nodes(wf_config)
-        # for k, v in wf_nodes_meta.items():
-            # self._logger.debug(f" - {k} : {v}")
-            # print("  -", k, ":", v)
+        self._print_debug_data(wf_nodes_meta)
 
         self._logger.error("# [DAG Loader] Step 3. Extract Service Pool")
         wf_service_pool = self._dag_meta_controller.cvt_wf_to_service_pool(wf_nodes_meta)
-        # for k, v in wf_service_pool.items():
-            # self._logger.debug(f" - {k} : {v}")
-            # print("  -", k, ":", v)
+        self._print_debug_data(wf_service_pool)
 
         self._logger.error("# [DAG Loader] Step 4. Extract Edges")
         wf_edges_meta = self._dag_meta_controller.get_wf_to_edges(wf_config, wf_service_pool)
-        for k, v in wf_edges_meta.items():
-            # self._logger.debug(f" - {k} : {v}")
-            print("  -", k, ":", v)
+        self._print_debug_data(wf_edges_meta)
 
         self._logger.error("# [DAG Loader] Step 5. Extract Grape")
         wf_edges_grape = self._dag_meta_controller.cvt_edge_to_grape(wf_edges_meta)
-        for k, v in wf_edges_grape.items():
-            self._logger.debug(f" - {k} : {v}")
+        self._print_debug_data(wf_edges_grape)
 
         self._logger.error("# [DAG Loader] Step 6. Extract Prev-Grape")
         wf_prev_edge_grape = self._dag_meta_controller.get_edges_to_prev_nodes(wf_edges_meta)
-        for k, v in wf_prev_edge_grape.items():
-            self._logger.debug(f" - {k} : {v}")
+        self._print_debug_data(wf_prev_edge_grape)
 
         self._logger.error("# [DAG Loader] Step 7. Extract Resource Meta")
         wf_resources_meta = self._dag_meta_controller.get_wf_to_resources(wf_config)
+        self._print_debug_data(wf_resources_meta)
 
         self._logger.error("# [DAG Loader] Step 8. Extract Start Node from edges_grape")
-        start_node = self._dag_meta_controller.find_start_node(wf_edges_grape)
-        # start_nodes = self._dag_meta_controller.find_start_nodes(wf_edges_grape)
+        # start_nodes = self._dag_meta_controller.find_start_node(wf_edges_grape)
+        start_nodes = self._dag_meta_controller.find_start_nodes(wf_edges_grape)
+        self._print_debug_data(start_nodes)
 
-        self._logger.error("# [DAG Loader] Step 9. Set all metas")
+        self._logger.error("# [DAG Loader] Step 9. Extract End Node from prev_edges_grape")
+        end_nodes = self._dag_meta_controller.find_end_nodes(wf_prev_edge_grape)
+        self._print_debug_data(end_nodes)
+
+        self._logger.error("# [DAG Loader] Step 10. Set all metas")
         self.set_metas(wf_comm_meta, wf_nodes_meta, wf_service_pool, wf_edges_meta,
-                       wf_edges_grape, wf_prev_edge_grape, wf_resources_meta, start_node)
+                       wf_edges_grape, wf_prev_edge_grape, wf_resources_meta, start_nodes, end_nodes)
+
+        self._io_manager.set_init_meta("test", wf_edges_meta)
 
     def get_wf_config(self) -> Dict:
         wf_config = self._dag_meta_controller.load_wf_config()
@@ -212,3 +222,13 @@ class DagLoadService(DagLoader):
         dag_meta = self.get_dag()
         if dag_meta:
             self.set_wf_config(wf_config)
+
+    def _print_debug_data(self, debug_data):
+        if isinstance(debug_data, dict):
+            for k, v in debug_data.items():
+                self._logger.debug(f"  - {k} : {v}")
+        elif isinstance(debug_data, list):
+            for l in debug_data:
+                self._logger.debug(f"  - {l}")
+        else:
+            self._logger.debug(f"  - {debug_data}")
