@@ -97,7 +97,7 @@
 							{
 								"required": true,
 								"key": "input_key_2",
-								"type": "double"
+								"type": "string"
 							}
 						]
 					},
@@ -290,7 +290,7 @@
 							{
 								"required": true,
 								"key": "datatype",
-								"type": "bytes"
+								"type": "string"
 							},
 							{
 								"required": true,
@@ -325,7 +325,7 @@
 		{
 			"node_id": "stt_aggregator_202504291319",
 			"node_type": "rest-api",
-			"role": "aggregation",
+			"role": "inference",
 			"location": "outer",
 			"containable": false,
 			"api_keys": [""],
@@ -405,7 +405,7 @@
 							{
 								"required": true,
 								"key": "agg_result",
-								"type": "dict"
+								"type": "string"
 							},
 							{
 								"required": true,
@@ -418,8 +418,8 @@
 						"format": "json",
 						"output": [
 							{
-								"key": "result_all_data",
-								"type": "string"
+								"key": "result_data",
+								"type": "dict"
 							}
 						]
 					}
@@ -456,8 +456,8 @@
 						"input": [
 							{
 								"required": true,
-								"key": "result",
-								"type": "json"
+								"key": "result_all",
+								"type": "dict"
 							}
 						]
 					},
@@ -465,8 +465,8 @@
 						"format": "json",
 						"output": [
 							{
-								"key": "result",
-								"type": "json"
+								"key": "result_all",
+								"type": "dict"
 							}
 						]
 					}
@@ -548,7 +548,7 @@
 				{
 					"call_method": "value",
 					"key": "classification_model_node_202504291319.class_stt.datatype",
-					"value": "BYTES"
+					"value": "str"
 				},
 				{
 					"call_method": "refer",
@@ -572,13 +572,12 @@
 				{
 					"call_method": "refer",
 					"key": "stt_aggregator_202504291319.aggregation.summery_stt",
-					"value": "classification_model_node_202504291319.class_stt.data"
-					
+					"value": "stt_summary_model_node_202504291319.sum_stt.text_output"
 				},
 				{
 					"call_method": "refer",
 					"key": "stt_aggregator_202504291319.aggregation.cls_code",
-					"value": "stt_summary_model_node_202504291319.sum_stt.text_output"
+					"value": "classification_model_node_202504291319.class_stt.data"
 				}
 			]
 		},
@@ -644,8 +643,8 @@
 			"data_mapper": [
 				{
 					"call_method": "refer",
-					"key": "stt_end_node_202504291319.end.result",
-					"value": "test_aggregator_202504291319.aggregation.result_all_data"
+					"key": "stt_end_node_202504291319.end.result_all",
+					"value": "test_aggregator_202504291319.aggregation.result_data"
 				}
 			]
 		}

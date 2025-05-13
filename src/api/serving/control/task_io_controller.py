@@ -26,7 +26,7 @@ class TaskIOController:
             if value_type in ['str', 'string']:
                 value = bytes(value, 'utf-8')
         elif key_type in ['dict', 'map']:
-            pass
+            value = dict(value)
         elif key_type in ['json']:
             pass
         return value

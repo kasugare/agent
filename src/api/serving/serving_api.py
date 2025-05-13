@@ -58,13 +58,13 @@ class ServingProvider(BaseRouter):
 
             meta_pack = self._dag_loader.get_meta_pack()
             workflow_engine = JobTaskExecutor(self._logger, meta_pack)
-            workflow_engine.do_process(request)
+            result = workflow_engine.do_process(request)
             # workflow_engine = WorkflowExecutionService(self._logger, meta_pack)
 
             # input_params = workflow_engine.extract_params(request)
             # workflow_engine.check_start_params(request)
 
-            return {"result": ""}
+            return {"result": result}
 
             if edges_grape:
                 input_params = {"request_id": "1234567890", "src_stt": "test stt input data!!"}

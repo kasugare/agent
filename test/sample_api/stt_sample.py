@@ -47,11 +47,8 @@ class TestResponse(BaseModel):
 app_node_b = FastAPI(title="Node B - Test Node")
 @app_node_b.post("/v1/test", response_model=TestResponse)
 async def test_name(request: TestRequest):
-	print(f"# Node: test_node_202504291319")
-	await asyncio.sleep(random.randrange(1, 5)*0.1)
-
-	input_data = request.input_data
-	# print(input_data)
+	print(f"# Node B - {request}")
+	await asyncio.sleep(random.randrange(1, 5)*0.01)
 
 	return TestResponse(
 		result_key = "request.request_id"
@@ -80,7 +77,7 @@ app_node_c = FastAPI(title="Node C - stt_summary_model_node_202504291319")
 @app_node_c.post("/v2/helath/ready", response_model=SumHealthResponse)
 async def sum_health_check():
 	print(f"# Node C - health_check()")
-	await asyncio.sleep(random.randrange(1, 5)*0.1)
+	await asyncio.sleep(random.randrange(1, 5)*0.01)
 	return SumHealthResponse(
 		status = 1
 	)
@@ -88,15 +85,15 @@ async def sum_health_check():
 @app_node_c.post("/v2/repository/index", response_model=SumDeployModelCheckResponse)
 async def sum_deploy_model_check():
 	print(f"# Node C - deploy_model_check()")
-	await asyncio.sleep(random.randrange(1, 5)*0.1)
+	await asyncio.sleep(random.randrange(1, 5)*0.01)
 	return SumDeployModelCheckResponse(
 		result = ["1", "2", "3"]
 	)
 
 @app_node_c.post("/v2/models/stt/generate", response_model=SumResultResponse)
 async def sum_stt(request: SumInputRequest):
-	print(f"# Node C - sum_stt()")
-	await asyncio.sleep(random.randrange(1, 5)*0.1)
+	print(f"# Node C - sum_stt(): {request}")
+	await asyncio.sleep(random.randrange(1, 5)*0.01)
 	return SumResultResponse(
 		model_name = "요약모델",
 		model_version = "1.1.0",
@@ -111,7 +108,7 @@ async def sum_stt(request: SumInputRequest):
 class ClassInputRequest(BaseModel):
 	name: str
 	shape: List[Any]
-	datatype: bytes
+	datatype: str
 	data: str
 
 class ClassHealthResponse(BaseModel):
@@ -129,7 +126,7 @@ app_node_d = FastAPI(title="Node D - classification_model_node_202504291319")
 @app_node_d.post("/v2/helath/ready", response_model=SumHealthResponse)
 async def cls_health_check():
 	print(f"# Node D - cls_health_check()")
-	await asyncio.sleep(random.randrange(1, 5)*0.1)
+	await asyncio.sleep(random.randrange(1, 5)*0.01)
 	return SumHealthResponse(
 		status = 1
 	)
@@ -137,7 +134,7 @@ async def cls_health_check():
 @app_node_d.post("/v2/repository/index", response_model=ClassDeployModelCheckResponse)
 async def cls_deploy_model_check():
 	print(f"# Node D - cls_deploy_model_check()")
-	await asyncio.sleep(random.randrange(1, 5)*0.1)
+	await asyncio.sleep(random.randrange(1, 5)*0.0)
 	return DeployModelCheckResponse(
 		result = ["A", "B", "C"]
 	)
@@ -145,7 +142,7 @@ async def cls_deploy_model_check():
 @app_node_d.post("/v2/models/vert_base_smry_cls/infer", response_model=ClassResultResponse)
 async def cls_stt(request: ClassInputRequest):
 	print(f"# Node D - cls_stt()")
-	await asyncio.sleep(random.randrange(1, 5)*0.1)
+	await asyncio.sleep(random.randrange(1, 5)*0.01)
 	print(f"  - {request.name}")
 	print(f"  - {request.shape}")
 	print(f"  - {request.datatype}")
@@ -172,7 +169,7 @@ app_node_e = FastAPI(title="Node E - stt_aggregator_202504291319")
 @app_node_e.post("/v1/result/aggregator", response_model=AggResultResponse)
 async def aggregator(request: AggInputRequest):
 	print(f"# Node E - aggregator()")
-	await asyncio.sleep(random.randrange(1, 5)*0.1)
+	await asyncio.sleep(random.randrange(1, 5)*0.9)
 
 	result = f"요약내용: {request.summery_stt} - 분류코드: {request.cls_code}"
 
@@ -187,23 +184,32 @@ async def aggregator(request: AggInputRequest):
 # Node F - Business Logic 3
 
 class TestAggInputRequest(BaseModel):
-	agg_result: Dict[str, Any]
+	agg_result: str #Dict[str, Any]
 	test_aggr: str
 
 class TestAggResultResponse(BaseModel):
-	result_data: str
+	result_data: Dict[str, Any]
 
 app_node_f = FastAPI(title="Node F - test_aggregator_202504291319")
 @app_node_f.post("/v1/result/test_aggregator", response_model=TestAggResultResponse)
 async def aggregation(request: TestAggInputRequest):
 	print(f"# Node F - aggregator()")
-	await asyncio.sleep(random.randrange(1, 5)*100)
+	import time
+	await asyncio.sleep(random.randrange(1, 5)*0.02)
+	splited_agg_result = request.agg_result.split('-')
+	print(splited_agg_result)
 
-	result = f"요약내용: {request.summery_stt} - 분류코드: {request.cls_code}"
+	result_data = {
+			'summary': splited_agg_result[0],
+			'cls_code': splited_agg_result[-1],
+			"combo": {
+				"STT_TS": int(time.time() * 1000),
+				"params": request
+			}
+		}
+	print(result_data)
 
-	return TestAggResultResponse(
-		result_data = result
-	)
+	return TestAggResultResponse(result_data=result_data)
 
 
 #------------------------------------------------------------------------#
@@ -219,7 +225,7 @@ app_node_g = FastAPI(title="Node G - stt_end_node_202504291319")
 @app_node_g.post("/process", response_model=EndResultResponse)
 async def end(request: EndInputRequest):
 	print(f"# Node G - end()")
-	await asyncio.sleep(random.randrange(1, 5)*0.1)
+	await asyncio.sleep(random.randrange(1, 5)*0.01)
 
 	result = request.result
 

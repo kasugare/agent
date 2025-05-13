@@ -8,7 +8,7 @@ import os
 bind = "127.0.0.1:18000"
 workers = 1
 worker_class = "uvicorn.workers.UvicornWorker"
-timeout = 5
+timeout = 5000
 keepalive = 3
 worker_connections = 1000
 # preload_app = True
