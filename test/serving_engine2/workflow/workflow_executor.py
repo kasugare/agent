@@ -84,7 +84,7 @@ class WorkflowExecutor:
                 self._logger.debug(result_map)
                 status = result_map['status']
                 if status != 'success':
-                    error = result_map['error']
+                    error = result_map['error_pool']
                     raise Exception(f"{tar_node_id} 실행 실패: {error}")
                 else:
                     result = result_map['result']
@@ -173,8 +173,8 @@ class WorkflowExecutor:
             return self.results
 
         except Exception as e:
-            self._logger.error(f"Workflow execution error: {str(e)}\n{traceback.format_exc()}")
-            return {"status": "error", "error": str(e)}
+            self._logger.error(f"Workflow execution error_pool: {str(e)}\n{traceback.format_exc()}")
+            return {"status": "error_pool", "error_pool": str(e)}
 
         finally:
             if self.session:

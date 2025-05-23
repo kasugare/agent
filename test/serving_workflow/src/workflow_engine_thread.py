@@ -130,7 +130,7 @@ class APIWorkflowExecutor:
                 return node_id, result
 
         except Exception as e:
-            return node_id, {"error": str(e)}
+            return node_id, {"error_pool": str(e)}
 
     def execute(self):
         print("# ThreadPoolExecutor를 사용한 워크플로우 실행")
@@ -156,7 +156,7 @@ class APIWorkflowExecutor:
                 for future in as_completed(future_to_node):
                     node_id, result = future.result()
                     print(f" - (completed) {node_id} : {result}")
-                    if "error" in result:
+                    if "error_pool" in result:
                         self.failed.add(node_id)
                     else:
                         self.results[node_id] = result

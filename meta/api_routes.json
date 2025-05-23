@@ -1,7 +1,7 @@
 {
-  "ServingProvider": {
+  "WorkflowEngine": {
     "prefix": "/api/v1",
-    "module_name": "api.serving.serving_api",
-    "class_name": "ServingProvider"
+    "module_name": "api.workflow.workflow_api",
+    "class_name": "WorkflowEngine"
   }
 }

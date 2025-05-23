@@ -31,8 +31,8 @@ class TaskExecutor:
 
                     self._logger.debug(f" - task completed successfully: {node_id} - {result}")
                 except Exception as e:
-                    self._logger.error(f"Workflow execution error: {str(e)}\n{traceback.format_exc()}")
-                    result = {"status": "error", "error": str(e)}
+                    self._logger.error(f"Workflow execution error_pool: {str(e)}\n{traceback.format_exc()}")
+                    result = {"status": "error_pool", "error_pool": str(e)}
                 return result
 
     def run(self, node_id, node_info):

@@ -25,7 +25,7 @@ class ServingProvider:
 
     def get_workflow(self):
         if not self._workflow_config:
-            raise Exception(f"not exist workflow, ")
+            raise Exception(f"not exist temp_wf, ")
         return self._workflow_configsc
 
     async def run_executor(self, executor):
@@ -36,12 +36,12 @@ class ServingProvider:
         config_dir = '/Users/hanati/workspace/model_serving/test/serving_engine/recipe'
         workflow_config = service.load_dag(config_dir)
 
-        self._logger.info("# Step 2: load workflow config(DAG)")
+        self._logger.info("# Step 2: load temp_wf config(DAG)")
         executor = WorkflowExecutor(self._logger, workflow_config)
         results = asyncio.run(self.run_executor(executor))
 
 
-        self._logger.info("# Step 3: show result form workflow pipeline")
+        self._logger.info("# Step 3: show result form temp_wf pipeline")
         # self._logger.debug(json.dumps(results, indent=2))
 
 

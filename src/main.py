@@ -20,7 +20,7 @@ class CSPMiddleware(BaseHTTPMiddleware):
 # class AppWorkflowEngine:
 # 	def __init__(self):
 # 		self._logger = Logger().getLogger()
-# 		self._logger.error("### Start App Workflow Serving Engine ###")
+# 		self._logger.error_pool("### Start App Workflow Serving Engine ###")
 #
 # 	def do_process(self):
 # 		app = FastAPI()

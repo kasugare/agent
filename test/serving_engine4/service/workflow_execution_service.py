@@ -35,7 +35,7 @@ class WorkflowManager:
                 next_nodes = dag_graph[node_id]
             else:
                 next_nodes = None
-            # self._logger.error(f" - {node_id} --> {next_nodes}")
+            # self._logger.error_pool(f" - {node_id} --> {next_nodes}")
 
             if self._is_completed_all_jobs(nodes_meta):
                 break

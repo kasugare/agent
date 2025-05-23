@@ -19,9 +19,9 @@ class BaseHandler:
     def __init__(self, app: FastAPI, logger):
         self.app = app
         self._logger = logger
-        db_conn = self._set_db_conn()
+        self._db_conn = self._set_db_conn()
 
-        self.dynamic_router = DynamicRouterService(app, logger, db_conn)
+        self.dynamic_router = DynamicRouterService(app, logger, self._db_conn)
         self.router = APIRouter(tags=['ADMIN'])
         self.setup_routes()
 
@@ -175,7 +175,7 @@ class ApiLauncher(BaseHandler):
 
     def setup_routes(self):
         @self.router.get("/add")
-        async def add_service() -> List[dict]:
+        async def add_service() -> dict:
             prefix = "/api/v1"
             # module_name = "api.user.account.user_account"
             # class_name = "UserAccountRouter"
