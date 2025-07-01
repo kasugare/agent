@@ -50,9 +50,11 @@ async def test_name(request: TestRequest):
 	print(f"# Node B - {request}")
 	await asyncio.sleep(random.randrange(1, 5)*0.01)
 
-	return TestResponse(
-		result_key = "request.request_id"
+	res = TestResponse(
+		result_key="request.request_id"
 	)
+	return res
+
 
 
 #------------------------------------------------------------------------#
@@ -79,7 +81,7 @@ async def sum_health_check():
 	print(f"# Node C - health_check()")
 	await asyncio.sleep(random.randrange(1, 5)*0.01)
 	return SumHealthResponse(
-		status = 1
+		status=1
 	)
 
 @app_node_c.post("/v2/repository/index", response_model=SumDeployModelCheckResponse)
@@ -107,7 +109,7 @@ async def sum_stt(request: SumInputRequest):
 
 class ClassInputRequest(BaseModel):
 	name: str
-	shape: List[Any]
+	shape: str#List[Any]
 	datatype: str
 	data: str
 
@@ -135,7 +137,7 @@ async def cls_health_check():
 async def cls_deploy_model_check():
 	print(f"# Node D - cls_deploy_model_check()")
 	await asyncio.sleep(random.randrange(1, 5)*0.0)
-	return DeployModelCheckResponse(
+	return ClassDeployModelCheckResponse(
 		result = ["A", "B", "C"]
 	)
 
@@ -197,7 +199,6 @@ async def aggregation(request: TestAggInputRequest):
 	import time
 	await asyncio.sleep(random.randrange(1, 5)*0.02)
 	splited_agg_result = request.agg_result.split('-')
-	print(splited_agg_result)
 
 	result_data = {
 			'summary': splited_agg_result[0],
@@ -207,8 +208,6 @@ async def aggregation(request: TestAggInputRequest):
 				"params": request
 			}
 		}
-	print(result_data)
-
 	return TestAggResultResponse(result_data=result_data)
 
 

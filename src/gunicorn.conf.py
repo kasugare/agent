@@ -6,11 +6,13 @@ import resource
 import os
 
 bind = "127.0.0.1:18000"
-workers = 1
+workers = 5
 worker_class = "uvicorn.workers.UvicornWorker"
 timeout = 5000
 keepalive = 3
 worker_connections = 1000
+max_requests = 1000
+max_requests_jitter = 100
 # preload_app = True
 
 def on_starting(server):
@@ -32,7 +34,7 @@ def post_fork(server, worker):
     multiprocessing.current_process().name = f'worker-{worker.pid}'
 
 def worker_exit(server, worker):
-    """워커 종료 시"""
+    print("""워커 종료 시""")
     # 리소스 정리
     try:
         multiprocessing.resource_tracker._resource_tracker._fd = None

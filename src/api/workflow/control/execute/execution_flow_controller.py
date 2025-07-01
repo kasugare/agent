@@ -42,7 +42,7 @@ class ExecutionFlowController(WorkflowNavigator):
 
         executor = ApiExecutor(self._logger)
 
-        output_result = executor.run_api(end_point)
+        output_result = executor.run(end_point)
         result = output_result.get('result')
         self.set_job_status(service_id, status='done')
         task_order['output'] = result
@@ -106,7 +106,7 @@ class ExecutionFlowController(WorkflowNavigator):
         start_nodes = self.get_start_nodes()
         for service_id in start_nodes:
             self._logger.debug(f" # Step 1. service_id: {service_id}")
-            self.set_init_pararms(service_id, request_params)
+            self.set_init_params(service_id, request_params)
             task_order = gen_task_order(None, service_id, None, None, None)
             self.set_job_status(service_id, status='wait')
             self.request_execution(task_order)

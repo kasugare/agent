@@ -486,14 +486,14 @@
 				"type": "sequence",
 				"conditions": {}
 			},
-			"data_mapper": [
+			"params_info": [
 				{
-					"call_method": "refer",
+					"refer_type": "indirect",
 					"key": "stt_summary_model_node_202504291319.sum_stt.text_input",
 					"value": "stt_start_node_202504291319.start.text_input"
 				},
 				{
-					"call_method": "value",
+					"refer_type": "direct",
 					"key": "stt_summary_model_node_202504291319.sum_stt.max_tokens",
 					"value": 1
 				}
@@ -510,14 +510,14 @@
 				"type": "sequence",
 				"conditions": {}
 			},
-			"data_mapper": [
+			"params_info": [
 				{
-					"call_method": "refer",
+					"refer_type": "indirect",
 					"key": "test_node_202504291319.test_name.input_key_1",
 					"value": "stt_start_node_202504291319.start.request_id"
 				},
 				{
-					"call_method": "value",
+					"refer_type": "direct",
 					"key": "test_node_202504291319.test_name.input_key_2",
 					"value": "110000"
 				}
@@ -534,24 +534,24 @@
 				"type": "sequence",
 				"conditions": {}
 			},
-			"data_mapper": [
+			"params_info": [
 				{
-					"call_method": "value",
+					"refer_type": "direct",
 					"key": "classification_model_node_202504291319.class_stt.name",
 					"value": "text"
 				},
 				{
-					"call_method": "value",
+					"refer_type": "direct",
 					"key": "classification_model_node_202504291319.class_stt.shape",
 					"value": "1"
 				},
 				{
-					"call_method": "value",
+					"refer_type": "direct",
 					"key": "classification_model_node_202504291319.class_stt.datatype",
 					"value": "str"
 				},
 				{
-					"call_method": "refer",
+					"refer_type": "indirect",
 					"key": "classification_model_node_202504291319.class_stt.data",
 					"value": "stt_summary_model_node_202504291319.sum_stt.text_output"
 				}
@@ -568,14 +568,14 @@
 				"type": "sequence",
 				"conditions": {}
 			},
-			"data_mapper": [
+			"params_info": [
 				{
-					"call_method": "refer",
+					"refer_type": "indirect",
 					"key": "stt_aggregator_202504291319.aggregation.summery_stt",
 					"value": "stt_summary_model_node_202504291319.sum_stt.text_output"
 				},
 				{
-					"call_method": "refer",
+					"refer_type": "indirect",
 					"key": "stt_aggregator_202504291319.aggregation.cls_code",
 					"value": "classification_model_node_202504291319.class_stt.data"
 				}
@@ -592,14 +592,14 @@
 				"type": "sequence",
 				"conditions": {}
 			},
-			"data_mapper": [
+			"params_info": [
 				{
-					"call_method": "refer",
+					"refer_type": "indirect",
 					"key": "test_aggregator_202504291319.aggregation.agg_result",
 					"value": "stt_aggregator_202504291319.aggregation.result_data"
 				},
 				{
-					"call_method": "refer",
+					"refer_type": "indirect",
 					"key": "test_aggregator_202504291319.aggregation.test_aggr",
 					"value": "test_node_202504291319.test_name.result_key"
 				}
@@ -616,14 +616,14 @@
 				"type": "sequence",
 				"conditions": {}
 			},
-			"data_mapper": [
+			"params_info": [
 				{
-					"call_method": "refer",
+					"refer_type": "indirect",
 					"key": "test_aggregator_202504291319.aggregation.agg_result",
 					"value": "stt_aggregator_202504291319.aggregation.result_data"
 				},
 				{
-					"call_method": "refer",
+					"refer_type": "indirect",
 					"key": "test_aggregator_202504291319.aggregation.test_aggr",
 					"value": "test_node_202504291319.test_name.result_key"
 				}
@@ -640,9 +640,9 @@
 				"type": "sequence",
 				"conditions": {}
 			},
-			"data_mapper": [
+			"params_info": [
 				{
-					"call_method": "refer",
+					"refer_type": "indirect",
 					"key": "stt_end_node_202504291319.end.result_all",
 					"value": "test_aggregator_202504291319.aggregation.result_data"
 				}

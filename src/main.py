@@ -67,6 +67,6 @@ if __name__ == "__main__":
         "main:app",
         host="127.0.0.1",
         port=18000,
-        workers=2,
+        workers=3,
         timeout_keep_alive=0  # Keep-Alive 비활성화
     )

@@ -31,7 +31,7 @@ class WorkflowDAGManager:
 
     def get_available_dags(self) -> list:
         """사용 가능한 모든 DAG 파일 목록 반환"""
-        path = Path(self.loader.config_dir)
+        path = Path(self.loader.get_config_dir())
         return [f.stem for f in path.glob("*.json")]
 
 
@@ -39,6 +39,9 @@ class DAGLoader:
     def __init__(self, logger, config_dir: str = "config"):
         self._logger = logger
         self._config_dir = config_dir
+
+    def get_config_dir(self):
+        return self._config_dir
 
     def load_dag(self, filename: str) -> Dict:
         self._logger.info(f"Step 1. load DAG from json file: {filename}")

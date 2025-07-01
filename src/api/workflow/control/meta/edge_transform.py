@@ -24,24 +24,26 @@ class EdgeTransformer:
         for data_map in mapper_info:
             if data_map.get('key') == key:
                 data_type = data_map.get('type')
-                # print(f"- [{find_type}]", splited_param_id, ":\t\t", data_map, "\t", data_type)
-                return data_type
-        return None
+                required = data_map.get('required')
+                return data_type, required
+        return None, None
 
-    def _add_data_type_on_data_mapper(self, data_mapper, wf_service_pool):
-        for data_map in data_mapper:
-            call_method = data_map.get('call_method')
-            param_key_path = data_map.get('key')
-            tar_data_type = self._get_data_type(param_key_path, wf_service_pool, find_type='key')
-            data_map['key_type'] = tar_data_type
-            if call_method == 'refer':
-                src_value_path = data_map.get('value')
-                src_data_type = self._get_data_type(src_value_path, wf_service_pool, find_type='value')
-                data_map['value_type'] = src_data_type
-            elif call_method == 'value':
-                src_value = data_map.get('value')
-                data_map['value_type'] = type(src_value).__name__
-        return data_mapper
+    def _add_data_type_on_params_info(self, params_info, wf_service_pool):
+        for param_map in params_info:
+            refer_type = param_map.get('refer_type')
+            param_key_path = param_map.get('key')
+            tar_data_type, required = self._get_data_type(param_key_path, wf_service_pool, find_type='key')
+            param_map['key_data_type'] = tar_data_type
+            param_map['key_required'] = required
+            if refer_type == 'indirect':
+                src_value_path = param_map.get('value')
+                src_data_type, _ = self._get_data_type(src_value_path, wf_service_pool, find_type='value')
+                param_map['value_data_type'] = src_data_type
+
+            elif refer_type == 'direct':
+                src_value = param_map.get('value')
+                param_map['value_data_type'] = type(src_value).__name__
+        return params_info
 
     def cvt_service_edges(self, wf_config: Dict, wf_service_pool: Dict) -> Dict:
         def get_service_info(service_id):
@@ -57,7 +59,7 @@ class EdgeTransformer:
             edges_map[edge_id] = edge_info
             edges_map[edge_id]['source_info'] = get_service_info(src_id)
             edges_map[edge_id]['target_info'] = get_service_info(tar_id)
-            data_mapper = edge_info.get('data_mapper')
-            self._add_data_type_on_data_mapper(data_mapper, wf_service_pool)
+            params_info = edge_info.get('params_info')
+            self._add_data_type_on_params_info(params_info, wf_service_pool)
 
         return edges_map

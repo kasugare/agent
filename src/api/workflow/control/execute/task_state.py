@@ -15,6 +15,7 @@ class TaskState(Enum):
     CANCELED = auto()
     PAUSED = auto()
     TIMEOUT = auto()
+    STOPPED = auto()
 
     BLOCKED = auto()
     RETRYING = auto()

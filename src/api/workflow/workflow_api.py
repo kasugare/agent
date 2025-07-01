@@ -4,13 +4,13 @@
 from api.workflow.service.meta.meta_load_service import MetaLoadService
 from api.workflow.service.data.data_store_service import DataStoreService
 from api.workflow.service.execute.workflow_execution_orchestrator import WorkflowExecutionOrchestrator
-
+from multiprocessing import Process, Queue
 from typing import Dict, Any
 from abc import abstractmethod
 from fastapi import APIRouter
+from threading import Thread
 import json
 import time
-
 
 class BaseRouter:
     def __init__(self, logger=None, tags=[]):
@@ -38,6 +38,12 @@ class WorkflowEngine(BaseRouter):
         super().__init__(logger, tags=['serving'])
         self._datastore = DataStoreService(logger)
         self._meta_service = MetaLoadService(logger, self._datastore)
+        self._job_Q = Queue()
+
+    def __del__(self):
+        print("DEL DEL")
+        self._job_Q.put_nowait("TERMINATION")
+        self._job_Q.join()
 
     def setup_routes(self):
         @self.router.post(path='/workflow/meta')
@@ -52,13 +58,22 @@ class WorkflowEngine(BaseRouter):
                 request_id = request.pop('request_id')
             else:
                 request_id = "AUTO_%X" %(int(time.time() * 10000))
+
             request['request_id'] = request_id
-            workflow_engine = WorkflowExecutionOrchestrator(self._logger, self._datastore)
+            workflow_engine = WorkflowExecutionOrchestrator(self._logger, self._datastore, self._job_Q)
             # workflow_engine = WorkflowExecutionService(self._logger, self._datastore)
-            result = workflow_engine.run_workflow(request)
-            return {"result": result}
+            executor = Thread(target=workflow_engine.run_workflow, args=(request,))
+            executor.start()
+            print("대기")
+            executor.join()
 
-        @self.router.get(path='/workflow/add_func')
-        async def add_function() -> None:
-             pass
+            # result = workflow_engine.run_workflow(request)
+            return {"result": "result"}
 
+        @self.router.get(path='/workflow/datapool')
+        async def call_data_pool():
+            self._logger.debug("---------------------------------< Data Pool >---------------------------------")
+            data_pool = self._datastore.get_service_data_pool()
+            for k, v in data_pool.items():
+                self._logger.debug(f" - {k} : \t{v}")
+            return data_pool

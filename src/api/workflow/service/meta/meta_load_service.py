@@ -70,43 +70,51 @@ class MetaLoadService:
 
         self._logger.error("# [DAG Loader] Step 1. Extract Common Info")
         wf_comm_meta = self._meta_controller.extract_wf_common_info(wf_meta)
+        self._datastore.set_comm_meta(wf_comm_meta)
         self._print_debug_data(wf_comm_meta)
 
         self._logger.error("# [DAG Loader] Step 2. Extract Nodes")
         wf_nodes_meta = self._meta_controller.extract_wf_to_nodes(wf_meta)
+        self._datastore.set_nodes_meta(wf_nodes_meta)
         self._print_debug_data(wf_nodes_meta)
 
         self._logger.error("# [DAG Loader] Step 3. Extract Service Pool")
         wf_service_pool = self._meta_controller.cvt_wf_to_service_pool(wf_nodes_meta)
+        self._datastore.set_node_service_pool(wf_service_pool)
         self._print_debug_data(wf_service_pool)
 
         self._logger.error("# [DAG Loader] Step 4. Extract Edges")
         wf_edges_meta = self._meta_controller.extract_wf_to_edges(wf_meta, wf_service_pool)
+        self._datastore.set_edges_meta(wf_edges_meta)
         self._print_debug_data(wf_edges_meta)
 
         self._logger.error("# [DAG Loader] Step 5. Extract Grape")
         wf_edges_grape = self._meta_controller.extract_sequenceal_edge_to_grape(wf_edges_meta)
+        self._datastore.set_edges_grape_meta(wf_edges_grape)
         self._print_debug_data(wf_edges_grape)
 
         self._logger.error("# [DAG Loader] Step 6. Extract Prev-Grape")
         wf_prev_edge_grape = self._meta_controller.extract_reverse_edge_grape(wf_edges_meta)
+        self._datastore.set_prev_edge_grape_meta(wf_prev_edge_grape)
         self._print_debug_data(wf_prev_edge_grape)
 
         self._logger.error("# [DAG Loader] Step 7. Extract Resource Meta")
         wf_resources_meta = self._meta_controller.get_wf_to_resources(wf_meta)
+        self._datastore.set_resources_meta(wf_resources_meta)
         self._print_debug_data(wf_resources_meta)
 
         self._logger.error("# [DAG Loader] Step 8. Extract Start Node from edges_grape")
         start_nodes = self._meta_controller.find_start_nodes(wf_edges_grape)
+        self._datastore.set_start_nodes_meta(start_nodes)
         self._print_debug_data(start_nodes)
 
         self._logger.error("# [DAG Loader] Step 9. Extract End Node from prev_edges_grape")
         end_nodes = self._meta_controller.find_end_nodes(wf_prev_edge_grape)
+        self._datastore.set_end_nodes_meta(end_nodes)
         self._print_debug_data(end_nodes)
 
-        self._logger.error("# [DAG Loader] Step 10. Set all metas")
-        self._datastore.set_meta_pack(wf_comm_meta, wf_nodes_meta, wf_service_pool, wf_edges_meta,
-                       wf_edges_grape, wf_prev_edge_grape, wf_resources_meta, start_nodes, end_nodes)
+        self._logger.error("# [DAG Loader] Step 10. Set init params")
+        self._datastore.set_init_service_params(wf_edges_meta)
 
     def _print_debug_data(self, debug_data) -> None:
         if isinstance(debug_data, dict):

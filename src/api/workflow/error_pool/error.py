@@ -8,3 +8,12 @@ class NotPreparedPrevJob(Exception):
 
     def __str__(self):
         return self._errorMessage
+
+
+class NotExistedData(Exception):
+    def __init__(self):
+        super().__init__("Not existed data in data pool")
+        self._errorMessage = "Not existed data in data pool"
+
+    def __str__(self):
+        return self._errorMessage

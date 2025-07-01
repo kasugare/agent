@@ -75,6 +75,7 @@ class WorkflowNavigator:
         prev_nodes = prev_edges_grape.get(curr_node)
         return prev_nodes
 
+    # Deprecated
     def prepare_next_job(self, service_id, next_service_id):
         def gen_edge_id(curr_node_id, next_node_id):
             edge_id = f"{curr_node_id}-{next_node_id}"
@@ -104,7 +105,8 @@ class WorkflowNavigator:
         self._logger.debug(f" # Step 9. set task Queue")
         return task_order
 
-    def set_init_pararms(self, service_id, request_params):
+    # Deprecated
+    def set_init_params(self, service_id, request_params):
         def compose_node_params(input_params, tar_params_info):
             req_params = tar_params_info.get('input')
             input_node_params = {}

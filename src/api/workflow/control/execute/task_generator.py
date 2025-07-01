@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from api.workflow.access.execute.start_executor import StartExecutor
-from api.workflow.access.execute.end_executor import EndExecutor
-from api.workflow.access.execute.api_executor import ApiExecutor
 from api.workflow.control.execute.task import Task
 
 
@@ -12,6 +9,7 @@ class TaskGenerator:
         self._logger = logger
         self._datastore = datastore
         self._meta_pack = datastore.get_meta_pack()
+        self._task_map = {}
 
     def get_edge_info(self, edge_id):
         edges_info = self._meta_pack.get('edges_info')
@@ -28,16 +26,6 @@ class TaskGenerator:
         next_service_ids = edges_grape.get(service_id)
         return next_service_ids
 
-    def extract_api_info(self, service_id):
-        node_info = self.get_node_info(service_id)
-        url_info = {
-            'url': node_info.get('url'),
-            'method': node_info.get('method'),
-            'header': node_info.get('header'),
-            'body': node_info.get('body')
-        }
-        return url_info
-
     def get_start_nodes(self):
         start_nodes = self._meta_pack['start_nodes']
         return start_nodes
@@ -52,9 +40,12 @@ class TaskGenerator:
             print(" - ", k, ":", v)
 
         self._logger.debug("f # Step 3. extract data_mapper")
-        data_mapper = edge_info.get('data_mapper')
-        for map_info in data_mapper:
-            print(f" - {map_info}")
+        params_info = edge_info.get('params_info')
+        params_map = {}
+        for param_info in params_info:
+            key_path = param_info.get('key')
+            param_name = key_path.split('.')[-1]
+            params_map[param_name] = param_info
 
         #
         # self._logger.debug(f" # Step 5. edge_info")
@@ -76,13 +67,28 @@ class TaskGenerator:
         # self._logger.debug(f" # Step 9. set task Queue")
         # print(tar_api_url_info)
 
-    def make_tasks(self):
-        self._logger.info("=" * 170)
-        start_service_ids = self.get_start_nodes()
-        for curr_service_id in start_service_ids:
-            print(curr_service_id)
-            next_service_ids = self.get_next_service_ids(curr_service_id)
-            print(f"{curr_service_id} : {next_service_ids}")
-            for next_service_id in next_service_ids:
-                self.prepare_next_job(curr_service_id, next_service_id)
+    def add_task(self, service_id, node_info):
+        task = Task(self._logger, self._datastore, service_id, node_info)
+        self._task_map[service_id] = task
 
+    def make_tasks(self, curr_service_ids=[]):
+        if not curr_service_ids:
+            curr_service_ids = self.get_start_nodes()
+            for curr_service_id in curr_service_ids:
+                node_info = self.get_node_info(curr_service_id)
+                self.add_task(curr_service_id, node_info)
+
+        for curr_service_id in curr_service_ids:
+            next_service_ids = self.get_next_service_ids(curr_service_id)
+            if not next_service_ids:
+                return
+            for task_service_id in next_service_ids:
+                # edge_id = f"{curr_service_id}-{task_service_id}"
+                # edge_info = self.get_edge_info(edge_id)
+                node_info = self.get_node_info(task_service_id)
+                self.add_task(task_service_id, node_info)
+                self.make_tasks([task_service_id])
+        return self._task_map
+
+    def get_task_map(self):
+        return self._task_map

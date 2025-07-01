@@ -18,17 +18,26 @@ class DataStoreService: # NodeDataService
         param_name = key_path.split('.')[-1]
         return param_name
 
-    def set_service_params(self, service_id: str, params: dict) -> bool:
-        """ service_id = {node_id}.{service_name}"""
-        self._data_controller.set_service_params(service_id, params)
+    def set_init_service_params(self, wf_edges_meta):
+        self._data_controller.set_init_service_params_ctl(wf_edges_meta)
 
-    def set_service_result(self, service_id: str, result: dict) -> bool:
+    def set_service_params(self, service_id: str, params_map: dict):
         """ service_id = {node_id}.{service_name}"""
-        self._data_controller.set_service_result(service_id, result)
+        self._data_controller.set_service_params_ctl(service_id, params_map)
+
+    def set_service_result(self, service_id: str, result: dict):
+        """ service_id = {node_id}.{service_name}"""
+        self._data_controller.set_service_result_ctl(service_id, result)
+
+    def get_start_service_params(self, service_id: str) -> dict:
+        wf_edges_meta = self.get_edges_meta()
+        params = self._data_controller.get_start_service_params_ctl(service_id)
+        return params
 
     def get_service_params(self, service_id: str) -> dict:
         """ service_id = {node_id}.{service_name}"""
-        params = {}
+        wf_edges_meta = self.get_edges_meta()
+        params = self._data_controller.get_service_params_ctl(service_id, wf_edges_meta)
         return params
 
     def get_service_result(self, service_id: str) -> dict:
@@ -36,47 +45,48 @@ class DataStoreService: # NodeDataService
         result = {}
         return result
 
-    def get_value_by_service_io_id(self, service_io_id: str):
-        """ service_io_id = {node_id}.{service_name}.{parma/result}_name """
-        value = self._data_controller.get_result_value_by_service_io_id(service_io_id)
-        return value
-
-    def get_next_service_params(self, edge_info: dict) -> dict:
-        data_mapper = edge_info.get('data_mapper')
-        value_params = {}
-        for param_meta in data_mapper:
-            call_method = param_meta.get('call_method')
-            key_path = param_meta.get('key')
-            value_path = param_meta.get('value')
-            src_data_type = param_meta.get('key_type')
-            tar_data_type = param_meta.get('value_type')
-            param_name = self._extract_param_name(key_path)
-
-            if call_method.lower() == 'refer':
-                try:
-                    value = self._data_controller.get_result_value_by_service_io_id(value_path)
-                    type_casting_value = self._type_casting.trans_data_type(value, src_data_type, tar_data_type)
-                    value_params[param_name] = type_casting_value
-                except Exception as e:
-                    raise NotPreparedPrevJob
-            elif call_method.lower() == 'value':
-                type_casting_value = self._type_casting.trans_data_type(value_path, src_data_type, tar_data_type)
-                value_params[param_name] = type_casting_value
-            else:
-                pass
-        return value_params
-
     def get_service_data_pool(self) -> Dict:
-        data_pool = self._data_controller.get_data_pool()
+        data_pool = self._data_controller.get_data_pool_ctl()
         return data_pool
 
-    def set_meta_pack(self, wf_comm_meta, wf_nodes_meta, wf_service_pool, wf_edges_meta,
-                  wf_edges_grape, wf_prev_edge_grape, wf_resources_meta, start_nodes, end_nodes):
-        self._metastore_controller.set_metas(wf_comm_meta, wf_nodes_meta, wf_service_pool, wf_edges_meta,
-                  wf_edges_grape, wf_prev_edge_grape, wf_resources_meta, start_nodes, end_nodes)
+    def get_service_info(self, service_id) -> Dict:
+        data_pool = self.get_service_data_pool()
+        service_node_info = data_pool.get(service_id)
+        return service_node_info
+
+    def set_comm_meta(self, wf_comm_meta):
+        self._metastore_controller.set_comm_meta_ctl(wf_comm_meta)
+
+    def set_nodes_meta(self, wf_nodes_meta):
+        self._metastore_controller.set_nodes_meta_ctl(wf_nodes_meta)
+
+    def set_node_service_pool(self, wf_service_pool):
+        self._metastore_controller.set_node_service_pool_ctl(wf_service_pool)
+
+    def set_edges_meta(self, wf_edges_meta):
+        self._metastore_controller.set_edges_meta_ctl(wf_edges_meta)
+
+    def get_edges_meta(self):
+        wf_edges_meta = self._metastore_controller.get_edges_meta_ctl()
+        return wf_edges_meta
+
+    def set_edges_grape_meta(self, wf_edges_grape):
+        self._metastore_controller.set_edges_grape_meta_ctl(wf_edges_grape)
+
+    def set_prev_edge_grape_meta(self, wf_prev_edge_grape):
+        self._metastore_controller.set_prev_edge_grape_meta_ctl(wf_prev_edge_grape)
+
+    def set_resources_meta(self, wf_resources_meta):
+        self._metastore_controller.set_resources_meta_ctl(wf_resources_meta)
+
+    def set_start_nodes_meta(self, start_nodes):
+        self._metastore_controller.set_start_nodes_meta_ctl(start_nodes)
+
+    def set_end_nodes_meta(self, end_nodes):
+        self._metastore_controller.set_end_nodes_meta_ctl(end_nodes)
 
     def get_meta_pack(self) -> Dict:
-        meta_pack = self._metastore_controller.get_metas()
+        meta_pack = self._metastore_controller.get_metas_ctl()
         return meta_pack
 
     def set_wf_meta(self, wf_meta: Dict, dirpath: str = None, filename: str = None) -> None:
