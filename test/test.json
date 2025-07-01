@@ -1,0 +1,99 @@
+{
+	"end_point": {
+		"url": "http://127.0.0.1:20003/v2/models/stt/generate", 
+		"method": "POST", 
+		"header": {}, 
+		"body": {}, 
+		"params": {
+			"text_input": "hihihihihi", 
+			"max_tokens": 1
+		}
+	},
+	"edges": {
+	 	"edge_id": "stt_start_node_202504291319.start-stt_summary_model_node_202504291319.sum_stt", 
+	 	"edge_info": {
+	 		"source": "stt_start_node_202504291319.start", 
+	 		"source_handler": {
+	 			"type": "sequence", "conditions": {}
+			}, 
+			"target": "stt_summary_model_node_202504291319.sum_stt", 
+			"target_handler": {
+				"type": "sequence", "conditions": {}
+			}, 
+			"data_mapper": [
+				{
+					"call_method": "refer", 
+					"key": "stt_summary_model_node_202504291319.sum_stt.text_input", 
+					"value": "stt_start_node_202504291319.start.text_input", 
+					"key_type": "string", 
+					"value_type": "string"
+				}, 
+				{
+					"call_method": "value", 
+					"key": "stt_summary_model_node_202504291319.sum_stt.max_tokens", 
+					"value": 1, 
+					"key_type": "integer", 
+					"value_type": "int"
+				}
+			], 
+			"source_info": {
+				"name": "start", 
+				"desc": "start_api", 
+				"type": "start_node", 
+				"url": "http://127.0.0.1:20001/v1/stt_start", 
+				"method": "GET", 
+				"header": {}, 
+				"body": {}, 
+				"params": {
+					"format": "json", 
+					"input": [
+						{"required": false, "key": "request_id", "type": "string"}, 
+						{"required": true, "key": "text_input", "type": "string"}
+					]
+				}, 
+				"result": {
+					"format": "json", 
+					"output": [
+						{"key": "request_id", "type": "string"}, 
+						{"key": "text_input", "type": "string"}
+					]
+				}, 
+				"node_type": "engine", 
+				"role": "start", 
+				"location": "inner", 
+				"api_keys": [""], 
+				"containable": false
+			}, 
+
+			"target_info": {
+				"name": "sum_stt", 
+				"desc": "stt summerization", 
+				"type": "inference", 
+				"url": "http://127.0.0.1:20003/v2/models/stt/generate", 
+				"method": "POST", 
+				"header": {}, 
+				"body": {}, 
+				"params": {
+					"format": "json", 
+					"input": [
+						{"required": true, "key": "text_input", "type": "string"}, 
+						{"required": false, "key": "max_tokens", "type": "integer"}
+					]
+				}, 
+				"result": {
+					"format": "json", 
+					"output": [
+						{"key": "model_name", "type": "string"}, 
+						{"key": "model_version", "type": "string"}, 
+						{"key": "text_output", "type": "string"}
+					]
+				}, 
+			 	"node_type": "rest-api", 
+			 	"role": "model_inference", 
+			 	"location": "outer", 
+			 	"api_keys": [""], 
+			 	"containable": false
+			}
+		}
+	}
+}

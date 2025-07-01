@@ -46,7 +46,7 @@ class WorkflowManager:
                 next_nodes = None
             # next_nodes = self._graph.get_next_nodes(node_id)
 
-            # self._logger.error(f" - {node_id} --> {next_nodes}")
+            # self._logger.error_pool(f" - {node_id} --> {next_nodes}")
 
             if self._is_completed_all_jobs(nodes_meta):
                 self._logger.critical("COMPLETED")

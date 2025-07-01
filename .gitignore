@@ -176,3 +176,6 @@ cython_debug/
 # Log
 logs/
 *.log
+
+.venv/
+.virtualenv/

@@ -13,4 +13,3 @@ class LauncherController(Controller):
     def get_init_service_meta(self):
         init_service_meta = self._launcher_access.get_init_service_data()
         return init_service_meta
-        # return []

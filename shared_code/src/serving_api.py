@@ -18,7 +18,7 @@ class ServingProvider:
 
     def _load_dag(self, config_dir: str = None, dag_filename: str = None):
         if not dag_filename:
-            dag_filename = 'workflow.json'
+            dag_filename = 'temp_wf.json'
 
         if not config_dir:
             config_dir = '/Users/hanati/workspace/model_serving/recipe'
