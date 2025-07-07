@@ -558,6 +558,30 @@
 			]
 		},
 		{
+			"source": "stt_summary_model_node_202504291319.sum_stt",
+			"source_handler": {
+				"type": "parallel",
+				"conditions": {}
+			},
+			"target": "stt_aggregator_202504291319.aggregation",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"params_info": [
+				{
+					"refer_type": "indirect",
+					"key": "stt_aggregator_202504291319.aggregation.summery_stt",
+					"value": "stt_summary_model_node_202504291319.sum_stt.text_output"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "stt_aggregator_202504291319.aggregation.cls_code",
+					"value": "classification_model_node_202504291319.class_stt.data"
+				}
+			]
+		},
+		{
 			"source": "classification_model_node_202504291319.class_stt",
 			"source_handler": {
 				"type": "sequence",

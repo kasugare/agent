@@ -19,7 +19,6 @@ class DataIoController:
     def set_init_service_params_ctl(self, wf_edges_meta):
         for edge_id, edge_meta in wf_edges_meta.items():
             params_info = edge_meta.get('params_info')
-            self._logger.error(f"{edge_id} - {params_info}")
             for params_map in params_info:
                 if params_map.get('refer_type') == 'direct':
                     key = params_map.get('key')

@@ -70,11 +70,17 @@ class DataStoreService: # NodeDataService
         wf_edges_meta = self._metastore_controller.get_edges_meta_ctl()
         return wf_edges_meta
 
-    def set_edges_grape_meta(self, wf_edges_grape):
-        self._metastore_controller.set_edges_grape_meta_ctl(wf_edges_grape)
+    def set_forward_graph_meta(self, wf_forward_edge_graph):
+        self._metastore_controller.set_forward_graph_meta_ctl(wf_forward_edge_graph)
 
-    def set_prev_edge_grape_meta(self, wf_prev_edge_grape):
-        self._metastore_controller.set_prev_edge_grape_meta_ctl(wf_prev_edge_grape)
+    def get_forward_graph_meta(self):
+        return self._metastore_controller.get_forward_graph_meta_ctl()
+
+    def set_reverse_graph_meta(self, wf_reverse_edge_graph):
+        self._metastore_controller.set_reverse_graph_meta_ctl(wf_reverse_edge_graph)
+
+    def get_reverse_graph_meta(self):
+        return self._metastore_controller.get_reverse_graph_meta_ctl()
 
     def set_resources_meta(self, wf_resources_meta):
         self._metastore_controller.set_resources_meta_ctl(wf_resources_meta)

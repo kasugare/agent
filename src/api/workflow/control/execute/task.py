@@ -18,8 +18,6 @@ class Task(TaskContext):
         self._params = {}
         self._result = None
 
-        self._job_Q = None
-
     def set_params(self, params=None):
         self._params = params
 
@@ -39,9 +37,6 @@ class Task(TaskContext):
     def get_error(self):
         return self._error
 
-    def set_job_Q(self, job_Q):
-        self._job_Q = job_Q
-
     def set_task(self, name, executor, **kwargs):
         self._task_name = name
         self._executor = executor
@@ -52,7 +47,6 @@ class Task(TaskContext):
 
     def execute(self):
         try:
-            # self._params = params
             self._state = TaskState.RUNNING
             self._start_time = datetime.now()
             result = self._executor.run(self._params)
@@ -65,10 +59,6 @@ class Task(TaskContext):
         finally:
             self._end_time = datetime.now()
         self._logger.debug(f"{self._start_time} - {self._end_time}")
-
-        if self._job_Q:
-            self._job_Q.put_nowait(self.get_service_id())
-
 
     def cancel(self):
         if self._state in (TaskState.PENDING, TaskState.SCHEDULED, TaskState.ASSIGNED, TaskState.QUEUED):

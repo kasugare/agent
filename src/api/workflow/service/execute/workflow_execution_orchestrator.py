@@ -16,22 +16,18 @@ class WorkflowExecutionOrchestrator:
         self._meta_pack = datastore.get_meta_pack()
 
         self._job_Q = job_Q
-        # self._flow_controller = ExecutionFlowController(logger, datastore, self._job_Q)
         self._task_generator = TaskGenerator(logger, datastore)
 
-    def __del__(self):
-        self._job_Q.put_nowait("SIGTERM")
-
     def _get_next_service_ids(self, service_id):
-        edges_grape = self._meta_pack['edges_grape']
-        next_service_ids = edges_grape.get(service_id)
+        edges_graph = self._meta_pack['edges_graph']
+        next_service_ids = edges_graph.get(service_id)
         if not next_service_ids:
             next_service_ids = []
         return next_service_ids
 
     def _get_prev_service_ids(self, service_id):
-        prev_edges_grape = self._meta_pack['prev_edges_grape']
-        prev_service_ids = prev_edges_grape.get(service_id)
+        prev_edges_graph = self._meta_pack['prev_edges_graph']
+        prev_service_ids = prev_edges_graph.get(service_id)
         return prev_service_ids
 
     def _get_start_nodes(self):
@@ -60,14 +56,21 @@ class WorkflowExecutionOrchestrator:
                 break
         return be_completed
 
+    def _execute_task(self, task):
+        try:
+            task.execute()
+            service_id = task.get_service_id()
+            self._job_Q.put_nowait(service_id)
+        except Exception as e:
+            self._logger.error(e)
+
     def _run_exec_handler(self, task_map):
         result = None
         while True:
             try:
                 self._logger.debug("<<< WAIT Q >>>")
                 service_id = self._job_Q.get()
-                if service_id == "TERMINATION":
-                    print("DEL")
+                if service_id == "SIGTERM":
                     break
                 task = task_map.get(service_id)
                 task_state = task.get_state()
@@ -77,10 +80,12 @@ class WorkflowExecutionOrchestrator:
                     self._logger.debug(f" - Step 1. [PENDING  ] wait order to run: {service_id}")
                     task.set_state(TaskState.SCHEDULED)
                     self._job_Q.put_nowait(service_id)
+
                 elif task_state in [TaskState.SCHEDULED]:
                     self._logger.debug(f" - Step 2. [SCHEDULED] prepared service resources: {service_id}")
                     task.set_state(TaskState.QUEUED)
                     self._job_Q.put_nowait(service_id)
+
                 elif task_state in [TaskState.QUEUED]:
                     self._logger.debug(f" - Step 3. [QUEUED   ] aggregation params and run: {service_id}")
                     runnable = True
@@ -100,7 +105,7 @@ class WorkflowExecutionOrchestrator:
                         self._job_Q.put_nowait(service_id)
 
                 elif task_state in [TaskState.RUNNING]:
-                    executor = Thread(target=task.execute, args=())
+                    executor = Thread(target=self._execute_task, args=(task,))
                     executor.start()
 
                 elif task_state in [TaskState.COMPLETED]:
@@ -122,18 +127,23 @@ class WorkflowExecutionOrchestrator:
                     self._logger.debug(f" - Step 5. [FAILED   ] paused task by user : {service_id}")
                     self._show_task(task_map)
                     break
+
                 elif task_state in [TaskState.PAUSED]:
                     self._logger.debug(f" - Step 6. [PAUSED   ] paused task by user : {service_id}")
                     break
+
                 elif task_state in [TaskState.STOPPED]:
                     self._logger.debug(f" - Step 7. [STOP     ] stop task by user : {service_id}")
                     break
+
                 elif task_state in [TaskState.SKIPPED]:
                     self._logger.debug(f" - Step 8. [SKIPPED  ] skipped task: {service_id}")
                     break
+
                 elif task_state in [TaskState.BLOCKED]:
                     self._logger.debug(f" - Step 9. [BLOCKED  ] blocked task: {service_id}")
                     break
+
                 else:
                     break
                 self._show_task(task_map)
@@ -144,13 +154,10 @@ class WorkflowExecutionOrchestrator:
                 break
         return result
 
-    def run_workflow(self, request_params):
+    def run_workflow(self, request_params, task_nodes=[]):
         self._logger.critical(f" # user params: {request_params}")
         task_map = self._task_generator.make_tasks()
         self._set_job_Q_in_tasks(task_map)
-
-        self._show_task(task_map)
-
         self._set_start_jobs(request_params)
         result = self._run_exec_handler(task_map)
         return result

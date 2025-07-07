@@ -15,8 +15,8 @@ class CachedMetastoreAccess:
         self._wf_nodes_meta = {}
         self._wf_node_service_pool = {}
         self._wf_edges_meta = []
-        self._wf_edges_grape = {}
-        self._wf_prev_edge_grape = {}
+        self._wf_forward_edge_graph = {}
+        self._wf_reverse_edge_graph = {}
         self._wf_resources_meta = {}
         self._start_nodes = []
         self._end_nodes = []
@@ -33,14 +33,20 @@ class CachedMetastoreAccess:
     def set_edges_meta_access(self, wf_edges_meta: Dict) -> None:
         self._wf_edges_meta = wf_edges_meta
 
-    def get_edges_meta_access(self) -> Dict:
+    def get_edges_meta_access(self) -> List:
         return self._wf_edges_meta
 
-    def set_edges_grape_meta_access(self, wf_edges_grape: Dict) -> None:
-        self._wf_edges_grape = wf_edges_grape
+    def set_forward_graph_meta_access(self, wf_forward_edge_graph: Dict) -> None:
+        self._wf_forward_edge_graph = wf_forward_edge_graph
 
-    def set_prev_edge_grape_meta_access(self, wf_prev_edge_grape: Dict) -> None:
-        self._wf_prev_edge_grape = wf_prev_edge_grape
+    def get_forward_graph_meta_access(self) -> Dict:
+        return self._wf_forward_edge_graph
+
+    def set_reverse_graph_meta_access(self, wf_reverse_edge_graph: Dict) -> None:
+        self._wf_reverse_edge_graph = wf_reverse_edge_graph
+
+    def get_reverse_graph_meta_access(self) -> Dict:
+        return self._wf_reverse_edge_graph
 
     def set_resources_meta_access(self, wf_resources_meta: Dict) -> None:
         self._wf_resources_meta = wf_resources_meta
@@ -63,11 +69,11 @@ class CachedMetastoreAccess:
     def get_nodes_meta_access(self) -> Dict:
         return self._wf_nodes_meta
 
-    def get_edges_grape_meta_access(self) -> Dict:
-        return self._wf_edges_grape
+    def get_edges_graph_meta_access(self) -> Dict:
+        return self._wf_edges_graph
 
     def get_prev_edges_grpae_meta_access(self) -> Dict:
-        return self._wf_prev_edge_grape
+        return self._wf_prev_edge_graph
 
     def get_resources_meta_access(self) -> Dict:
         return self._wf_resources_meta
