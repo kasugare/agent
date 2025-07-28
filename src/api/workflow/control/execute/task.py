@@ -7,8 +7,8 @@ from datetime import datetime
 
 
 class Task(TaskContext):
-    def __init__(self, logger, datastore, service_id, node_info):
-        super().__init__(logger, datastore, service_id, node_info)
+    def __init__(self, logger, service_id, service_info):
+        super().__init__(logger, service_id, service_info)
         self._logger = logger
 
         self._state = self.set_state()

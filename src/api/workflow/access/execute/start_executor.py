@@ -10,4 +10,5 @@ class StartExecutor:
         self._params = params
 
     def run(self, params):
+        print(f"---- {params} -----")
         return params

@@ -15,13 +15,13 @@ class MetastoreController:
         self._cached_metastore_access = CachedMetastoreAccess(logger)
 
     def set_metas_ctl(self, wf_comm_meta, wf_nodes_meta, wf_service_pool, wf_edges_meta,
-                  wf_forward_edge_graph, wf_reverse_edge_graph, wf_resources_meta, start_nodes, end_nodes):
+                  wf_forward_edge_graph, wf_backward_edge_graph, wf_resources_meta, start_nodes, end_nodes):
         self.set_comm_meta_ctl(wf_comm_meta)
         self.set_nodes_meta_ctl(wf_nodes_meta)
         self.set_node_service_pool_ctl(wf_service_pool)
         self.set_edges_meta_ctl(wf_edges_meta)
         self.set_forward_graph_meta_ctl(wf_forward_edge_graph)
-        self.set_reverse_graph_meta_ctl(wf_reverse_edge_graph)
+        self.set_backward_graph_meta_ctl(wf_backward_edge_graph)
         self.set_resources_meta_ctl(wf_resources_meta)
         self.set_start_nodes_meta_ctl(start_nodes)
         self.set_end_nodes_meta_ctl(end_nodes)
@@ -35,6 +35,14 @@ class MetastoreController:
     def set_node_service_pool_ctl(self, wf_service_pool):
         self._cached_metastore_access.set_node_service_pool_access(wf_service_pool)
 
+    def get_node_service_pool_ctl(self):
+        service_pool = self._cached_metastore_access.get_node_service_pool_access()
+        return service_pool
+
+    def get_start_nodes_meta_ctl(self):
+        start_nodes = self._cached_metastore_access.get_start_nodes_meta_access()
+        return start_nodes
+
     def set_edges_meta_ctl(self, wf_edges_meta):
         self._cached_metastore_access.set_edges_meta_access(wf_edges_meta)
 
@@ -42,17 +50,28 @@ class MetastoreController:
         wf_edges_meta = self._cached_metastore_access.get_edges_meta_access()
         return wf_edges_meta
 
-    def set_forward_graph_meta_ctl(self, wf_forward_edge_graph):
-        self._cached_metastore_access.set_forward_graph_meta_access(wf_forward_edge_graph)
+    def get_edge_meta_by_edge_id_ctl(self, edge_id):
+        wf_edges_meta = self.get_edges_meta_ctl()
+        wf_edge_meta = wf_edges_meta.get(edge_id)
+        return wf_edge_meta
+
+    def set_forward_edge_graph_meta_ctl(self, wf_forward_edge_graph):
+        self._cached_metastore_access.set_forward_edge_graph_meta_access(wf_forward_edge_graph)
+
+    def get_forward_edge_graph_meta_ctl(self):
+        return self._cached_metastore_access.get_forward_edge_graph_meta_access()
+
+    def set_forward_graph_meta_ctl(self, wf_forward_graph):
+        self._cached_metastore_access.set_forward_graph_meta_access(wf_forward_graph)
 
     def get_forward_graph_meta_ctl(self):
         return self._cached_metastore_access.get_forward_graph_meta_access()
 
-    def set_reverse_graph_meta_ctl(self, wf_reverse_edge_graph):
-        self._cached_metastore_access.set_reverse_graph_meta_access(wf_reverse_edge_graph)
+    def set_backward_graph_meta_ctl(self, wf_backward_edge_graph):
+        self._cached_metastore_access.set_backward_graph_meta_access(wf_backward_edge_graph)
 
-    def get_reverse_graph_meta_ctl(self):
-        return self._cached_metastore_access.get_reverse_graph_meta_access()
+    def get_backward_graph_meta_ctl(self):
+        return self._cached_metastore_access.get_backward_graph_meta_access()
 
     def set_resources_meta_ctl(self, wf_resources_meta):
         self._cached_metastore_access.set_resources_meta_access(wf_resources_meta)
@@ -63,6 +82,13 @@ class MetastoreController:
     def set_end_nodes_meta_ctl(self, end_nodes):
         self._cached_metastore_access.set_end_nodes_meta_access(end_nodes)
 
+    def set_edges_param_map_ctl(self, service_params_map):
+        self._cached_metastore_access.set_edges_param_map_access(service_params_map)
+
+    def get_edges_param_map_ctl(self):
+        edges_param_map = self._cached_metastore_access.get_edges_param_map_access()
+        return edges_param_map
+
     def get_metas_ctl(self):
         meta_pack = {
             "start_nodes": self._cached_metastore_access.get_start_nodes_meta_access(),
@@ -70,8 +96,10 @@ class MetastoreController:
             "nodes_info": self._cached_metastore_access.get_nodes_meta_access(),
             "service_pool": self._cached_metastore_access.get_node_service_pool_access(),
             "edges_info": self._cached_metastore_access.get_edges_meta_access(),
-            "edges_graph": self._cached_metastore_access.get_edges_graph_meta_access(),
-            "prev_edges_graph": self._cached_metastore_access.get_prev_edges_grpae_meta_access()
+            "forward_edge_graph": self._cached_metastore_access.get_forward_edges_graph_meta_access(),
+            "forward_graph": self._cached_metastore_access.get_forward_graph_meta_access(),
+            "backward_graph": self._cached_metastore_access.get_backward_graph_meta_access(),
+            'edges_param_map': self._cached_metastore_access.get_edges_param_map_access()
         }
         return meta_pack
 
