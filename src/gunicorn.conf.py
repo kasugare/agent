@@ -6,7 +6,7 @@ import resource
 import os
 
 bind = "127.0.0.1:18000"
-workers = 5
+workers = 1
 worker_class = "uvicorn.workers.UvicornWorker"
 timeout = 5000
 keepalive = 3

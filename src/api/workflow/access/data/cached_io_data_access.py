@@ -34,9 +34,9 @@ class CachedIODataAccess:
         self._thread_lock.release()
         return data
 
-    def set_data(self, io_id, data):
+    def set_data(self, value_id, data):
         self._thread_lock.acquire()
-        self._data_pool[io_id] = data
+        self._data_pool[value_id] = data
         self._thread_lock.release()
 
     def delete(self, service_id):

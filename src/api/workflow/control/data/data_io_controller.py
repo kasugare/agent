@@ -18,16 +18,13 @@ class DataIoController:
 
     def set_init_service_params_ctl(self, wf_edges_meta):
         for edge_id, edge_meta in wf_edges_meta.items():
+            service_id = edge_meta.get('target')
             params_info = edge_meta.get('params_info')
-            self._logger.error(f"{edge_id} - {params_info}")
             for params_map in params_info:
                 if params_map.get('refer_type') == 'direct':
-                    key = params_map.get('key')
-                    splited_key = key.split('.')
-                    service_id = ".".join(splited_key[:-1])
-                    param_name = splited_key[-1]
+                    param_name = params_map.get('key')
                     value = params_map.get('value')
-                    self.set_service_params_ctl(service_id, {param_name: value})
+                    self.set_service_params_ctl(service_id, params_map={param_name: value})
 
     def set_service_params_ctl(self, service_id, params_map: dict):
         self._set_data_ctl(service_id, params_map, io_type="I")
@@ -36,13 +33,13 @@ class DataIoController:
         self._set_data_ctl(service_id, result, io_type='O')
 
     def _set_data_ctl(self, service_id, data_map, io_type):
-        """ io_id = {io_type}.{service_id}.{param_name}"""
+        """ value_id = {io_type}.{service_id}.{param_name}"""
         if io_type not in ['I', 'O']:
             raise Exception
 
         for key_name, value in data_map.items():
-            io_id = f"{io_type}.{service_id}.{key_name}"
-            self._data_access.set_data(io_id, value)
+            value_id = f"{io_type}.{service_id}.{key_name}"
+            self._data_access.set_data(value_id, value)
 
     def get_start_service_params_ctl(self, service_id):
         params = {}
@@ -51,13 +48,16 @@ class DataIoController:
             if key.find(f"I.{service_id}") == 0:
                 params_name = key.split(".")[-1]
                 params[params_name] = value
+            elif key.find(f"O.{service_id}") == 0:
+                params_name = key.split(".")[-1]
+                params[params_name] = value
         return params
 
     def _get_service_value_ctl(self, key_name, io_type='O'):
         """ key_name = {node_id}.{service_name}.{param_name}
-            io_id = {io_type}.{node_id}.{service_name}.{param_name}"""
-        io_id = f"{io_type}.{key_name}"
-        value = self._data_access.get_data(io_id)
+            value_id = {io_type}.{node_id}.{service_name}.{param_name}"""
+        value_id = f"{io_type}.{key_name}"
+        value = self._data_access.get_data(value_id)
         return value
 
     def get_service_params_ctl(self, service_id, wf_edges_meta):
@@ -84,3 +84,8 @@ class DataIoController:
     def get_data_pool_ctl(self):
         data_pool = self._data_access.get_all()
         return data_pool
+
+    def get_param_value_control(self, value_id):
+        param_value = self._data_access.get_data(value_id)
+        return param_value
+

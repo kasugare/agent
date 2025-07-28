@@ -8,7 +8,7 @@ class MetaParseController:
         self._logger = logger
         self._edge_transformer = EdgeTransformer(logger)
 
-    def extract_wf_common_info(self, wf_meta: dict) -> dict:
+    def extract_wf_common_info_ctl(self, wf_meta: dict) -> dict:
         wf_comm_meta = {
             'wf_id': wf_meta.get('workflow_id'),
             'wf_name': wf_meta.get('name'),
@@ -18,12 +18,12 @@ class MetaParseController:
         }
         return wf_comm_meta
 
-    def extract_wf_to_nodes(self, wf_meta: dict) -> dict:
+    def extract_wf_to_nodes_ctl(self, wf_meta: dict) -> dict:
         nodes = wf_meta.get('nodes')
         nodes_meta = {node.get('node_id'): node for node in nodes if node.get('node_id')}
         return nodes_meta
 
-    def cvt_wf_to_service_pool(self, nodes_meta: dict) -> dict:
+    def cvt_wf_to_service_pool_ctl(self, nodes_meta: dict) -> dict:
         service_pool = {}
         add_node_keys = ['node_type', 'role', 'location', 'api_keys', 'containable']
         for node_id, node_info in nodes_meta.items():
@@ -35,33 +35,57 @@ class MetaParseController:
                     service_pool[node_service_id][node_key] = node_info[node_key]
         return service_pool
 
-    def extract_wf_to_edges(self, wf_meta: dict, wf_service_pool: dict) -> dict:
+    def extract_wf_to_edges_ctl(self, wf_meta: dict, wf_service_pool: dict) -> dict:
         edges_meta = self._edge_transformer.cvt_service_edges(wf_meta, wf_service_pool)
         return edges_meta
 
-    def extract_sequenceal_edge_to_grape(self, edges_meta: dict) -> dict:
-        edge_grape = dict()
+    def extract_forward_edge_graph_ctl(self, edges_meta: dict) -> dict:
+        forward_edge_graph = dict()
         for edge_id, edge_info in edges_meta.items():
             curr_node = edge_info.get('source')
             next_node = edge_info.get('target')
-            if curr_node in edge_grape.keys():
-                edge_grape[curr_node].append(next_node)
+            param_map_list = edge_info.get('params_info')
+            forward_edge_graph[next_node] = {}
+            if curr_node in forward_edge_graph.keys():
+                forward_edge_graph[curr_node][next_node] = param_map_list
             else:
-                edge_grape[curr_node] = [next_node]
-        return edge_grape
+                forward_edge_graph[curr_node] = {next_node: param_map_list}
+        return forward_edge_graph
 
-    def extract_reverse_edge_grape(self, edges_meta: dict) -> dict:
-        prev_edge_grape = dict()
+    def extract_forward_graph_ctl(self, edges_meta: dict) -> dict:
+        forward_graph = dict()
+        for edge_id, edge_info in edges_meta.items():
+            curr_node = edge_info.get('source')
+            next_node = edge_info.get('target')
+            forward_graph[next_node] = []
+            if curr_node in forward_graph.keys():
+                forward_graph[curr_node].append(next_node)
+            else:
+                forward_graph[curr_node] = [next_node]
+        return forward_graph
+
+    def extract_backward_graph_ctl(self, edges_meta: dict) -> dict:
+        backward_edge_graph = dict()
         for edge_id, edge_info in edges_meta.items():
             curr_node = edge_info.get('target')
             prev_node = edge_info.get('source')
-            if curr_node in prev_edge_grape.keys():
-                prev_edge_grape[curr_node].append(prev_node)
+            if curr_node in backward_edge_graph.keys():
+                backward_edge_graph[curr_node].append(prev_node)
             else:
-                prev_edge_grape[curr_node] = [prev_node]
-        return prev_edge_grape
+                backward_edge_graph[curr_node] = [prev_node]
+        return backward_edge_graph
 
-    def get_wf_to_resources(self, wf_meta: dict) -> dict:
+    def reverse_forward_graph_ctl(self, forward_edge_graph):
+        backward_edge_graph = dict()
+        for service_id, target_list in forward_edge_graph.items():
+            for forward_service_id in target_list:
+                if forward_service_id in backward_edge_graph.keys():
+                    backward_edge_graph[forward_service_id].append(service_id)
+                else:
+                    backward_edge_graph[forward_service_id] = [service_id]
+        return backward_edge_graph
+
+    def get_wf_to_resources_ctl(self, wf_meta: dict) -> dict:
         resources = wf_meta.get('resources')
         return resources
 
@@ -85,14 +109,18 @@ class MetaParseController:
 
         return wf_meta
 
-    def find_start_nodes(self, edge_map: dict) -> list:
-        all_nodes = set(edge_map.keys())
+    def find_start_nodes_ctl(self, wf_forward_edge_graph: dict) -> list:
+        all_nodes = set(wf_forward_edge_graph.keys())
         reachable_nodes = set()
-        for node in edge_map:
-            reachable_nodes.update(edge_map[node])
+        for node in wf_forward_edge_graph:
+            reachable_nodes.update(wf_forward_edge_graph[node])
         start_nodes = all_nodes - reachable_nodes
         return sorted(list(start_nodes))
 
-    def find_end_nodes(self, prev_edge_map: dict) -> list:
-        end_nodes = self.find_start_nodes(prev_edge_map)
+    def find_end_nodes_ctl(self, wf_backward_edge_graph: dict) -> list:
+        end_nodes = self.find_start_nodes_ctl(wf_backward_edge_graph)
         return sorted(list(end_nodes))
+
+    def extract_params_map_ctl(self, start_nodes, wf_service_pool, wf_edges_meta) -> dict:
+        edge_params_map = self._edge_transformer.cvt_params_map_ctl(start_nodes, wf_service_pool, wf_edges_meta)
+        return edge_params_map

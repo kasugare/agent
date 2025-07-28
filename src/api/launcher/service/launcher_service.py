@@ -37,6 +37,7 @@ class DynamicRouterService(Service):
         service_module_map_list = self._launcher_ctl.get_init_service_meta()
         # return service_module_map_list
         return []
+
     def get_api_service_info(self):
         return self._api_services
 
@@ -96,7 +97,6 @@ class DynamicRouterService(Service):
                 'route_paths': [route_path]
             }
 
-
     def del_app_router(self, prefix, route_path):
         del_index = []
         api_route_path = self._gen_api_route_path(prefix, route_path)
@@ -104,6 +104,6 @@ class DynamicRouterService(Service):
             if isinstance(route, APIRoute):
                 if route.path == api_route_path:
                     del_index.append(index)
-        del_index.reverse()
+        del_index.backward()
         for index in del_index:
             self._app.router.routes.pop(index)

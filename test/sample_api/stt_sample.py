@@ -136,7 +136,7 @@ async def cls_health_check():
 @app_node_d.post("/v2/repository/index", response_model=ClassDeployModelCheckResponse)
 async def cls_deploy_model_check():
 	print(f"# Node D - cls_deploy_model_check()")
-	await asyncio.sleep(random.randrange(1, 5)*0.0)
+	await asyncio.sleep(random.randrange(1, 5)*0.01)
 	return ClassDeployModelCheckResponse(
 		result = ["A", "B", "C"]
 	)
@@ -171,7 +171,7 @@ app_node_e = FastAPI(title="Node E - stt_aggregator_202504291319")
 @app_node_e.post("/v1/result/aggregator", response_model=AggResultResponse)
 async def aggregator(request: AggInputRequest):
 	print(f"# Node E - aggregator()")
-	await asyncio.sleep(random.randrange(1, 5)*0.9)
+	await asyncio.sleep(random.randrange(1, 5)*0.1)
 
 	result = f"요약내용: {request.summery_stt} - 분류코드: {request.cls_code}"
 

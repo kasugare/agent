@@ -1,0 +1,316 @@
+{
+	"name": "RAG Workflow",
+	"version": "1.0",
+	"metadata": {
+		"description": "RAG System Workflow",
+		"type": "RAG"
+	},
+	"nodes": [
+		{
+			"node_id": "Input_zla_r0_node",
+			"node_type": "class",
+			"role": "start",
+			"location": "inner",
+			"containable": true,
+			"api_keys": [""],
+
+			"source_node": {
+				"id": "input_node",
+				"code": "RAG_INPUT",
+				"version": "1.0.0",
+				"title": "rag input",
+				"desc": "RAG Input Node"
+			},
+			"services": [
+				{
+					"service_id": "set_input",
+					"name": "set_input",
+					"environments": {},
+					"params": {
+						"format": "json",
+						"input": [
+							{
+								"required": true,
+								"key": "query",
+								"type": "string"
+							}
+						]
+					},
+					"result":{
+						"format": "json",
+						"output": [
+							{
+								"key": "query",
+								"type": "string"
+							}
+						]
+					}
+				}
+			]
+		},
+		{
+			"node_id": "Retrieval_724KHk_node",
+			"node_type": "class",
+			"role": "retrieval",
+			"location": "inner",
+			"containable": true,
+			"api_keys": [""],
+
+			"source_node": {
+				"id": "Retrieval_724KHk_node",
+				"code": "RAG_RETR",
+				"version": "1.0.0",
+				"title": "Retrieva",
+				"desc": "RAG Retrieva Node"
+			},
+			"services": [
+				{
+					"service_id": "retrieve_documents",
+					"name": "retrieve_documents",
+					"environments": {
+						"input": [
+							{
+								"required": true,
+								"key": "collection_id",
+								"value": 2,
+								"type": "integer"
+							}
+						]
+					},
+					"params": {
+						"format": "json",
+						"input": [
+							{
+								"required": true,
+								"key": "query",
+								"type": "string"
+							}
+						]
+					},
+					"header": {},
+					"body": {},
+					"result":{
+						"format": "json",
+						"output": [
+							{
+								"key": "retrieved_documents",
+								"type": "string"
+							},
+							{
+								"key": "document_sources",
+								"type": "string"
+							},
+							{
+								"key": "document_meta",
+								"type": "string"
+							}
+						]
+					}
+				}
+			]
+		},
+		{
+			"node_id": "Generation_TAVl73_node",
+			"node_type": "class",
+			"role": "generation",
+			"location": "inner",
+			"containable": true,
+			"api_keys": [""],
+
+			"source_node": {
+				"id": "Generation_TAVl73_node",
+				"code": "RAG_GEN",
+				"version": "1.0.23",
+				"title": "summerization model for STT",
+				"desc": "summerization STT for telecommunication with customer"
+			},
+			"services": [
+				{
+					"service_id": "generate",
+					"name": "retrieve_documents",
+					"environments": {
+						"input": [
+							{
+								"required": true,
+								"key": "model_type",
+								"value": "ollama",
+								"type": "string"
+							},
+							{
+								"required": true,
+								"key": "llm_id",
+								"value": "2",
+								"type": "string"
+							},
+							{
+								"required": true,
+								"key": "llm_params",
+								"value": {
+									"temperature": "0.5"
+								},
+								"type": "json"
+							},
+							{
+								"required": true,
+								"key": "prompt_template",
+								"value": "다음 Context를 참고하여 질문에 한국어로 답하세요 \n 질문 : {{question}} \n Context : {{docs | join('\\n')}}",
+								"type": "string"
+							}
+						]
+					},
+					"params": {
+						"format": "json",
+						"input": [
+							{
+								"required": true,
+								"key": "question",
+								"type": "string"
+							},
+							{
+								"required": true,
+								"key": "docs",
+								"type": "string"
+							}
+						]
+					},
+					"result":{
+						"format": "json",
+						"output": [
+							{
+								"key": "answer",
+								"type": "string"
+							}
+						]
+					}
+				}
+			]
+		},
+		{
+			"node_id": "Output_OvdARr_node",
+			"node_type": "class",
+			"role": "output",
+			"location": "inner",
+			"containable": true,
+			"api_keys": [""],
+
+			"source_node": {
+				"id": "Output_OvdARr_node",
+				"code": "RAG_OUTPUT",
+				"version": "1.0.0",
+				"title": "RAG Output",
+				"desc": "Rag Output Node"
+			},
+
+			"services": [
+				{
+					"service_id": "set_output",
+					"name": "set output",
+					"environments": {
+						"input": [
+							{
+								"required": true,
+								"key": "type",
+								"value": "string",
+								"type": "string"
+							},
+							{
+								"required": true,
+								"key": "prompt",
+								"value": "{{answer}}",
+								"type": "string"
+							}
+						]
+					},
+					"params": {
+						"format": "json",
+						"input": [
+							{
+								"required": true,
+								"key": "answer",
+								"type": "string"
+							}
+						]
+					},
+					"result": {
+						"format": "json",
+						"output": [
+							{
+								"required": true,
+								"key": "output",
+								"type": "string"
+							}
+						]
+					}
+				}
+			]
+		}
+	],
+	"edges": [
+		{
+			"source": "Input_zla_r0_node.set_input",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"target": "Retrieval_724KHk_node.retrieve_documents",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"data_mapper": [
+				{
+					"input_type": "refer",
+					"src": "Input_zla_r0_node.set_input.query",
+					"tar": "Retrieval_724KHk_node.retrieve_documents.query"
+				}
+			]
+		},
+		{
+			"source": "Retrieval_724KHk_node.retrieve_documents",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"target": "Generation_TAVl73_node.generate",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"data_mapper": [
+				{
+					"input_type": "refer",
+					"src": "Input_zla_r0_node.set_input.query",
+					"tar": "Generation_TAVl73_node.generate.question"
+				},
+				{
+					"input_type": "refer",
+					"src": "Retrieval_724KHk_node.retrieve_documents.docs",
+					"tar": "Generation_TAVl73_node.generate.docs"
+				}
+			]
+		},
+		{
+			"source": "Generation_TAVl73_node.generate",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"target": "Output_OvdARr_node.set_output",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"data_mapper": [
+				{
+					"input_type": "refer",
+					"src": "Generation_TAVl73_node.generate.answer",
+					"tar": "Output_OvdARr_node.set_output.answer"
+				}
+			]
+		}
+	],
+	"resources": {
+		"node_a": {
+		}
+	}
+}
