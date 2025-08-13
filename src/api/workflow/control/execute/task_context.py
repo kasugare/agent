@@ -4,6 +4,7 @@
 from api.workflow.access.execute.start_executor import StartExecutor
 from api.workflow.access.execute.end_executor import EndExecutor
 from api.workflow.access.execute.api_executor import ApiExecutor
+from api.workflow.access.execute.module_executor import ModuleExecutor
 import time
 
 
@@ -16,19 +17,20 @@ class TaskContext:
         self._params_value_map = None
         self._executor = None
         self._conn_info = None
+        self._location = None
 
         self._init_context(service_info)
 
     def _init_context(self, service_info):
         self._task_type = service_info.get('type')
         self._role = service_info.get('role')
-        self._node_type = service_info.get('node_type')
+        self._node_type = str(service_info.get('node_type')).lower()
         self._location = service_info.get('location')
         # self._params_map = self._extract_params_map(edge_info)
         self._params_format = self._extract_params_format(service_info)
         self._result_format = self._extract_results_format(service_info)
 
-        if self._node_type.lower() == 'rest-api':
+        if self._node_type == 'rest-api':
             if self._role == 'start':
                 self._set_start_executor()
             elif self._role == 'end':
@@ -36,11 +38,14 @@ class TaskContext:
             else:
                 self._conn_info = self._extract_api_info(service_info)
                 self._set_api_executor(**self._conn_info)
-        elif self._node_type.lower() == 'engine':
+        elif self._node_type == 'engine':
             if self._task_type.lower() == 'start_node':
                 self._set_start_executor()
             else:
                 self._conn_info = self._extract_api_info(service_info)
+        elif self._node_type == 'class':
+            self._conn_info = self._extract_class_info(service_info)
+            self._set_class_executor(**self._conn_info)
         else:
             self._conn_info = self._extract_api_info(service_info)
             self._set_api_executor(**self._conn_info)
@@ -62,7 +67,7 @@ class TaskContext:
         return result_format
 
     def _extract_params_map(self, edge_info):
-        self._logger.debug("f # Step 3. extract data_mapper")
+        self._logger.debug(f" # Step 3. extract data_mapper")
         params_info = edge_info.get('params_info')
         params_map = {}
         for param_info in params_info:
@@ -71,19 +76,33 @@ class TaskContext:
             params_map[param_name] = param_info
         return params_map
 
-    def _extract_api_info(self, node_info):
-        url_info = {
-            'url': node_info.get('url'),
-            'method': node_info.get('method'),
-            'header': node_info.get('header'),
-            'body': node_info.get('body'),
-            'api_keys': node_info.get('api_keys')
+    def _extract_api_info(self, service_info):
+        api_info = service_info.get('api_info')
+        url = f"{api_info.get('base_url')}{service_info.get('function')}"
+        conn_info = {
+            'url': url,
+            'method': service_info.get('method'),
+            'header': service_info.get('header'),
+            'body': service_info.get('body'),
+            'api_keys': service_info.get('api_keys')
         }
-        return url_info
+        return conn_info
+
+    def _extract_class_info(self, service_info):
+        class_info = service_info.get('class_info')
+        conn_info = {
+            'module_path': class_info.get('module_path'),
+            'class_name': class_info.get('class_name'),
+            'function': service_info.get('function'),
+            'api_keys': service_info.get('api_keys')
+        }
+        return conn_info
 
     def _set_api_executor(self, url=None, method=None, header={}, body={}, api_keys=[]):
-        self._executor = ApiExecutor(self._logger)
-        self._executor.set_api(url=url, method=method, header=header, body=body)
+        self._executor = ApiExecutor(self._logger, url, method, header, body)
+
+    def _set_class_executor(self, module_path, class_name, function, api_keys=[]):
+        self._executor = ModuleExecutor(self._logger, module_path, class_name, function)
 
     def _set_start_executor(self):
         self._executor = StartExecutor(self._logger)
@@ -112,6 +131,12 @@ class TaskContext:
     def get_service_info(self):
         return self._service_info
 
+    def get_executor(self):
+        return self._executor
+
+    def get_location(self):
+        return self._location
+
     def _print_service_info(self):
         def print_params(params_format):
             for params_info in params_format:
@@ -124,12 +149,10 @@ class TaskContext:
             for result_info in results_format:
                 param_name = result_info.get('key')
                 value_type = result_info.get('type')
-                self._logger.debug(f"          L  param_name: {param_name} ({value_type}) ")
+                self._logger.debug(f"          L  param_name:  {param_name}  ({value_type}) ")
 
-        def print_connection(conn_info):
-            if not conn_info:
-                return
-            for k, v in conn_info.items():
+        def print_connection():
+            for k, v in self._conn_info.items():
                 self._logger.debug(f"      L  {k}:\t{v}")
 
         self._logger.debug(f" - (common) task_type:\t {self._task_type}")
@@ -139,5 +162,6 @@ class TaskContext:
         self._logger.debug(f" - (common) params_map")
         self._logger.debug(f" - (common) result_format")
         print_result(self._result_format)
+        print_connection()
         self._logger.debug(f" - (API) connection_info")
         # print_connection(self._conn_info)

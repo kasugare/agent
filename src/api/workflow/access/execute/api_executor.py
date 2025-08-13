@@ -8,25 +8,17 @@ import aiohttp
 
 
 class ApiExecutor:
-    def __init__(self, logger):
+    def __init__(self, logger, url, method, header, body):
         self._logger = logger
-        self._url = None
-        self._method = None
-        self._header = None
-        self._body = None
+        self._url = url
+        self._method = method
+        self._header = header
+        self._body = body
+        self._env_params = {}
         self._params = None
 
-    def set_api(self, url=None, method=None, header=None, body=None, params=None):
-        if url:
-            self._url = url
-        if method:
-            self._method = method
-        if header:
-            self._header = header
-        if body:
-            self._body = body
-        if params:
-            self._params = params
+    def set_env(self, env_params):
+        self._env_params = env_params
 
     def set_url(self, url):
         self._url = url

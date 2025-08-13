@@ -6,7 +6,6 @@ from typing import Dict, List, Any
 class EdgeTransformer:
     def __init__(self, logger):
         self._logger = logger
-        self._index = 0
 
     def _get_data_type(self, param_key: str, service_info: Dict, find_type: str) -> Any:
         if find_type == 'key':

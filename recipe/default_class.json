@@ -14,18 +14,24 @@
 			"containable": true,
 			"api_keys": [""],
 
-			"source_node": {
+			"node_info": {
 				"id": "input_node",
 				"code": "RAG_INPUT",
 				"version": "1.0.0",
 				"title": "rag input",
 				"desc": "RAG Input Node"
 			},
-			"services": [
-				{
-					"service_id": "set_input",
-					"name": "set_input",
-					"environments": {},
+			"api_info": {
+				"base_url": ""
+			},
+			"class_info": {
+				"module_path": "app.rag.input",
+				"class_name": "InputNode",
+				"environments": {}
+			},
+			"services": {
+				"set_input": {
+					"function": "set_input",
 					"params": {
 						"format": "json",
 						"input": [
@@ -36,7 +42,7 @@
 							}
 						]
 					},
-					"result":{
+					"result": {
 						"format": "json",
 						"output": [
 							{
@@ -46,7 +52,7 @@
 						]
 					}
 				}
-			]
+			}
 		},
 		{
 			"node_id": "Retrieval_724KHk_node",
@@ -55,28 +61,33 @@
 			"location": "inner",
 			"containable": true,
 			"api_keys": [""],
-
-			"source_node": {
+			"node_info": {
 				"id": "Retrieval_724KHk_node",
 				"code": "RAG_RETR",
 				"version": "1.0.0",
-				"title": "Retrieva",
-				"desc": "RAG Retrieva Node"
+				"title": "Retrieval",
+				"desc": "RAG Retrieval Node"
 			},
-			"services": [
-				{
-					"service_id": "retrieve_documents",
-					"name": "retrieve_documents",
-					"environments": {
-						"input": [
-							{
-								"required": true,
-								"key": "collection_id",
-								"value": 2,
-								"type": "integer"
-							}
-						]
-					},
+			"api_info": {
+				"base_url": ""
+			},
+			"class_info": {
+				"module_path": "app.rag.retrieval",
+				"class_name": "Retrieval",
+				"environments": {
+					"input": [
+						{
+							"required": true,
+							"key": "collection_id",
+							"value": 2,
+							"type": "integer"
+						}
+					]
+				}
+			},
+			"services": {
+				"retrieve_documents": {
+					"function": "retrieve_documents",
 					"params": {
 						"format": "json",
 						"input": [
@@ -89,7 +100,7 @@
 					},
 					"header": {},
 					"body": {},
-					"result":{
+					"result": {
 						"format": "json",
 						"output": [
 							{
@@ -107,7 +118,7 @@
 						]
 					}
 				}
-			]
+			}
 		},
 		{
 			"node_id": "Generation_TAVl73_node",
@@ -117,47 +128,53 @@
 			"containable": true,
 			"api_keys": [""],
 
-			"source_node": {
+			"node_info": {
 				"id": "Generation_TAVl73_node",
 				"code": "RAG_GEN",
 				"version": "1.0.23",
-				"title": "summerization model for STT",
-				"desc": "summerization STT for telecommunication with customer"
+				"title": "Generate Model",
+				"desc": "RAG Generation"
 			},
-			"services": [
-				{
-					"service_id": "generate",
-					"name": "retrieve_documents",
-					"environments": {
-						"input": [
-							{
-								"required": true,
-								"key": "model_type",
-								"value": "ollama",
-								"type": "string"
+			"api_info": {
+				"base_url": ""
+			},
+			"class_info": {
+				"module_path": "app.rag.generation",
+				"class_name": "Generation",
+				"environments": {
+					"input": [
+						{
+							"required": true,
+							"key": "model_type",
+							"value": "ollama",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "llm_id",
+							"value": "2",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": " ",
+							"value": {
+								"temperature": "0.5"
 							},
-							{
-								"required": true,
-								"key": "llm_id",
-								"value": "2",
-								"type": "string"
-							},
-							{
-								"required": true,
-								"key": "llm_params",
-								"value": {
-									"temperature": "0.5"
-								},
-								"type": "json"
-							},
-							{
-								"required": true,
-								"key": "prompt_template",
-								"value": "다음 Context를 참고하여 질문에 한국어로 답하세요 \n 질문 : {{question}} \n Context : {{docs | join('\\n')}}",
-								"type": "string"
-							}
-						]
-					},
+							"type": "json"
+						},
+						{
+							"required": true,
+							"key": "prompt_template",
+							"value": "다음 Context를 참고하여 질문에 한국어로 답하세요. 질문 : {{question}}. Context : {{docs | join('\\n')}}",
+							"type": "string"
+						}
+					]
+				}
+			},
+			"services": {
+				"generate": {
+					"function": "generate",
 					"params": {
 						"format": "json",
 						"input": [
@@ -173,7 +190,7 @@
 							}
 						]
 					},
-					"result":{
+					"result": {
 						"format": "json",
 						"output": [
 							{
@@ -183,7 +200,7 @@
 						]
 					}
 				}
-			]
+			}
 		},
 		{
 			"node_id": "Output_OvdARr_node",
@@ -193,34 +210,39 @@
 			"containable": true,
 			"api_keys": [""],
 
-			"source_node": {
+			"node_info": {
 				"id": "Output_OvdARr_node",
 				"code": "RAG_OUTPUT",
 				"version": "1.0.0",
 				"title": "RAG Output",
 				"desc": "Rag Output Node"
 			},
-
-			"services": [
-				{
-					"service_id": "set_output",
-					"name": "set output",
-					"environments": {
-						"input": [
-							{
-								"required": true,
-								"key": "type",
-								"value": "string",
-								"type": "string"
-							},
-							{
-								"required": true,
-								"key": "prompt",
-								"value": "{{answer}}",
-								"type": "string"
-							}
-						]
-					},
+			"api_info": {
+				"base_url": ""
+			},
+			"class_info": {
+				"module_path": "app.rag.output",
+				"class_name": "Output",
+				"environments": {
+					"input": [
+						{
+							"required": true,
+							"key": "type",
+							"value": "string",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "prompt",
+							"value": "{{answer}}",
+							"type": "string"
+						}
+					]
+				}
+			},
+			"services": {
+				"set_output": {
+					"function": "set_output",
 					"params": {
 						"format": "json",
 						"input": [
@@ -242,7 +264,7 @@
 						]
 					}
 				}
-			]
+			}
 		}
 	],
 	"edges": [
@@ -257,11 +279,11 @@
 				"type": "sequence",
 				"conditions": {}
 			},
-			"data_mapper": [
+			"params_info": [
 				{
 					"input_type": "refer",
-					"src": "Input_zla_r0_node.set_input.query",
-					"tar": "Retrieval_724KHk_node.retrieve_documents.query"
+					"key": "query",
+					"value": "Input_zla_r0_node.set_input.query"
 				}
 			]
 		},
@@ -276,16 +298,16 @@
 				"type": "sequence",
 				"conditions": {}
 			},
-			"data_mapper": [
+			"params_info": [
 				{
 					"input_type": "refer",
-					"src": "Input_zla_r0_node.set_input.query",
-					"tar": "Generation_TAVl73_node.generate.question"
+					"key": "question",
+					"value": "Input_zla_r0_node.set_input.query"
 				},
 				{
 					"input_type": "refer",
-					"src": "Retrieval_724KHk_node.retrieve_documents.docs",
-					"tar": "Generation_TAVl73_node.generate.docs"
+					"key": "docs",
+					"value": "Retrieval_724KHk_node.retrieve_documents.retrieved_documents"
 				}
 			]
 		},
@@ -300,11 +322,11 @@
 				"type": "sequence",
 				"conditions": {}
 			},
-			"data_mapper": [
+			"params_info": [
 				{
 					"input_type": "refer",
-					"src": "Generation_TAVl73_node.generate.answer",
-					"tar": "Output_OvdARr_node.set_output.answer"
+					"key": "answer",
+					"value": "Generation_TAVl73_node.generate.answer"
 				}
 			]
 		}

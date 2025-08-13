@@ -2,11 +2,13 @@
 # -*- coding: utf-8 -*-
 
 from api.workflow.control.meta.edge_transform import EdgeTransformer
+from api.workflow.control.meta.env_transform import EnvironmentsTransformer
 
 class MetaParseController:
     def __init__(self, logger):
         self._logger = logger
         self._edge_transformer = EdgeTransformer(logger)
+        self._env_transformer = EnvironmentsTransformer(logger)
 
     def extract_wf_common_info_ctl(self, wf_meta: dict) -> dict:
         wf_comm_meta = {
@@ -25,7 +27,8 @@ class MetaParseController:
 
     def cvt_wf_to_service_pool_ctl(self, nodes_meta: dict) -> dict:
         service_pool = {}
-        add_node_keys = ['node_type', 'role', 'location', 'api_keys', 'containable']
+        add_node_keys = ['node_type', 'role', 'location', 'api_keys',
+                         'containable', 'api_info', 'class_info']
         for node_id, node_info in nodes_meta.items():
             services = node_info.get('services')
             for service_name, service_info in services.items():
@@ -120,6 +123,10 @@ class MetaParseController:
     def find_end_nodes_ctl(self, wf_backward_edge_graph: dict) -> list:
         end_nodes = self.find_start_nodes_ctl(wf_backward_edge_graph)
         return sorted(list(end_nodes))
+
+    def extract_node_env_value_map_ctl(self, wf_service_pool) -> dict:
+        nodes_env_value_map = self._env_transformer.cvt_node_env_value_map_ctl(wf_service_pool)
+        return nodes_env_value_map
 
     def extract_params_map_ctl(self, start_nodes, wf_service_pool, wf_edges_meta) -> dict:
         edge_params_map = self._edge_transformer.cvt_params_map_ctl(start_nodes, wf_service_pool, wf_edges_meta)

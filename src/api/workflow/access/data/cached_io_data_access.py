@@ -20,7 +20,7 @@ class CachedIODataAccess:
             self._thread_lock.acquire()
             value = self._data_pool[key]
         except KeyError as e:
-            self._logger.error(e)
+            self._logger.error(f"{e} is not existed in data pool")
             raise NotExistedData
         except Exception as e:
             self._logger.error(e)
@@ -29,10 +29,10 @@ class CachedIODataAccess:
         return value
 
     def get_all(self):
-        self._thread_lock.acquire()
-        data = deepcopy(self._data_pool)
-        self._thread_lock.release()
-        return data
+        # self._thread_lock.acquire()
+        # data = deepcopy(self._data_pool)
+        # self._thread_lock.release()
+        return self._data_pool
 
     def set_data(self, value_id, data):
         self._thread_lock.acquire()

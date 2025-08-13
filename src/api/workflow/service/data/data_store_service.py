@@ -6,7 +6,7 @@ from api.workflow.control.data.type_transfer import DataTypeTransfer
 from api.workflow.control.data.data_io_controller import DataIoController
 from api.workflow.control.data.metastore_controller import MetastoreController
 from api.workflow.control.data.task_pool_controller import TaskPoolController
-from typing import Dict
+from typing import Dict, Any
 
 class DataStoreService:
     def __init__(self, logger):
@@ -20,6 +20,9 @@ class DataStoreService:
         param_name = key_path.split('.')[-1]
         return param_name
 
+    def set_init_nodes_env_params_service(self, nodes_env_value_map):
+        self._data_controller.set_init_nodes_env_params_ctl(nodes_env_value_map)
+
     def set_init_service_params_service(self, wf_edges_meta):
         self._data_controller.set_init_service_params_ctl(wf_edges_meta)
 
@@ -29,7 +32,7 @@ class DataStoreService:
             return
         self._data_controller.set_service_params_ctl(service_id, params_map)
 
-    def set_service_result_service(self, service_id: str, result: dict):
+    def set_service_result_service(self, service_id: str, result: Any):
         """ service_id = {node_id}.{service_name}"""
         self._data_controller.set_service_result_ctl(service_id, result)
 

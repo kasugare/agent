@@ -42,6 +42,7 @@ class WorkflowEngine(BaseRouter):
         self._metastore = MetaLoadService(logger, self._datastore, self._taskstore)
         self._act_planner = ActionPlanningService(logger, self._datastore, self._metastore, self._taskstore)
         self._job_Q = Queue()
+        self._act_meta = {}
 
     def setup_routes(self):
         @self.router.post(path='/workflow/meta')
@@ -65,6 +66,7 @@ class WorkflowEngine(BaseRouter):
             request['request_id'] = request_id
 
             act_meta_pack = self._act_planner.gen_action_meta_pack(start_node, end_node, request)
+            self._act_meta = act_meta_pack
             if act_meta_pack.get('act_start_nodes'):
                 workflow_engine = WorkflowExecutionOrchestrator(self._logger, self._datastore, act_meta_pack, self._job_Q)
                 result = workflow_engine.run_workflow(request)
@@ -75,16 +77,54 @@ class WorkflowEngine(BaseRouter):
 
         @self.router.get(path='/workflow/datapool')
         async def call_data_pool():
-            self._logger.debug("-------------------------< Data Pool >-------------------------")
+            self._logger.error("################################################################")
+            self._logger.error("#                         < Data Pool >                        #")
+            self._logger.error("################################################################")
             data_pool = self._datastore.get_service_data_pool_service()
             for k, v in data_pool.items():
                 self._logger.debug(f" - {k} : \t{v}")
             return data_pool
 
-        @self.router.get(path='/workflow/state')
+        @self.router.get(path='/workflow/act_dag')
+        async def call_active_dag():
+            self._logger.error("################################################################")
+            self._logger.error("#                        < Active DAG >                        #")
+            self._logger.error("################################################################")
+            for k, v in self._act_meta.items():
+                self._logger.info(f" - {k}")
+                if isinstance(v, dict):
+                    for kk, vv in v.items():
+                        self._logger.debug(f" \t- {kk}: {vv}")
+                elif isinstance(v, list):
+                    for l in v:
+                        self._logger.debug(f" \t- {l}")
+                else:
+                    self._logger.debug(f" \t- {v}")
+                self._logger.debug("*" * 200)
+
+        @self.router.get(path='/workflow/tasks')
         async def call_task_pool():
-            self._logger.debug("-------------------------< Data Pool >-------------------------")
-            data_pool = self._datastore.get_service_data_pool_service()
-            for k, v in data_pool.items():
-                self._logger.debug(f" - {k} : \t{v}")
-            return data_pool
+            self._logger.error("################################################################")
+            self._logger.error("#                       < Active Tasks >                       #")
+            self._logger.error("################################################################")
+            act_task_map = self._act_meta.get('act_task_map')
+            if not act_task_map:
+                return
+            for task_id, task_obj in act_task_map.items():
+                self._logger.info(f" - {task_id}")
+                service_id = task_obj.get_service_id()
+                state = task_obj.get_state()
+                env = task_obj.get_env_params()
+                params = task_obj.get_params()
+                result = task_obj.get_result()
+                error = task_obj.get_error()
+                node_type = task_obj.get_node_type()
+                self._logger.debug(f"\t- service_id: {service_id}")
+                self._logger.debug(f"\t- state:      {state}")
+                self._logger.debug(f"\t- env:        {env}")
+                self._logger.debug(f"\t- params:     {params}")
+                self._logger.debug(f"\t- result:     {result}")
+                self._logger.debug(f"\t- Error:      {error}")
+                self._logger.debug(f"\t- node_type:  {node_type}")
+                task_obj._print_service_info()
+                self._logger.debug("*" * 100)

@@ -32,7 +32,7 @@ class CSPMiddleware(BaseHTTPMiddleware):
 # 	wfEngine.do_process()
 
 
-logger = Logger().getLogger()
+logger = Logger()
 logger.setLevel("DEBUG")
 
 app = FastAPI()

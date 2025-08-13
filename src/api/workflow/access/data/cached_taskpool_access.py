@@ -15,4 +15,4 @@ class CachedTaskPoolAccess:
         self._task_pool = task_map
 
     def get_task_map_access(self):
-        return deepcopy(self._task_pool)
+        return self._task_pool

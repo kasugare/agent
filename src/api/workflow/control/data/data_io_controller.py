@@ -16,6 +16,13 @@ class DataIoController:
         self._logger = logger
         self._data_access = CachedIODataAccess(logger)
 
+    def set_init_nodes_env_params_ctl(self, nodes_env_value_map):
+        if not nodes_env_value_map:
+            return
+        for env_id, value in nodes_env_value_map.items():
+            value_id = f"E.{env_id}"
+            self._data_access.set_data(value_id, value)
+
     def set_init_service_params_ctl(self, wf_edges_meta):
         for edge_id, edge_meta in wf_edges_meta.items():
             service_id = edge_meta.get('target')
@@ -34,7 +41,7 @@ class DataIoController:
 
     def _set_data_ctl(self, service_id, data_map, io_type):
         """ value_id = {io_type}.{service_id}.{param_name}"""
-        if io_type not in ['I', 'O']:
+        if io_type not in ['I', 'O', 'E']:
             raise Exception
 
         for key_name, value in data_map.items():

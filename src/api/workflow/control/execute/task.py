@@ -15,14 +15,23 @@ class Task(TaskContext):
         self._error = None
         self._start_time = None
         self._end_time = None
+        self._env_params = {}
         self._params = {}
         self._result = None
+
+    def set_env_params(self, env_params=None):
+        self._env_params = env_params
+        executor = self.get_executor()
+        executor.set_env(env_params)
 
     def set_params(self, params=None):
         self._params = params
 
     def _set_result(self, result):
         self._result = result
+
+    def get_env_params(self):
+        return self._env_params
 
     def get_params(self):
         return self._params
@@ -37,8 +46,8 @@ class Task(TaskContext):
     def get_error(self):
         return self._error
 
-    def set_task(self, name, executor, **kwargs):
-        self._task_name = name
+    def set_task(self, task_name, executor, **kwargs):
+        self._task_name = task_name
         self._executor = executor
         self.set_params(kwargs)
 
@@ -61,7 +70,7 @@ class Task(TaskContext):
         self._logger.debug(f"{self._start_time} - {self._end_time}")
 
     def cancel(self):
-        if self._state in (TaskState.PENDING, TaskState.SCHEDULED, TaskState.ASSIGNED, TaskState.QUEUED):
+        if self._state in (TaskState.PENDING, TaskState.SCHEDULED, TaskState.QUEUED):
             self._state = TaskState.CANCELED
             return True
         return False

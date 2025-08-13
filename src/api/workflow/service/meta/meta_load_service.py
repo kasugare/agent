@@ -109,6 +109,10 @@ class MetaLoadService:
         end_nodes = self._meta_controller.find_end_nodes_ctl(wf_backward_graph)
         return end_nodes
 
+    def extract_node_environments_value_map_service(self, wf_service_pool) -> Dict:
+        nodes_env_value_map = self._meta_controller.extract_node_env_value_map_ctl(wf_service_pool)
+        return nodes_env_value_map
+
     def extract_params_map_service(self, start_nodes, wf_service_pool, wf_edges_meta) -> Dict:
         edge_params_map = self._meta_controller.extract_params_map_ctl(start_nodes, wf_service_pool, wf_edges_meta)
         return edge_params_map
@@ -135,7 +139,7 @@ class MetaLoadService:
         self._logger.error("# [DAG Loader] Step 04. Extract Service Pool")
         wf_service_pool = self.cvt_wf_to_service_pool_service(wf_nodes_meta)
         self._datastore.set_node_service_pool_service(wf_service_pool)
-        # self._print_debug_data(wf_service_pool)
+        self._print_debug_data(wf_service_pool)
 
         self._logger.error("# [DAG Loader] Step 05. Extract Edges")
         wf_edges_meta = self.extract_wf_to_edges_service(wf_meta, wf_service_pool)
@@ -167,15 +171,20 @@ class MetaLoadService:
         self._datastore.set_end_nodes_meta_service(end_nodes)
         # self._print_debug_data(end_nodes)
 
-        self._logger.error("# [DAG Loader] Step 11. Extract service params-map")
+        self._logger.error("# [DAG Loader] Step 11. Extract node's environment params")
+        nodes_env_value_map = self.extract_node_environments_value_map_service(wf_service_pool)
+        self._datastore.set_init_nodes_env_params_service(nodes_env_value_map)
+        self._print_debug_data(nodes_env_value_map)
+
+        self._logger.error("# [DAG Loader] Step 12. Extract service params-map")
         edges_param_map = self.extract_params_map_service(start_nodes, wf_service_pool, wf_edges_meta)
         self._datastore.set_edges_param_map_service(edges_param_map)
         self._print_debug_data(edges_param_map)
 
-        self._logger.error("# [DAG Loader] Step 12. Set init params")
+        self._logger.error("# [DAG Loader] Step 13. Set init nodes params")
         self._datastore.set_init_service_params_service(wf_edges_meta)
 
-        self._logger.error("# [DAG Loader] Step 13. Generate task map")
+        self._logger.error("# [DAG Loader] Step 14. Generate task map")
         task_map = self._taskstore.gen_init_tasks_service()
         self._datastore.set_init_task_map_service(task_map)
         self._print_task_map(task_map, edges_param_map)

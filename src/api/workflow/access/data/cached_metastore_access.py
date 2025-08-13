@@ -67,7 +67,7 @@ class CachedMetastoreAccess:
         self._end_nodes = end_nodes
 
     def set_edges_param_map_access(self, edge_params_map: dict) -> None:
-        self._edges_param_map = edge_params_map
+        self._edges_param_map.update(edge_params_map)
 
     def get_edges_param_map_access(self) -> Dict:
         return deepcopy(self._edges_param_map)
