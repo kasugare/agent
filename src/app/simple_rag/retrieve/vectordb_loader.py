@@ -17,6 +17,12 @@ class VectorDBLoader:
     DB_TYPES = {
         'qdrant': QdrantDB
     }
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
 
     def __init__(self, logger):
         """Initialize the loader."""
@@ -78,7 +84,6 @@ class VectorDBLoader:
             db_class = self.DB_TYPES[db_type.lower()]
 
             # Initialize the DB instance with the appropriate parameters
-            print(kwargs)
             if db_type.lower() in ['qdrant'] and collection_name:
                 db = db_class(
                     connection_string=connection_string,

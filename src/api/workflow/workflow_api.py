@@ -75,6 +75,16 @@ class WorkflowEngine(BaseRouter):
                 result = "# Not generated task_map, check DAG meta"
             return {"result": result}
 
+        @self.router.get(path='/workflow/metapack')
+        async def call_meta_pack():
+            self._logger.error("################################################################")
+            self._logger.error("#                         < Meta Pack >                        #")
+            self._logger.error("################################################################")
+            meta_pack = self._datastore.get_meta_pack_service()
+            for k, v in meta_pack.items():
+                self._logger.debug(f" - {k} : \t{v}")
+            return meta_pack
+
         @self.router.get(path='/workflow/datapool')
         async def call_data_pool():
             self._logger.error("################################################################")

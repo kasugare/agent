@@ -118,19 +118,16 @@ class ActionPlanningService:
         if not request_params:
             return act_edges_param_map
 
+        req_param_names = request_params.keys()
         for service_id in start_nodes:
-            task_edge_ids = act_edges_param_map.keys()
-            for task_edge_id in task_edge_ids:
+            for task_edge_id, edge_param_map_list in act_edges_param_map.items():
                 if task_edge_id.find(service_id) <= 0:
                     continue
-                else:
-                    edge_param_map_list = act_edges_param_map.get(task_edge_id)
-                    for req_param_name, req_value in request_params.items():
-                        for edge_param_map in edge_param_map_list:
-                            param_name = edge_param_map.get('key')
-                            if req_param_name == param_name:
-                                edge_param_map['refer_type'] = 'direct'
-                                edge_param_map['value'] = f'I.{service_id}.{param_name}'
+                for edge_param_map in edge_param_map_list:
+                    param_name = edge_param_map.get('key')
+                    if param_name in req_param_names:
+                        edge_param_map['refer_type'] = 'direct'
+                        edge_param_map['value'] = f'I.{service_id}.{param_name}'
         return act_edges_param_map
 
     def gen_action_service_ids(self, forward_graph, backward_graph):

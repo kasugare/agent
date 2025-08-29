@@ -92,13 +92,23 @@ class BaseVectorDB(ABC):
             raise ValueError("Vector store not initialized. Call connect() first.")
 
         try:
+            print("# Step 1")
+            print(exclude_pages)
             if exclude_pages is not None:
+                print("# Step 2")
                 exclude_filter = self.build_page_not_in_filter(exclude_pages=exclude_pages)
+                print("# Step 3")
                 results = self.vectorstore.similarity_search_with_score(query, k=top_k, filter=exclude_filter)
+                print("# Step 4")
             else:
+                print("# Step 5")
                 # Search using similarity search
+                print(query)
+                print(top_k)
                 results = await self.vectorstore.asimilarity_search_with_score(query, k=top_k)
+                print("# Step 6")
             # Format results
+            print("# Step 7")
             formatted_results = []
             for doc, score in results:
                 formatted_results.append({
@@ -106,7 +116,7 @@ class BaseVectorDB(ABC):
                     'metadata': doc.metadata,
                     'score': score
                 })
-
+            print("# Step 8")
             return formatted_results
         except Exception as e:
             self.logger.error(f"Error searching documents: {e}")

@@ -83,7 +83,7 @@ class DataIoController:
                     ref_value_id = ref_param_map.get('value')
                     value = self._get_service_value_ctl(ref_value_id, io_type="O")
                 else:
-                    value = self._get_service_value_ctl(key, io_type="I")#ref_param_map.get('value')
+                    value = self._get_service_value_ctl(key, io_type="I")
                 param_name = _extract_param_name(key)
                 params[param_name] = value
         return params

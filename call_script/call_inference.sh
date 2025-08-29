@@ -14,3 +14,5 @@
 
 # RAG
 time curl -d '{"request_id":"1234567890", "query":"에이전트의 기본 구성 요소는?"}' -H "Content-Type: application/json" http://127.0.0.1:18000/api/v1/workflow/run
+
+echo

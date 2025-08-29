@@ -29,9 +29,9 @@ class CachedIODataAccess:
         return value
 
     def get_all(self):
-        # self._thread_lock.acquire()
-        # data = deepcopy(self._data_pool)
-        # self._thread_lock.release()
+        self._thread_lock.acquire()
+        data = deepcopy(self._data_pool)
+        self._thread_lock.release()
         return self._data_pool
 
     def set_data(self, value_id, data):

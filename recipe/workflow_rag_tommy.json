@@ -1,0 +1,528 @@
+{
+    "name": "Loaded Project",
+    "version": "1.0",
+    "metadata": {
+        "description": "Simple RAG Workflow",
+        "type": "RAG"
+    },
+    "nodes": [
+        {
+            "node_id": "Input_node",
+            "node_type": "class",
+            "role": "start",
+            "location": "inner",
+            "containable": true,
+            "api_keys": [
+                ""
+            ],
+            "node_info": {
+                "id": "Input_node",
+                "code": "RagInput",
+                "version": "1.0.0",
+                "title": "rag input",
+                "desc": "RAG Input Node"
+            },
+            "api_info": {
+                "base_url": ""
+            },
+            "class_info": {
+                "module_path": "app.simple_rag.input.rag_input",
+                "class_name": "RagInput",
+                "environments": {}
+            },
+            "services": {
+                "query_input": {
+                    "function": "query_input",
+                    "params": {
+                        "format": "json",
+                        "input": [
+                            {
+                                "required": true,
+                                "key": "query",
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "result": {
+                        "format": "json",
+                        "output": [
+                            {
+                                "required": false,
+                                "key": "query",
+                                "type": "string"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "node_id": "Retrieval_node",
+            "node_type": "class",
+            "role": "retrieval",
+            "location": "inner",
+            "containable": true,
+            "api_keys": [
+                ""
+            ],
+            "node_info": {
+                "id": "Retrieval_node",
+                "code": "RAG_RETR",
+                "version": "1.0.0",
+                "title": "Retrieval",
+                "desc": "RAG Retrieval Node"
+            },
+            "api_info": {
+                "base_url": ""
+            },
+            "class_info": {
+                "module_path": "app.simple_rag.retrieve.rag_retrieve",
+                "class_name": "RagRetrieve",
+                "environments": {}
+            },
+            "services": {
+                "retrieve": {
+                    "function": "retrieve",
+                    "params": {
+                        "format": "json",
+                        "input": [
+                            {
+                                "required": true,
+                                "key": "query",
+                                "type": "string"
+                            },
+                            {
+                                "required": true,
+                                "key": "top_k",
+                                "type": "int",
+                                "default_value": 0.8
+                            }
+                        ]
+                    },
+                    "header": {},
+                    "body": {},
+                    "result": {
+                        "format": "json",
+                        "output": [
+                            {
+                                "required": false,
+                                "key": "retrieved_documents",
+                                "type": "object"
+                            },
+                            {
+                                "required": false,
+                                "key": "document_sources",
+                                "type": "object"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "node_id": "Generation_node",
+            "node_type": "class",
+            "role": "generation",
+            "location": "inner",
+            "containable": true,
+            "api_keys": [
+                ""
+            ],
+            "node_info": {
+                "id": "Generation_node",
+                "code": "RAG_GEN",
+                "version": "1.0.23",
+                "title": "Generate Model",
+                "desc": "RAG Generation"
+            },
+            "api_info": {
+                "base_url": ""
+            },
+            "class_info": {
+                "module_path": "app.simple_rag.generate.rag_generate",
+                "class_name": "RagGenerator",
+                "environments": {}
+            },
+            "services": {
+                "generate_prompt": {
+                    "function": "generate_prompt",
+                    "params": {
+                        "format": "json",
+                        "input": [
+                            {
+                                "required": true,
+                                "key": "question",
+                                "type": "string"
+                            },
+                            {
+                                "required": true,
+                                "key": "prompt_template",
+                                "type": "object"
+                            },
+                            {
+                                "required": true,
+                                "key": "retrieved_documents",
+                                "type": "object"
+                            }
+                        ]
+                    },
+                    "result": {
+                        "format": "json",
+                        "output": [
+                            {
+                                "required": false,
+                                "key": "prompt",
+                                "type": "object"
+                            }
+                        ]
+                    }
+                },
+                "generate_answer": {
+                    "function": "generate_answer",
+                    "params": {
+                        "format": "json",
+                        "input": [
+                            {
+                                "required": true,
+                                "key": "prompt",
+                                "type": "string"
+                            },
+                            {
+                                "required": true,
+                                "key": "llm_type",
+                                "type": "string",
+                                "default_value": "ollama"
+                            },
+                            {
+                                "required": true,
+                                "key": "model_name",
+                                "type": "string"
+                            },
+                            {
+                                "required": true,
+                                "key": "base_url",
+                                "type": "string",
+                                "default_value": "http://ailand.ai:30804/v1"
+                            },
+                            {
+                                "required": true,
+                                "key": "temperature",
+                                "type": "float",
+                                "default_value": 0.7
+                            },
+                            {
+                                "required": true,
+                                "key": "api_key",
+                                "type": "string",
+                                "default_value": "dummy"
+                            }
+                        ]
+                    },
+                    "result": {
+                        "format": "json",
+                        "output": [
+                            {
+                                "required": false,
+                                "key": "answer",
+                                "type": "string"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "node_id": "Generation_node",
+            "node_type": "class",
+            "role": "generation",
+            "location": "inner",
+            "containable": true,
+            "api_keys": [
+                ""
+            ],
+            "node_info": {
+                "id": "Generation_node",
+                "code": "RAG_GEN",
+                "version": "1.0.23",
+                "title": "Generate Model",
+                "desc": "RAG Generation"
+            },
+            "api_info": {
+                "base_url": ""
+            },
+            "class_info": {
+                "module_path": "app.simple_rag.generate.rag_generate",
+                "class_name": "RagGenerator",
+                "environments": {}
+            },
+            "services": {
+                "generate_prompt": {
+                    "function": "generate_prompt",
+                    "params": {
+                        "format": "json",
+                        "input": [
+                            {
+                                "required": true,
+                                "key": "question",
+                                "type": "string"
+                            },
+                            {
+                                "required": true,
+                                "key": "prompt_template",
+                                "type": "object"
+                            },
+                            {
+                                "required": true,
+                                "key": "retrieved_documents",
+                                "type": "object"
+                            }
+                        ]
+                    },
+                    "result": {
+                        "format": "json",
+                        "output": [
+                            {
+                                "required": false,
+                                "key": "prompt",
+                                "type": "object"
+                            }
+                        ]
+                    }
+                },
+                "generate_answer": {
+                    "function": "generate_answer",
+                    "params": {
+                        "format": "json",
+                        "input": [
+                            {
+                                "required": true,
+                                "key": "prompt",
+                                "type": "string"
+                            },
+                            {
+                                "required": true,
+                                "key": "llm_type",
+                                "type": "string",
+                                "default_value": "ollama"
+                            },
+                            {
+                                "required": true,
+                                "key": "model_name",
+                                "type": "string"
+                            },
+                            {
+                                "required": true,
+                                "key": "base_url",
+                                "type": "string",
+                                "default_value": "http://ailand.ai:30804/v1"
+                            },
+                            {
+                                "required": true,
+                                "key": "temperature",
+                                "type": "float",
+                                "default_value": 0.7
+                            },
+                            {
+                                "required": true,
+                                "key": "api_key",
+                                "type": "string",
+                                "default_value": "dummy"
+                            }
+                        ]
+                    },
+                    "result": {
+                        "format": "json",
+                        "output": [
+                            {
+                                "required": false,
+                                "key": "answer",
+                                "type": "string"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "node_id": "Output_node",
+            "node_type": "class",
+            "role": "output",
+            "location": "inner",
+            "containable": true,
+            "api_keys": [
+                ""
+            ],
+            "node_info": {
+                "id": "Output_node",
+                "code": "RAG_OUTPUT",
+                "version": "1.0.0",
+                "title": "RAG Output",
+                "desc": "Rag Output Node"
+            },
+            "api_info": {
+                "base_url": ""
+            },
+            "class_info": {
+                "module_path": "app.simple_rag.output.rag_output",
+                "class_name": "RagOutput",
+                "environments": {}
+            },
+            "services": {
+                "output": {
+                    "function": "output",
+                    "params": {
+                        "format": "json",
+                        "input": [
+                            {
+                                "required": true,
+                                "key": "output_prompt",
+                                "type": "object"
+                            },
+                            {
+                                "required": true,
+                                "key": "answer",
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "result": {
+                        "format": "json",
+                        "output": [
+                            {
+                                "required": true,
+                                "key": "output",
+                                "type": "json"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    ],
+    "edges": [
+        {
+            "source": "Generation_node.generate_answer",
+            "source_handler": {
+                "type": "sequence",
+                "conditions": {}
+            },
+            "target": "Output_node.output",
+            "target_handler": {
+                "type": "sequence",
+                "conditions": {}
+            },
+            "params_info": [
+                {
+                    "refer_type": "direct",
+                    "key": "output_prompt",
+                    "value": "{{answer}}"
+                },
+                {
+                    "refer_type": "indirect",
+                    "key": "answer",
+                    "value": "Generation_node.generate_answer.answer"
+                }
+            ]
+        },
+        {
+            "source": "Generation_node.generate_prompt",
+            "source_handler": {
+                "type": "sequence",
+                "conditions": {}
+            },
+            "target": "Generation_node.generate_answer",
+            "target_handler": {
+                "type": "sequence",
+                "conditions": {}
+            },
+            "params_info": [
+                {
+                    "refer_type": "indirect",
+                    "key": "prompt",
+                    "value": "Generation_node.generate_prompt.prompt"
+                },
+                {
+                    "refer_type": "direct",
+                    "key": "llm_type",
+                    "value": "openai"
+                },
+                {
+                    "refer_type": "direct",
+                    "key": "model_name",
+                    "value": "gemma3:12b"
+                },
+                {
+                    "refer_type": "direct",
+                    "key": "base_url",
+                    "value": "http://192.15.90.108:21434/v1"
+                },
+                {
+                    "refer_type": "direct",
+                    "key": "temperature",
+                    "value": 0.5
+                },
+                {
+                    "refer_type": "direct",
+                    "key": "api_key",
+                    "value": "dummy"
+                }
+            ]
+        },
+        {
+            "source": "Retrieval_node.retrieve",
+            "source_handler": {
+                "type": "sequence",
+                "conditions": {}
+            },
+            "target": "Generation_node.generate_prompt",
+            "target_handler": {
+                "type": "sequence",
+                "conditions": {}
+            },
+            "params_info": [
+                {
+                    "refer_type": "indirect",
+                    "key": "question",
+                    "value": "Input_node.query_input.query"
+                },
+                {
+                    "refer_type": "direct",
+                    "key": "prompt_template",
+                    "value": "다음 Context를 참고하여 질문에 한국어로 답하세요 \\n 질문 : {{question}} \\n Context : {{docs | join('\\n')}}"
+                },
+                {
+                    "refer_type": "indirect",
+                    "key": "retrieved_documents",
+                    "value": "Retrieval_node.retrieve.retrieved_documents"
+                }
+            ]
+        },
+        {
+            "source": "Input_node.query_input",
+            "source_handler": {
+                "type": "sequence",
+                "conditions": {}
+            },
+            "target": "Retrieval_node.retrieve",
+            "target_handler": {
+                "type": "sequence",
+                "conditions": {}
+            },
+            "params_info": [
+                {
+                    "refer_type": "indirect",
+                    "key": "query",
+                    "value": "Input_node.query_input.query"
+                },
+                {
+                    "refer_type": "direct",
+                    "key": "top_k",
+                    "value": 0.8
+                }
+            ]
+        }
+    ],
+    "resources": {
+        "node_a": {}
+    }
+}

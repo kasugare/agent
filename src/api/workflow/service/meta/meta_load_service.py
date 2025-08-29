@@ -124,17 +124,17 @@ class MetaLoadService:
         self._logger.error("# [DAG Loader] Step 01. Extract Common Info")
         wf_comm_meta = self.extract_wf_common_info_service(wf_meta)
         self._datastore.set_comm_meta_service(wf_comm_meta)
-        # self._print_debug_data(wf_comm_meta)
+        self._print_debug_data(wf_comm_meta)
 
         self._logger.error("# [DAG Loader] Step 02. Extract Resource Meta")
         wf_resources_meta = self.get_wf_to_resources_service(wf_meta)
         self._datastore.set_resources_meta_service(wf_resources_meta)
-        # self._print_debug_data(wf_resources_meta)
+        self._print_debug_data(wf_resources_meta)
 
         self._logger.error("# [DAG Loader] Step 03. Extract Nodes")
         wf_nodes_meta = self.extract_wf_to_nodes_service(wf_meta)
         self._datastore.set_nodes_meta_service(wf_nodes_meta)
-        # self._print_debug_data(wf_nodes_meta)
+        self._print_debug_data(wf_nodes_meta)
 
         self._logger.error("# [DAG Loader] Step 04. Extract Service Pool")
         wf_service_pool = self.cvt_wf_to_service_pool_service(wf_nodes_meta)
@@ -144,12 +144,12 @@ class MetaLoadService:
         self._logger.error("# [DAG Loader] Step 05. Extract Edges")
         wf_edges_meta = self.extract_wf_to_edges_service(wf_meta, wf_service_pool)
         self._datastore.set_edges_meta_service(wf_edges_meta)
-        # self._print_debug_data(wf_edges_meta)
+        self._print_debug_data(wf_edges_meta)
 
         self._logger.error("# [DAG Loader] Step 06. Extract Forward-Edge graph")
         wf_forward_edge_graph = self.extract_forward_edge_graph_service(wf_edges_meta)
         self._datastore.set_forward_edge_graph_meta_service(wf_forward_edge_graph)
-        # self._print_debug_data(wf_forward_edge_graph)
+        self._print_debug_data(wf_forward_edge_graph)
 
         self._logger.error("# [DAG Loader] Step 07 Extract Forward-graph")
         wf_forward_graph = self.extract_forward_graph_service(wf_edges_meta)
@@ -164,12 +164,12 @@ class MetaLoadService:
         self._logger.error("# [DAG Loader] Step 09. Extract Start Node from forward_graph")
         start_nodes = self.find_start_nodes_service(wf_forward_graph)
         self._datastore.set_start_nodes_meta_service(start_nodes)
-        # self._print_debug_data(start_nodes)
+        self._print_debug_data(start_nodes)
 
         self._logger.error("# [DAG Loader] Step 10. Extract End Node from backward_graph")
         end_nodes = self.find_end_nodes_service(wf_backward_graph)
         self._datastore.set_end_nodes_meta_service(end_nodes)
-        # self._print_debug_data(end_nodes)
+        self._print_debug_data(end_nodes)
 
         self._logger.error("# [DAG Loader] Step 11. Extract node's environment params")
         nodes_env_value_map = self.extract_node_environments_value_map_service(wf_service_pool)
@@ -194,7 +194,6 @@ class MetaLoadService:
             task_params_map_list = edges_param_map.get(service_id)
             self._logger.debug(f" - {service_id}")
             self._logger.debug(f"         - {task.get_state()}")
-
 
     def _print_debug_data(self, debug_data) -> None:
         if isinstance(debug_data, dict):

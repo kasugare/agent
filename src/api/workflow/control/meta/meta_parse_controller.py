@@ -48,7 +48,8 @@ class MetaParseController:
             curr_node = edge_info.get('source')
             next_node = edge_info.get('target')
             param_map_list = edge_info.get('params_info')
-            forward_edge_graph[next_node] = {}
+            if not forward_edge_graph.get(next_node):
+                forward_edge_graph[next_node] = {}
             if curr_node in forward_edge_graph.keys():
                 forward_edge_graph[curr_node][next_node] = param_map_list
             else:
@@ -60,7 +61,8 @@ class MetaParseController:
         for edge_id, edge_info in edges_meta.items():
             curr_node = edge_info.get('source')
             next_node = edge_info.get('target')
-            forward_graph[next_node] = []
+            if not forward_graph.get(next_node):
+                forward_graph[next_node] = []
             if curr_node in forward_graph.keys():
                 forward_graph[curr_node].append(next_node)
             else:
