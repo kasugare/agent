@@ -44,14 +44,14 @@ def _checkInteger(value):
 		sys.exit(1)
 
 
-def _getLoggerConf(configList, elemnts = LOGGER_INFO, confName = 'MASTER_LOGGER'):
+def _getLoggerConf(configList, elemnts=LOGGER_INFO, confName = 'MASTER_LOGGER'):
 	conf = _getConfig()
 	for elementName in elemnts:
 		configList[elementName] = conf.get(confName, elementName)
 	return configList
 
 
-def _getHandlerConf(configList, elements = HANDLER_INFO, confName = 'HANDLER'):
+def _getHandlerConf(configList, elements=HANDLER_INFO, confName = 'HANDLER'):
 	conf = _getConfig()
 	for elementName in elements:
 		elementValue = conf.get(confName, elementName)
@@ -65,9 +65,9 @@ def _getHandlerConf(configList, elements = HANDLER_INFO, confName = 'HANDLER'):
 	return configList
 
 
-def _getLotateConf(configList, elemnts = LOTATE_INFO, confName = 'LOTATE'):
+def _getLotateConf(configList, elements=LOTATE_INFO, confName = 'LOTATE'):
 	conf = _getConfig()
-	for elementName in elemnts:
+	for elementName in elements:
 		elementValue = conf.get(confName, elementName)
 		if elementName == 'is_lotate':
 			configList[elementName] = _cvtFlag(elementValue)
@@ -82,7 +82,7 @@ def _getLotateConf(configList, elemnts = LOTATE_INFO, confName = 'LOTATE'):
 
 def getLoggerInfo(loggerConfName):
 	configList = {}
-	configList = _getLoggerConf(configList, LOGGER_INFO, loggerConfName)
-	configList = _getHandlerConf(configList)
-	configList = _getLotateConf(configList)
+	configList = _getLoggerConf(configList, confName=loggerConfName)
+	configList = _getHandlerConf(configList, confName=loggerConfName)
+	configList = _getLotateConf(configList, confName=loggerConfName)
 	return configList

@@ -1,7 +1,7 @@
 {
   "WorkflowEngine": {
     "prefix": "/api/v1",
-    "module_name": "api.workflow.workflow_api",
+    "module_name": "engine.workflow.workflow_api",
     "class_name": "WorkflowEngine"
   }
 }

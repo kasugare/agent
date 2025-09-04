@@ -62,8 +62,8 @@ class DynamicRouterService(Service):
 
             elif src_type == 'SRC':
                 self._logger.debug(f" - add api service: {module_name} - {class_name}")
-                if 'api' != module_name.split('.')[0]:
-                    module_name = f'api.{module_name}'
+                # if 'api' != module_name.split('.')[0]:
+                #     module_name = f'api.{module_name}'
                 module = __import__(module_name, fromlist=[module_name])
                 app_object = getattr(module, class_name)(self._logger, self._db_conn)
                 api_router = app_object.get_router()
