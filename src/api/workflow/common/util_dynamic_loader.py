@@ -279,7 +279,6 @@ class DynamicLoader:
 
             self._logger.debug(f"# Step 5: check, method/function is async or sync: '{function_name}'")
             is_async = is_async_function(target_function)
-            self._logger.error(f"   - {function_name} async mode?: {is_async}")
 
             self._logger.debug(f"# Step 6: call function: '{function_name}'")
             if is_async:

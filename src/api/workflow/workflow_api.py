@@ -38,8 +38,8 @@ class WorkflowEngine(BaseRouter):
     def __init__(self, logger=None, db_conn=None):
         super().__init__(logger, tags=['serving'])
         self._datastore = DataStoreService(logger)
+        self._metastore = MetaLoadService(logger, self._datastore)
         self._taskstore = TaskLoadService(logger, self._datastore)
-        self._metastore = MetaLoadService(logger, self._datastore, self._taskstore)
         self._act_planner = ActionPlanningService(logger, self._datastore, self._metastore, self._taskstore)
         self._job_Q = Queue()
         self._act_meta = {}
@@ -49,10 +49,12 @@ class WorkflowEngine(BaseRouter):
         async def create_workflow(workflow) -> None:
             wf_meta = json.loads(workflow)
             self._metastore.change_wf_meta(wf_meta)
-            # return self._metastore.get_dag()
 
         @self.router.post(path='/workflow/run')
         async def call_chained_model_service(request: Dict[str, Any]):
+            self._logger.error("################################################################")
+            self._logger.error("#                         < Inference >                        #")
+            self._logger.error("################################################################")
             start_node = request.get('from')
             if start_node:
                 request.pop('from')

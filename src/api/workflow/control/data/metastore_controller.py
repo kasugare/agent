@@ -26,6 +26,15 @@ class MetastoreController:
         self.set_start_nodes_meta_ctl(start_nodes)
         self.set_end_nodes_meta_ctl(end_nodes)
 
+    # <---------  신규추가 -------->
+    def set_wf_meta_ctl(self, wf_meta):
+        self._cached_metastore_access.set_wf_meta_access(wf_meta)
+
+    # <---------  신규추가 -------->
+    def get_wf_meta_ctl(self):
+        wf_meta = self._cached_metastore_access.get_wf_meta_access()
+        return wf_meta
+
     def set_comm_meta_ctl(self, wf_comm_meta):
         self._cached_metastore_access.set_comm_meta_access(wf_comm_meta)
 

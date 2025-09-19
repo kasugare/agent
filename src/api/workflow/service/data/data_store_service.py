@@ -60,6 +60,15 @@ class DataStoreService:
         service_node_info = data_pool.get(service_id)
         return service_node_info
 
+    # <---------  신규추가 -------->
+    def set_wf_meta_service(self, wf_meta):
+        self._metastore_controller.set_wf_meta_ctl(wf_meta)
+
+    # <---------  신규추가 -------->
+    def get_wf_meta_service(self):
+        wf_meta = self._metastore_controller.get_wf_meta_ctl()
+        return wf_meta
+
     def set_comm_meta_service(self, wf_comm_meta):
         self._metastore_controller.set_comm_meta_ctl(wf_comm_meta)
 
@@ -122,16 +131,19 @@ class DataStoreService:
         meta_pack = self._metastore_controller.get_metas_ctl()
         return meta_pack
 
-    def set_wf_meta_service(self, wf_meta: Dict, dirpath: str = None, filename: str = None) -> None:
+    # <---------  신규추가 -------->
+    def set_wf_meta_file_service(self, wf_meta: Dict, dirpath: str = None, filename: str = None) -> None:
         self._metastore_controller.save_wf_meta_on_file(wf_meta, dirpath, filename)
 
     def get_wf_meta_file_service(self, dirpath: str = None, filename: str = None) -> Dict:
         wf_meta = self._metastore_controller.load_wf_meta_on_file()
         return wf_meta
 
-    def set_init_task_map_service(self, task_map):
-        self._taskpool_controller.set_init_task_map_control(task_map)
+    # <---------  신규추가 -------->
+    def set_task_map_service(self, task_map):
+        self._taskpool_controller.set_task_map_control(task_map)
 
-    def get_init_task_map_service(self):
-        task_map = self._taskpool_controller.get_init_task_map_control()
+    # <---------  신규추가 -------->
+    def get_task_map_service(self):
+        task_map = self._taskpool_controller.get_task_map_control()
         return task_map

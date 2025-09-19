@@ -7,24 +7,26 @@ class EnvironmentsTransformer:
     def __init__(self, logger):
         self._logger = logger
 
-    def cvt_node_env_value_map_ctl(self, wf_service_pool) -> dict:
+    # <---------  신규추가 -------->
+    def cvt_node_env_value_map_ctl(self, wf_nodes_meta, wf_node_env_map_pool, wf_env_pool) -> dict:
         nodes_env_value_map = {}
-        for service_id, service_info in wf_service_pool.items():
-            node_type = service_info.get('node_type')
-            class_info = service_info.get('class_info')
-            if node_type == 'class':
-                env_info = class_info.get('environments')
-                if not env_info:
-                    continue
-                env_map_list = env_info.get('input')
-                if not env_map_list:
-                    continue
-                for env_map in env_map_list:
-                    env_name = env_map.get('key')
-                    env_id = f"{service_id}.{env_name}"
-                    env_value = env_map.get('value')
-                    nodes_env_value_map[env_id] = env_value
-            else:
-                continue
+        for node_id, node_meta in wf_nodes_meta.items():
+            module_info = node_meta.get('class_info')
+            if not module_info: continue
+            module_env_info = module_info.get('environments')
+            if not module_env_info: continue
+            env_params = module_env_info.get('params')
+            if not env_params: continue
+
+            node_env_map = wf_node_env_map_pool.get(node_id)
+            for node_env_param_name, node_env_map in node_env_map.items():
+                direct = node_env_map.get('direct')
+                if direct:
+                    value = node_env_map.get('value')
+                else:
+                    env_map_id = node_env_map.get('value')
+                    value = wf_env_pool.get(env_map_id)
+                env_id = f"{node_id}.{node_env_param_name}"
+                nodes_env_value_map[env_id] = value
         return nodes_env_value_map
 

@@ -20,6 +20,36 @@ class MetaParseController:
         }
         return wf_comm_meta
 
+# <---------  신규추가 -------->
+    def extract_wf_common_env_ctl(self, wf_meta: dict) -> dict:
+        wf_common_envs_map = wf_meta.get('environments')
+        env_pool = {}
+        for env_map in wf_common_envs_map:
+            env_code = env_map.get('env_code')
+            env_params = env_map.get('env_params')
+            for env_param_map in env_params:
+                env_id = f"{env_code}.{env_param_map.get('key')}"
+                env_pool[env_id] = env_param_map.get('value')
+        return env_pool
+
+    # <---------  신규추가 -------->
+    def extract_wf_node_env_map_ctl(self, wf_meta: dict) -> dict:
+        wf_node_env_map_list = wf_meta.get('node_env_maps')
+        node_env_map_pool = {}
+        for node_env_map in wf_node_env_map_list:
+            node_id = node_env_map.get('node_id')
+            env_maps = node_env_map.get('env_maps')
+            for env_map in env_maps:
+                try:
+                    key = env_map.pop('key')
+                    if node_env_map_pool.get(node_id):
+                        node_env_map_pool[node_id][key] = env_map
+                    else:
+                        node_env_map_pool[node_id] = {key: env_map}
+                except Exception as e:
+                    self._logger.error("not existed node-env parma key")
+        return node_env_map_pool
+
     def extract_wf_to_nodes_ctl(self, wf_meta: dict) -> dict:
         nodes = wf_meta.get('nodes')
         nodes_meta = {node.get('node_id'): node for node in nodes if node.get('node_id')}
@@ -33,6 +63,7 @@ class MetaParseController:
             services = node_info.get('services')
             for service_name, service_info in services.items():
                 node_service_id = f"{node_id}.{service_name}"
+                service_info['node_id'] = node_id   # <--
                 service_pool[node_service_id] = service_info
                 for node_key in add_node_keys:
                     service_pool[node_service_id][node_key] = node_info[node_key]
@@ -126,8 +157,9 @@ class MetaParseController:
         end_nodes = self.find_start_nodes_ctl(wf_backward_edge_graph)
         return sorted(list(end_nodes))
 
-    def extract_node_env_value_map_ctl(self, wf_service_pool) -> dict:
-        nodes_env_value_map = self._env_transformer.cvt_node_env_value_map_ctl(wf_service_pool)
+    # <---------  신규추가 -------->
+    def extract_node_env_value_map_ctl(self, wf_nodes_meta, wf_node_env_map_pool, wf_env_pool) -> dict:
+        nodes_env_value_map = self._env_transformer.cvt_node_env_value_map_ctl(wf_nodes_meta, wf_node_env_map_pool, wf_env_pool)
         return nodes_env_value_map
 
     def extract_params_map_ctl(self, start_nodes, wf_service_pool, wf_edges_meta) -> dict:

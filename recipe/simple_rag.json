@@ -5,6 +5,69 @@
 		"description": "Simple RAG Workflow",
 		"type": "RAG"
 	},
+	"environments": [
+		{
+			"env_code": "EMB_PATH",
+			"env_name": "embedding server url path",
+			"env_params": [
+				{
+					"key": "embedding_server_path",
+					"value": "http://192.15.90.108:21434/v1"
+				},
+				{
+					"key": "embed_model_nm",
+					"value": "nomic-embed-text:latest"
+				}
+			]
+		},
+		{
+			"env_code": "VEC_PATH",
+			"env_name": "vector db url path",
+			"env_params": [
+				{
+					"key": "vectordb_type",
+					"value": "qdrant"
+				},
+				{
+					"key": "vectordb_path",
+					"value": "http://192.15.90.108:31633"
+				}
+			]
+		}
+	],
+	"node_env_maps": [
+		{
+			"node_id": "Test_1234567890",
+			"env_maps": [
+				{
+					"direct": false,
+					"key": "embedding_server_path",
+					"value": "EMB_PATH.embedding_server_path"
+				},
+				{
+					"direct": false,
+					"key": "embed_model_nm",
+					"value": "EMB_PATH.embed_model_nm"
+				},
+				{
+					"direct": false,
+					"key": "vectordb_type",
+					"value": "VEC_PATH.vectordb_type"
+				},
+				{
+					"direct": false,
+					"key": "vectordb_path",
+					"value": "VEC_PATH.vectordb_path"
+				},
+				{
+					"direct": true,
+					"key": "test_env_key",
+					"value": "test_env_value-TEST"
+				}
+			]
+
+		}
+	],
 	"nodes": [
 		{
 			"node_id": "Input_zla_r0_node",
@@ -27,11 +90,87 @@
 			"class_info": {
 				"module_path": "app.simple_rag.input.rag_input",
 				"class_name": "RagInput",
-				"environments": {"test": "abcdefg"}
+				"environments": {}
 			},
 			"services": {
 				"query_input": {
 					"function": "query_input",
+					"params": {
+						"format": "json",
+						"input": [
+							{
+								"required": true,
+								"key": "query",
+								"type": "string"
+							}
+						]
+					},
+					"result": {
+						"format": "json",
+						"output": [
+							{
+								"key": "query",
+								"type": "string"
+							}
+						]
+					}
+				}
+			}
+		},
+		{
+			"node_id": "Test_1234567890",
+			"node_type": "class",
+			"role": "start",
+			"location": "inner",
+			"containable": true,
+			"api_keys": [""],
+
+			"node_info": {
+				"id": "test_external_node",
+				"code": "Ext_API",
+				"version": "1.0.0",
+				"title": "external_node",
+				"desc": "External Connection Node"
+			},
+			"api_info": {
+				"base_url": ""
+			},
+			"class_info": {
+				"module_path": "app.simple_rag.test.test_external_node",
+				"class_name": "ExternalRPC",
+				"environments": {
+					"params": [
+						{
+							"required": true,
+							"key": "embedding_server_path",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "embed_model_nm",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "vectordb_type",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "vectordb_path",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "test_env_key",
+							"type": "string"
+						}
+					]
+				}
+			},
+			"services": {
+				"test_service": {
+					"function": "test_service",
 					"params": {
 						"format": "json",
 						"input": [
@@ -300,6 +439,25 @@
 					"refer_type": "direct",
 					"key": "top_k",
 					"value": 5
+				}
+			]
+		},
+		{
+			"source": "Input_zla_r0_node.query_input",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"target": "Test_1234567890.test_service",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"params_info": [
+				{
+					"refer_type": "indirect",
+					"key": "query",
+					"value": "Input_zla_r0_node.query_input.query"
 				}
 			]
 		},

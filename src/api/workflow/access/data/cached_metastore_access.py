@@ -12,6 +12,7 @@ class CachedMetastoreAccess:
         self._dag_meta = {}
         self._edge_map = {}
 
+        self._wf_meta = {} # <--
         self._wf_comm_meta = {}
         self._wf_nodes_meta = {}
         self._wf_node_service_pool = {}
@@ -23,6 +24,14 @@ class CachedMetastoreAccess:
         self._start_nodes = []
         self._end_nodes = []
         self._edges_param_map = {}
+
+    # <---------  신규추가 -------->
+    def set_wf_meta_access(self, wf_meta: Dict) -> None:
+        self._wf_meta = wf_meta
+
+    # <---------  신규추가 -------->
+    def get_wf_meta_access(self) -> Dict:
+        return self._wf_meta
 
     def set_comm_meta_access(self, wf_comm_meta: Dict) -> None:
         self._wf_comm_meta = wf_comm_meta
