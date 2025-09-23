@@ -90,7 +90,6 @@ class BaseVectorDB(ABC):
         """
         if self.vectorstore is None:
             raise ValueError("Vector store not initialized. Call connect() first.")
-
         try:
             if exclude_pages is not None:
                 exclude_filter = self.build_page_not_in_filter(exclude_pages=exclude_pages)

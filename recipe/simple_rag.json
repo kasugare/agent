@@ -12,7 +12,7 @@
 			"env_params": [
 				{
 					"key": "embedding_server_path",
-					"value": "http://192.15.90.108:21434/v1"
+					"value": "http://127.0.0.1:21434/v1"
 				},
 				{
 					"key": "embed_model_nm",
@@ -30,7 +30,17 @@
 				},
 				{
 					"key": "vectordb_path",
-					"value": "http://192.15.90.108:31633"
+					"value": "http://127.0.0.1:16333"
+				}
+			]
+		},
+		{
+			"env_code": "APIKEY",
+			"env_name": "api key",
+			"env_params": [
+				{
+					"key": "api-key",
+					"value": "12345678890"
 				}
 			]
 		}
@@ -40,32 +50,71 @@
 			"node_id": "Test_1234567890",
 			"env_maps": [
 				{
-					"direct": false,
+					"refer_type": "indirect",
 					"key": "embedding_server_path",
 					"value": "EMB_PATH.embedding_server_path"
 				},
 				{
-					"direct": false,
+					"refer_type": "indirect",
 					"key": "embed_model_nm",
 					"value": "EMB_PATH.embed_model_nm"
 				},
 				{
-					"direct": false,
+					"refer_type": "indirect",
 					"key": "vectordb_type",
 					"value": "VEC_PATH.vectordb_type"
 				},
 				{
-					"direct": false,
+					"refer_type": "indirect",
 					"key": "vectordb_path",
 					"value": "VEC_PATH.vectordb_path"
 				},
 				{
-					"direct": true,
+					"refer_type": "direct",
 					"key": "test_env_key",
-					"value": "test_env_value-TEST"
+					"value": "customized_key"
 				}
 			]
-
+		},
+		{
+			"node_id": "Retrieval_724KHk_node",
+			"env_maps": [
+				{
+					"refer_type": "indirect",
+					"key": "embedding_server_path",
+					"value": "EMB_PATH.embedding_server_path"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "embed_model_nm",
+					"value": "EMB_PATH.embed_model_nm"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "vectordb_type",
+					"value": "VEC_PATH.vectordb_type"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "vectordb_path",
+					"value": "VEC_PATH.vectordb_path"
+				},
+				{
+					"refer_type": "direct",
+					"key": "api_key",
+					"value": "APIKEY.api-key"
+				}
+			]
+		},
+		{
+			"node_id": "Generation_TAVl73_node",
+			"env_maps": [
+				{
+					"refer_type": "indirect",
+					"key": "api_key",
+					"value": "APIKEY.api-key"
+				}
+			]
 		}
 	],
 	"nodes": [
@@ -213,7 +262,35 @@
 			"class_info": {
 				"module_path": "app.simple_rag.retrieve.rag_retrieve",
 				"class_name": "RagRetrieve",
-				"environments": {}
+				"environments": {
+					"params": [
+						{
+							"required": true,
+							"key": "embedding_server_path",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "embed_model_nm",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "vectordb_type",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "vectordb_path",
+							"type": "string"
+						},
+						{
+							"required": false,
+							"key": "api_key",
+							"type": "string"
+						}
+					]
+				}
 			},
 			"services": {
 				"retrieve": {
@@ -273,7 +350,15 @@
 			"class_info": {
 				"module_path": "app.simple_rag.generate.rag_generate",
 				"class_name": "RagGenerator",
-				"environments": {}
+				"environments": {
+					"params": [
+						{
+							"required": false,
+							"key": "api_key",
+							"type": "string"
+						}
+					]
+				}
 			},
 			"services": {
 				"generate_prompt": {
@@ -341,12 +426,6 @@
 								"key": "temperature",
 								"type": "float",
 								"default_value": 0.7
-							},
-							{
-								"required": true,
-								"key": "api_key",
-								"type": "string",
-								"default_value": "dummy"
 							}
 						]
 					},
@@ -439,6 +518,16 @@
 					"refer_type": "direct",
 					"key": "top_k",
 					"value": 5
+				},
+				{
+					"refer_type": "direct",
+					"key": "collection_name",
+					"value": "agent"
+				},
+				{
+					"refer_type": "direct",
+					"key": "check_embedding_ctx_length",
+					"value": false
 				}
 			]
 		},
@@ -526,11 +615,6 @@
 					"refer_type": "direct",
 					"key": "temperature",
 					"value": 0.5
-				},
-				{
-					"refer_type": "direct",
-					"key": "api_key",
-					"value": "dummy"
 				}
 			]
 		},

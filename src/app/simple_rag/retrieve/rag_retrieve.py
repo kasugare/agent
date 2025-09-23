@@ -4,26 +4,24 @@
 from langchain_openai import OpenAIEmbeddings
 from .vectordb_loader import VectorDBLoader
 
-
 class RagRetrieve:
-    def __init__(self, logger):
+    def __init__(self, logger, embedding_server_path, embed_model_nm, vectordb_type, vectordb_path, api_key=None):
         self._logger = logger
         self._vector_db_loader = None
         self._vector_db = None
+        self._api_key = api_key
+        self._embedding_server_path = embedding_server_path
+        self._embed_model_nm = embed_model_nm
+        self._vectordb_type = vectordb_type
+        self._vectordb_path = vectordb_path
 
-    async def retrieve(self, query, top_k):
-        embedding_server_path = "http://192.15.90.108:21434/v1"
-        embed_model_nm = "nomic-embed-text:latest"
-        vectordb_type = "qdrant"
-        vectordb_path = "http://192.15.90.108:31633"
-        collection_name = "agent"
-        api_key = "dummy"
-        embedding_model = OpenAIEmbeddings(openai_api_base=embedding_server_path, model=embed_model_nm, api_key=api_key, check_embedding_ctx_length=False)
+    async def retrieve(self, query, top_k, collection_name, check_embedding_ctx_length=False):
+        embedding_model = OpenAIEmbeddings(openai_api_base=self._embedding_server_path, model=self._embed_model_nm, api_key=self._api_key, check_embedding_ctx_length=check_embedding_ctx_length)
         if not self._vector_db:
             vector_db_loader = VectorDBLoader(self._logger)
             self._vector_db = vector_db_loader.load(
-                db_type=vectordb_type,
-                connection_string=vectordb_path,
+                db_type=self._vectordb_type,
+                connection_string=self._vectordb_path,
                 collection_name=collection_name,
                 embedding_model=embedding_model
             )

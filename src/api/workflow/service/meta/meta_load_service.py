@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# 통짜 복사
 
 from common.conf_system import getRecipeDir, getRecipeFile
 from api.workflow.control.meta.meta_parse_controller import MetaParseController
@@ -13,7 +12,7 @@ import os
 
 
 class MetaLoadService:
-    def __init__(self, logger, datastore): # <--
+    def __init__(self, logger, datastore): 
         self._logger = logger
         self._meta_controller = MetaParseController(logger)
         self._datastore = datastore
@@ -52,30 +51,30 @@ class MetaLoadService:
         wf_meta = self._datastore.get_wf_meta_file_service()
         if wf_meta:
             updated_dag_meta = self._meta_controller.cvt_wf_to_dag(wf_meta)
-            current_dag_meta = self._datastore.get_wf_meta_service()  # <--
+            current_dag_meta = self._datastore.get_wf_meta_service()  
             if current_dag_meta != updated_dag_meta:
                 self._logger.debug("# SYNC UPDATE")
                 self.set_base_wf_meta(wf_meta)
                 self._logger.debug(updated_dag_meta)
 
-    def change_wf_meta(self, updated_wf_meta: Dict) -> None:  # <--
-        current_wf_meta = self._datastore.get_wf_meta_service()  # <--
-        if current_wf_meta != updated_wf_meta:  # <--
-            self._logger.debug("# SYNC UPDATE")  # <--
-            self._datastore.set_wf_meta_file_service(updated_wf_meta)  # <--
-            # self.set_base_wf_meta(updated_wf_meta)  # <--
+    def change_wf_meta(self, updated_wf_meta: Dict) -> None:  
+        current_wf_meta = self._datastore.get_wf_meta_service()  
+        if current_wf_meta != updated_wf_meta:  
+            self._logger.debug("# SYNC UPDATE")  
+            # self._datastore.set_wf_meta_file_service(updated_wf_meta)
+            self.set_base_wf_meta(updated_wf_meta)
 
     def extract_wf_common_info_service(self, wf_meta: Dict) -> Dict:
         wf_comm_meta = self._meta_controller.extract_wf_common_info_ctl(wf_meta)
         return wf_comm_meta
 
-    def extract_wf_common_env_service(self, wf_meta: Dict) -> Dict:  # <--
-        wf_env_pool = self._meta_controller.extract_wf_common_env_ctl(wf_meta)  # <--
-        return wf_env_pool  # <--
+    def extract_wf_common_env_service(self, wf_meta: Dict) -> Dict:  
+        wf_env_pool = self._meta_controller.extract_wf_common_env_ctl(wf_meta)  
+        return wf_env_pool  
 
-    def extract_wf_node_env_service(self, wf_meta: Dict) -> Dict:  # <--
-        wf_node_env_map_pool = self._meta_controller.extract_wf_node_env_map_ctl(wf_meta)  # <--
-        return wf_node_env_map_pool  # <--
+    def extract_wf_node_env_service(self, wf_meta: Dict) -> Dict:  
+        wf_node_env_map_pool = self._meta_controller.extract_wf_node_env_map_ctl(wf_meta)  
+        return wf_node_env_map_pool  
 
     def extract_wf_to_nodes_service(self, wf_meta: Dict) -> Dict:
         wf_nodes_meta = self._meta_controller.extract_wf_to_nodes_ctl(wf_meta)

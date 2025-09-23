@@ -26,11 +26,9 @@ class MetastoreController:
         self.set_start_nodes_meta_ctl(start_nodes)
         self.set_end_nodes_meta_ctl(end_nodes)
 
-    # <---------  신규추가 -------->
     def set_wf_meta_ctl(self, wf_meta):
         self._cached_metastore_access.set_wf_meta_access(wf_meta)
 
-    # <---------  신규추가 -------->
     def get_wf_meta_ctl(self):
         wf_meta = self._cached_metastore_access.get_wf_meta_access()
         return wf_meta
@@ -61,8 +59,11 @@ class MetastoreController:
 
     def get_edge_meta_by_edge_id_ctl(self, edge_id):
         wf_edges_meta = self.get_edges_meta_ctl()
-        wf_edge_meta = wf_edges_meta.get(edge_id)
-        return wf_edge_meta
+        for wf_edge_meta in wf_edges_meta:
+            wf_edge_id = wf_edge_meta.get('edge_id')
+            if wf_edge_id == edge_id:
+                return wf_edge_meta
+        return {}
 
     def set_forward_edge_graph_meta_ctl(self, wf_forward_edge_graph):
         self._cached_metastore_access.set_forward_edge_graph_meta_access(wf_forward_edge_graph)

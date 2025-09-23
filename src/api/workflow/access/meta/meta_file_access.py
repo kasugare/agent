@@ -44,12 +44,12 @@ class MetaFileAccess:
                     with open(filepath, 'w') as fd:
                         json.dump({}, fd, indent=2)
         except FileNotFoundError as e:
-            traceback.format_exc(e)
+            self._logger.error(e)
             self._logger.error(f"Can not found DAG meta file: {filename}")
             raise Exception(f"Can not found DAG meta: {filename}")
 
         except json.JSONDecodeError as e:
-            traceback.format_exc(e)
+            self._logger.error(e)
             self._logger.error(f"wrong json format, decode error: {filename}")
             raise Exception(f"wrong json format, decode error: {filename}")
 

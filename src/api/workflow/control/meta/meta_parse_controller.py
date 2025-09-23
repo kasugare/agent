@@ -20,7 +20,6 @@ class MetaParseController:
         }
         return wf_comm_meta
 
-# <---------  신규추가 -------->
     def extract_wf_common_env_ctl(self, wf_meta: dict) -> dict:
         wf_common_envs_map = wf_meta.get('environments')
         env_pool = {}
@@ -32,7 +31,6 @@ class MetaParseController:
                 env_pool[env_id] = env_param_map.get('value')
         return env_pool
 
-    # <---------  신규추가 -------->
     def extract_wf_node_env_map_ctl(self, wf_meta: dict) -> dict:
         wf_node_env_map_list = wf_meta.get('node_env_maps')
         node_env_map_pool = {}
@@ -157,7 +155,6 @@ class MetaParseController:
         end_nodes = self.find_start_nodes_ctl(wf_backward_edge_graph)
         return sorted(list(end_nodes))
 
-    # <---------  신규추가 -------->
     def extract_node_env_value_map_ctl(self, wf_nodes_meta, wf_node_env_map_pool, wf_env_pool) -> dict:
         nodes_env_value_map = self._env_transformer.cvt_node_env_value_map_ctl(wf_nodes_meta, wf_node_env_map_pool, wf_env_pool)
         return nodes_env_value_map
