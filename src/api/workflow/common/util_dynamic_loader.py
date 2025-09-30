@@ -5,6 +5,7 @@
 from typing import Any, Dict, List, Optional, Union
 from concurrent.futures import ThreadPoolExecutor
 from common.conf_system import getHomeDir
+from common.create_module import CreateModule
 import weakref
 import traceback
 import importlib
@@ -15,28 +16,20 @@ import sys
 import gc
 import os
 
-
 class DynamicLoader:
     def __init__(self, logger):
         self._logger = logger
         self._loaded_modules = {}
         self._instance_pool = {}
-        self._add_path(f"{getHomeDir()}/nodes/")
-        self._add_path(f"{getHomeDir()}/app/")
+        self._add_path(f"{getHomeDir()}/src")
         self._active_clients = weakref.WeakSet()
         self._thread_pool = ThreadPoolExecutor(max_workers=10)
-
-    def _set_zip_path(self, module_path):
-        base_path = f"{getHomeDir()}/nodes/simple_rag"
-        file_names = ["input.zip", "generate.zip", "output.zip", "retrieve.zip"]
-        for file_name in file_names:
-            file_path = f"{base_path}/{file_name}"
-            self._add_path(file_path)
+        self._create_module = CreateModule()
 
     def _load_module(self, module_path: str, reload: bool = False) -> Any:
         """ module_path: "app.test.test_class" """
-        self._set_zip_path(module_path)
         try:
+
             if module_path in self._loaded_modules and not reload:
                 return self._loaded_modules[module_path]
             module = importlib.import_module(module_path)
@@ -60,17 +53,19 @@ class DynamicLoader:
         abs_path = os.path.abspath(path)
         if abs_path not in sys.path:
             sys.path.insert(0, abs_path)
-        print(sys.path)
 
     def create_instance(self, module_path: str, class_name: str, env_params: Dict[str, Any] = None, instance_key: str = None) -> Any:
         try:
+            self._create_module.install_requirements_from_module(module_path)
+
             if env_params is None:
                 env_params = {"logger": self._logger}
             else:
                 env_params['logger'] = self._logger
 
-            module = self._load_module(module_path)
-            # module = importlib.import_module(module_path)
+            # module_path = module_path.replace('app._simple_rag.', '')
+            module = importlib.import_module(module_path)
+
             if not hasattr(module, class_name):
                 raise AttributeError(f"'{class_name}'(class) is not exist in '{module_path}'.")
             target_class = getattr(module, class_name)
@@ -207,6 +202,7 @@ class DynamicLoader:
         elif args and not kwargs:
             final_args = list(args)
         else:
+            self._logger.debug("Case 5: No arguments provided")
             pass
 
         return tuple(final_args), final_kwargs

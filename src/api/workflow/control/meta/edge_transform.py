@@ -53,7 +53,7 @@ class EdgeTransformer:
             edges_map[edge_id] = edge_info
             edges_map[edge_id]['source_info'] = src_service_info
             edges_map[edge_id]['target_info'] = tar_service_info
-            params_info = edge_info.get('params_info')
+            params_info = edge_info.get('param_info')
             self._add_data_type_on_params_info(params_info, tar_service_info)
         return edges_map
 

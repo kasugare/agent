@@ -50,3 +50,9 @@ def getRecipeFile(section='DAG'):
     conf = getConfig()
     fileName = conf.get(section, 'dag_file')
     return fileName
+
+def getAccessPoolType(section='WORKFLOW', option='access_pool_type'):
+    conf = getConfig()
+    access_type = conf.get(section, option)
+    return access_type
+

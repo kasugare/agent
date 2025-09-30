@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# 통짜 복사
 
 from common.conf_system import getRecipeDir, getRecipeFile
 from api.workflow.control.meta.meta_parse_controller import MetaParseController
@@ -12,7 +13,7 @@ import os
 
 
 class MetaLoadService:
-    def __init__(self, logger, datastore): 
+    def __init__(self, logger, datastore):
         self._logger = logger
         self._meta_controller = MetaParseController(logger)
         self._datastore = datastore
@@ -51,30 +52,30 @@ class MetaLoadService:
         wf_meta = self._datastore.get_wf_meta_file_service()
         if wf_meta:
             updated_dag_meta = self._meta_controller.cvt_wf_to_dag(wf_meta)
-            current_dag_meta = self._datastore.get_wf_meta_service()  
+            current_dag_meta = self._datastore.get_wf_meta_service()
             if current_dag_meta != updated_dag_meta:
                 self._logger.debug("# SYNC UPDATE")
                 self.set_base_wf_meta(wf_meta)
                 self._logger.debug(updated_dag_meta)
 
-    def change_wf_meta(self, updated_wf_meta: Dict) -> None:  
-        current_wf_meta = self._datastore.get_wf_meta_service()  
-        if current_wf_meta != updated_wf_meta:  
-            self._logger.debug("# SYNC UPDATE")  
-            # self._datastore.set_wf_meta_file_service(updated_wf_meta)
-            self.set_base_wf_meta(updated_wf_meta)
+    def change_wf_meta(self, updated_wf_meta: Dict) -> None:
+        current_wf_meta = self._datastore.get_wf_meta_service()
+        if current_wf_meta != updated_wf_meta:
+            self._logger.debug("# SYNC UPDATE")
+            self._datastore.set_wf_meta_file_service(updated_wf_meta)
+            # self.set_base_wf_meta(updated_wf_meta)
 
     def extract_wf_common_info_service(self, wf_meta: Dict) -> Dict:
         wf_comm_meta = self._meta_controller.extract_wf_common_info_ctl(wf_meta)
         return wf_comm_meta
 
-    def extract_wf_common_env_service(self, wf_meta: Dict) -> Dict:  
-        wf_env_pool = self._meta_controller.extract_wf_common_env_ctl(wf_meta)  
-        return wf_env_pool  
+    def extract_wf_common_env_service(self, wf_meta: Dict) -> Dict:
+        wf_env_pool = self._meta_controller.extract_wf_common_env_ctl(wf_meta)
+        return wf_env_pool
 
-    def extract_wf_node_env_service(self, wf_meta: Dict) -> Dict:  
-        wf_node_env_map_pool = self._meta_controller.extract_wf_node_env_map_ctl(wf_meta)  
-        return wf_node_env_map_pool  
+    def extract_wf_node_env_service(self, wf_edges_meta: Dict) -> Dict:
+        wf_node_env_map_pool = self._meta_controller.extract_wf_node_env_map_ctl(wf_edges_meta)
+        return wf_node_env_map_pool
 
     def extract_wf_to_nodes_service(self, wf_meta: Dict) -> Dict:
         wf_nodes_meta = self._meta_controller.extract_wf_to_nodes_ctl(wf_meta)
@@ -147,25 +148,27 @@ class MetaLoadService:
         wf_env_pool = self.extract_wf_common_env_service(wf_meta)
         self._print_debug_data(wf_env_pool)
 
-        self._logger.error("# [DAG Loader] Step 05. Extract node - environment mapper")
-        wf_node_env_map_pool = self.extract_wf_node_env_service(wf_meta)
-        self._print_debug_data(wf_node_env_map_pool)
-
-        self._logger.error("# [DAG Loader] Step 06. Extract node's environment params")
-        nodes_env_value_map = self.extract_node_environments_value_map_service(wf_nodes_meta, wf_node_env_map_pool, wf_env_pool)
-        self._datastore.set_init_nodes_env_params_service(nodes_env_value_map)
-        self._print_debug_data(nodes_env_value_map)
-
-        self._logger.error("# [DAG Loader] Step 07. Extract Service Pool")
+        self._logger.error("# [DAG Loader] Step 05. Extract Service Pool")
         wf_service_pool = self.cvt_wf_to_service_pool_service(wf_nodes_meta)
         self._datastore.set_node_service_pool_service(wf_service_pool)
         self._print_debug_data(wf_service_pool)
 
-        self._logger.error("# [DAG Loader] Step 08. Extract Edges")
+        self._logger.error("# [DAG Loader] Step 06. Extract Edges")
         wf_edges_meta = self.extract_wf_to_edges_service(wf_meta, wf_service_pool)
         self._datastore.set_init_service_params_service(wf_edges_meta)
         self._datastore.set_edges_meta_service(wf_edges_meta)
         self._print_debug_data(wf_edges_meta)
+
+
+        self._logger.error("# [DAG Loader] Step 07. Extract node - environment mapper")
+        wf_node_env_map_pool = self.extract_wf_node_env_service(wf_edges_meta)
+        print(wf_node_env_map_pool)
+
+        self._logger.error("# [DAG Loader] Step 08. Extract node's environment params")
+        nodes_env_value_map = self.extract_node_environments_value_map_service(wf_nodes_meta, wf_node_env_map_pool, wf_env_pool)
+        self._datastore.set_init_nodes_env_params_service(nodes_env_value_map)
+        self._print_debug_data(nodes_env_value_map)
+
 
         self._logger.error("# [DAG Loader] Step 09. Extract Forward-Edge graph")
         wf_forward_edge_graph = self.extract_forward_edge_graph_service(wf_edges_meta)

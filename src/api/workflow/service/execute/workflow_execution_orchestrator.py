@@ -53,13 +53,13 @@ class WorkflowExecutionOrchestrator:
             service_pool = self._meta_pack['service_pool']
             service_info = service_pool.get(service_id)
             class_info = service_info.get('class_info')
-            if not class_info: return {} # <--
-            environments_map = class_info.get('environments')  # <--
-            if not environments_map: return {} # <--
-            env_params_info = environments_map.get('params') # <--
-            if not env_params_info: return {} # <--
-            node_id = service_info.get('node_id') # <--
-            env_params_map = {env_param_map.get('key'): f"E.{node_id}.{env_param_map.get('key')}"  # <--
+            if not class_info: return {}
+            environments_map = class_info.get('environments')
+            if not environments_map: return {}
+            env_params_info = environments_map.get('params')
+            if not env_params_info: return {}
+            node_id = service_info.get('node_id')
+            env_params_map = {env_param_map.get('key'): f"E.{node_id}.{env_param_map.get('key')}"
                              for env_param_map in env_params_info if env_param_map.get('key')}
             for env_name, env_value_id in env_params_map.items():
                 env_value = self._datastore.get_param_value_service(env_value_id)
@@ -74,6 +74,8 @@ class WorkflowExecutionOrchestrator:
             edges_param_map = self._meta_pack['act_edges_param_map']
             param_map_list = edges_param_map.get(edge_param_id)
             params = {}
+            if not param_map_list:
+                return params
             for param_map in param_map_list:
                 param_name = param_map.get('key')
 

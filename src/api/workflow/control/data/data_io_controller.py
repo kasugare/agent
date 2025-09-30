@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from api.workflow.access.data.cached_io_data_access import CachedIODataAccess
+from api.workflow.control.data.data_io_access_controller import DataIOAccessController
 from api.workflow.error_pool.error import NotExistedData
 
 class DataIoController:
@@ -14,7 +15,8 @@ class DataIoController:
 
     def __init__(self, logger):
         self._logger = logger
-        self._data_access = CachedIODataAccess(logger)
+        self._data_access_controller = DataIOAccessController(logger)
+        self._data_access = self._data_access_controller.get_data_access_instance()
 
     def set_init_nodes_env_params_ctl(self, nodes_env_value_map):
         if not nodes_env_value_map:
@@ -26,7 +28,7 @@ class DataIoController:
     def set_init_service_params_ctl(self, wf_edges_meta):
         for edge_id, edge_meta in wf_edges_meta.items():
             service_id = edge_meta.get('target')
-            params_info = edge_meta.get('params_info')
+            params_info = edge_meta.get('param_info')
             for params_map in params_info:
                 if params_map.get('refer_type') == 'direct':
                     param_name = params_map.get('key')

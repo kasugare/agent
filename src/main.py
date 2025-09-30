@@ -1,15 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from common.conf_system import getHomeDir
-from ailand.common.logger import Logger
+from common.logger import Logger
 from api.launcher.api_launcher import ApiLauncher
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 import multiprocessing
 import uvicorn
+from common.dependancy import create_redis_client
+from common.create_module import CreateModule
 
+# create_module = CreateModule()
+# create_module.create_all_packages('/data/kelly/pycharm_projects/agent/src/app/_simple_rag')
+# create_module.register_zip_packages('/data/kelly/pycharm_projects/agent/src/app/_simple_rag')
 
 class CSPMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
@@ -47,6 +51,14 @@ app.add_middleware(CSPMiddleware)
 api_service_launcher = ApiLauncher(app, logger)
 app.include_router(api_service_launcher.get_router(), prefix="/admin")
 
+# @app.on_event("startup")
+# async def startup_event():
+#     app.state.redis_clients = {
+#         "meta": create_redis_client(redis_databases=1),
+#         "data": create_redis_client(redis_databases=2),
+#         "task": create_redis_client(redis_databases=3),
+#     }
+
 
 @app.on_event("shutdown")
 async def shutdown_event():
@@ -60,6 +72,22 @@ async def shutdown_event():
 async def global_exception_handler(request, exc):
     logger.error(f"Global exception: {exc}", exc_info=True)
     return {"detail": "Internal Server Error"}
+
+
+
+# @app.on_event("startup")
+# async def startup_event():
+#     sentinel_hosts = "ailand.ai:30379"
+#     master_name = "mymaster"
+#     password = "mypassword"
+#
+#     create_redis_client(app, sentinel_hosts, master_name, password)
+# @app.on_event("shutdown")
+# async def shutdown_event():
+#     if hasattr(app.state, "redis_client"):
+#         app.state.redis_client.close()
+
+
 
 
 if __name__ == "__main__":

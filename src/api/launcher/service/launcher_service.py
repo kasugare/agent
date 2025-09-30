@@ -50,7 +50,7 @@ class DynamicRouterService(Service):
 
         try:
             if src_type == 'ZIP':
-                # input params
+                # helloworld params
                 path = './api/user.zip'
                 sys.path.insert(0, path)
                 module_name = "user.account.user_account"

@@ -31,13 +31,20 @@ class MetaParseController:
                 env_pool[env_id] = env_param_map.get('value')
         return env_pool
 
-    def extract_wf_node_env_map_ctl(self, wf_meta: dict) -> dict:
-        wf_node_env_map_list = wf_meta.get('node_env_maps')
+    def extract_wf_node_env_map_ctl(self, wf_edges_meta: dict) -> dict:
+        def extract_node_id(edge_info):
+            service_id = edge_info.get('target')
+            if service_id == 'None' or service_id == None:
+                service_id = edge_info.get('service')
+            splited_service_id = service_id.split(".")
+            node_id = splited_service_id[0]
+            return node_id
+
         node_env_map_pool = {}
-        for node_env_map in wf_node_env_map_list:
-            node_id = node_env_map.get('node_id')
-            env_maps = node_env_map.get('env_maps')
-            for env_map in env_maps:
+        for edge_id, edge_meta in wf_edges_meta.items():
+            node_id = extract_node_id(edge_meta)
+            env_info = edge_meta.get('env_info')
+            for env_map in env_info:
                 try:
                     key = env_map.pop('key')
                     if node_env_map_pool.get(node_id):
@@ -56,7 +63,7 @@ class MetaParseController:
     def cvt_wf_to_service_pool_ctl(self, nodes_meta: dict) -> dict:
         service_pool = {}
         add_node_keys = ['node_type', 'role', 'location', 'api_keys',
-                         'containable', 'api_info', 'class_info']
+                         'containable', 'api_info', 'module_info']
         for node_id, node_info in nodes_meta.items():
             services = node_info.get('services')
             for service_name, service_info in services.items():

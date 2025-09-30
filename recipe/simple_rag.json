@@ -45,82 +45,10 @@
 			]
 		}
 	],
-	"node_env_maps": [
-		{
-			"node_id": "Test_1234567890",
-			"env_maps": [
-				{
-					"refer_type": "indirect",
-					"key": "embedding_server_path",
-					"value": "EMB_PATH.embedding_server_path"
-				},
-				{
-					"refer_type": "indirect",
-					"key": "embed_model_nm",
-					"value": "EMB_PATH.embed_model_nm"
-				},
-				{
-					"refer_type": "indirect",
-					"key": "vectordb_type",
-					"value": "VEC_PATH.vectordb_type"
-				},
-				{
-					"refer_type": "indirect",
-					"key": "vectordb_path",
-					"value": "VEC_PATH.vectordb_path"
-				},
-				{
-					"refer_type": "direct",
-					"key": "test_env_key",
-					"value": "customized_key"
-				}
-			]
-		},
-		{
-			"node_id": "Retrieval_724KHk_node",
-			"env_maps": [
-				{
-					"refer_type": "indirect",
-					"key": "embedding_server_path",
-					"value": "EMB_PATH.embedding_server_path"
-				},
-				{
-					"refer_type": "indirect",
-					"key": "embed_model_nm",
-					"value": "EMB_PATH.embed_model_nm"
-				},
-				{
-					"refer_type": "indirect",
-					"key": "vectordb_type",
-					"value": "VEC_PATH.vectordb_type"
-				},
-				{
-					"refer_type": "indirect",
-					"key": "vectordb_path",
-					"value": "VEC_PATH.vectordb_path"
-				},
-				{
-					"refer_type": "direct",
-					"key": "api_key",
-					"value": "APIKEY.api-key"
-				}
-			]
-		},
-		{
-			"node_id": "Generation_TAVl73_node",
-			"env_maps": [
-				{
-					"refer_type": "indirect",
-					"key": "api_key",
-					"value": "APIKEY.api-key"
-				}
-			]
-		}
-	],
 	"nodes": [
 		{
 			"node_id": "Input_zla_r0_node",
-			"node_type": "class",
+			"node_type": "module",
 			"role": "start",
 			"location": "inner",
 			"containable": true,
@@ -136,7 +64,7 @@
 			"api_info": {
 				"base_url": ""
 			},
-			"class_info": {
+			"module_info": {
 				"module_path": "app.simple_rag.input.rag_input",
 				"class_name": "RagInput",
 				"environments": {}
@@ -167,84 +95,8 @@
 			}
 		},
 		{
-			"node_id": "Test_1234567890",
-			"node_type": "class",
-			"role": "start",
-			"location": "inner",
-			"containable": true,
-			"api_keys": [""],
-
-			"node_info": {
-				"id": "test_external_node",
-				"code": "Ext_API",
-				"version": "1.0.0",
-				"title": "external_node",
-				"desc": "External Connection Node"
-			},
-			"api_info": {
-				"base_url": ""
-			},
-			"class_info": {
-				"module_path": "app.simple_rag.test.test_external_node",
-				"class_name": "ExternalRPC",
-				"environments": {
-					"params": [
-						{
-							"required": true,
-							"key": "embedding_server_path",
-							"type": "string"
-						},
-						{
-							"required": true,
-							"key": "embed_model_nm",
-							"type": "string"
-						},
-						{
-							"required": true,
-							"key": "vectordb_type",
-							"type": "string"
-						},
-						{
-							"required": true,
-							"key": "vectordb_path",
-							"type": "string"
-						},
-						{
-							"required": true,
-							"key": "test_env_key",
-							"type": "string"
-						}
-					]
-				}
-			},
-			"services": {
-				"test_service": {
-					"function": "test_service",
-					"params": {
-						"format": "json",
-						"input": [
-							{
-								"required": true,
-								"key": "query",
-								"type": "string"
-							}
-						]
-					},
-					"result": {
-						"format": "json",
-						"output": [
-							{
-								"key": "query",
-								"type": "string"
-							}
-						]
-					}
-				}
-			}
-		},
-		{
 			"node_id": "Retrieval_724KHk_node",
-			"node_type": "class",
+			"node_type": "module",
 			"role": "retrieval",
 			"location": "inner",
 			"containable": true,
@@ -259,7 +111,7 @@
 			"api_info": {
 				"base_url": ""
 			},
-			"class_info": {
+			"module_info": {
 				"module_path": "simple_rag.retrieve.rag_retrieve",
 				"class_name": "RagRetrieve",
 				"environments": {
@@ -331,7 +183,7 @@
 		},
 		{
 			"node_id": "Generation_TAVl73_node",
-			"node_type": "class",
+			"node_type": "module",
 			"role": "generation",
 			"location": "inner",
 			"containable": true,
@@ -347,7 +199,7 @@
 			"api_info": {
 				"base_url": ""
 			},
-			"class_info": {
+			"module_info": {
 				"module_path": "simple_rag.generate.rag_generate",
 				"class_name": "RagGenerator",
 				"environments": {
@@ -443,7 +295,7 @@
 		},
 		{
 			"node_id": "Output_OvdARr_node",
-			"node_type": "class",
+			"node_type": "module",
 			"role": "output",
 			"location": "inner",
 			"containable": true,
@@ -459,7 +311,7 @@
 			"api_info": {
 				"base_url": ""
 			},
-			"class_info": {
+			"module_info": {
 				"module_path": "simple_rag.output.rag_output",
 				"class_name": "RagOutput",
 				"environments": {}
@@ -508,7 +360,34 @@
 				"type": "sequence",
 				"conditions": {}
 			},
-			"params_info": [
+			"env_info": [
+				{
+					"refer_type": "indirect",
+					"key": "embedding_server_path",
+					"value": "EMB_PATH.embedding_server_path"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "embed_model_nm",
+					"value": "EMB_PATH.embed_model_nm"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "vectordb_type",
+					"value": "VEC_PATH.vectordb_type"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "vectordb_path",
+					"value": "VEC_PATH.vectordb_path"
+				},
+				{
+					"refer_type": "direct",
+					"key": "api_key",
+					"value": "APIKEY.api-key"
+				}
+			],
+			"param_info": [
 				{
 					"refer_type": "indirect",
 					"key": "query",
@@ -529,26 +408,8 @@
 					"key": "check_embedding_ctx_length",
 					"value": false
 				}
-			]
-		},
-		{
-			"source": "Input_zla_r0_node.query_input",
-			"source_handler": {
-				"type": "sequence",
-				"conditions": {}
-			},
-			"target": "Test_1234567890.test_service",
-			"target_handler": {
-				"type": "sequence",
-				"conditions": {}
-			},
-			"params_info": [
-				{
-					"refer_type": "indirect",
-					"key": "query",
-					"value": "Input_zla_r0_node.query_input.query"
-				}
-			]
+			],
+			"result_info": []
 		},
 		{
 			"source": "Retrieval_724KHk_node.retrieve",
@@ -561,7 +422,8 @@
 				"type": "sequence",
 				"conditions": {}
 			},
-			"params_info": [
+			"env_info": [],
+			"param_info": [
 				{
 					"refer_type": "indirect",
 					"key": "question",
@@ -577,7 +439,8 @@
 					"key": "retrieved_documents",
 					"value": "Retrieval_724KHk_node.retrieve.retrieved_documents"
 				}
-			]
+			],
+			"result_info": []
 		},
 		{
 			"source": "Generation_TAVl73_node.generate_prompt",
@@ -590,7 +453,14 @@
 				"type": "sequence",
 				"conditions": {}
 			},
-			"params_info": [
+			"env_info": [
+				{
+					"refer_type": "indirect",
+					"key": "api_key",
+					"value": "APIKEY.api-key"
+				}
+			],
+			"param_info": [
 				{
 					"refer_type": "indirect",
 					"key": "prompt",
@@ -616,7 +486,8 @@
 					"key": "temperature",
 					"value": 0.5
 				}
-			]
+			],
+			"result_info": []
 		},
 		{
 			"source": "Generation_TAVl73_node.generate_answer",
@@ -629,10 +500,8 @@
 				"type": "sequence",
 				"conditions": {}
 			},
-			"env_info": [
-
-			],
-			"params_info": [
+			"env_info": [],
+			"param_info": [
 				{
 					"refer_type": "direct",
 					"key": "output_prompt",
@@ -646,9 +515,9 @@
 			],
 			"result_info": [
 				{
-					"refer_type": "direct",
-					"key": "output_prompt",
-					"value": "Generation_TAVl73_node.generate_answer.answer"
+					"refer_type": "indirect",
+					"key": "top_k",
+					"value": "Retrieval_724KHk_node.retrieve.top_k"
 				}
 			]
 		}

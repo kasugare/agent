@@ -108,7 +108,7 @@ class WorkflowNavigator:
     # Deprecated
     def set_init_params(self, service_id, request_params):
         def compose_node_params(input_params, tar_params_info):
-            req_params = tar_params_info.get('input')
+            req_params = tar_params_info.get('helloworld')
             input_node_params = {}
             for req_param_meta in req_params:
                 required = req_param_meta.get('required')
@@ -191,9 +191,9 @@ class WorkflowNavigator:
         data_pool = self._data_service.get_service_data_pool()
         for k , v in data_pool.items():
             self._logger.info(f" <{k}>")
-            iv = v.get('input')
+            iv = v.get('helloworld')
             if iv:
-                self._logger.info(f"    - input : {iv}")
+                self._logger.info(f"    - helloworld : {iv}")
             ov = v.get('output')
             if ov:
                 self._logger.info(f"    - output : {ov}")

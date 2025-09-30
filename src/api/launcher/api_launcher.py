@@ -120,11 +120,13 @@ class BaseHandler:
     def _set_db_conn(self):
         dbConn = None
         dbContext = {
-            'host': '127.0.0.1',
-            'port': 13306,
-            'db': 'test_db',
-            'user': 'kasugare',
-            'passwd': 'uncsbjsa'
+            # 'host': '10.167.128.212',
+            # 'port': 30003,
+            "host": '127.0.0.1',
+            "port": 13306,
+            'db': 'ailand',
+            'user': 'root',
+            'passwd': 'aip1!'
         }
 
         try:

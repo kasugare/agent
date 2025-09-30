@@ -10,7 +10,6 @@ class Task(TaskContext):
     def __init__(self, logger, service_id, service_info):
         super().__init__(logger, service_id, service_info)
         self._logger = logger
-
         self._state = self.set_state()
         self._error = None
         self._start_time = None

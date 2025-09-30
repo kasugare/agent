@@ -42,9 +42,9 @@ class TaskContext:
             if self._task_type.lower() == 'start_node':
                 self._set_start_executor()
             else:
-                self._conn_info = self._extract_api_info(service_info)
-        elif self._node_type == 'class':
-            self._conn_info = self._extract_class_info(service_info)
+                self._conn_info = self._extract_module_info(service_info)
+        elif self._node_type == 'module':
+            self._conn_info = self._extract_module_info(service_info)
             self._set_class_executor(**self._conn_info)
         else:
             self._conn_info = self._extract_api_info(service_info)
@@ -58,7 +58,7 @@ class TaskContext:
 
     def _extract_params_format(self, service_info):
         params_map = service_info.get('params')
-        params_format = params_map.get('input')
+        params_format = params_map.get('helloworld')
         return params_format
 
     def _extract_results_format(self, result_info):
@@ -88,11 +88,11 @@ class TaskContext:
         }
         return conn_info
 
-    def _extract_class_info(self, service_info):
-        class_info = service_info.get('class_info')
+    def _extract_module_info(self, service_info):
+        module_info = service_info.get('module_info')
         conn_info = {
-            'module_path': class_info.get('module_path'),
-            'class_name': class_info.get('class_name'),
+            'module_path': module_info.get('module_path'),
+            'class_name': module_info.get('class_name'),
             'function': service_info.get('function'),
             'api_keys': service_info.get('api_keys')
         }

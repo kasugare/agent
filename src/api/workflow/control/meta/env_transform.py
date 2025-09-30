@@ -10,7 +10,7 @@ class EnvironmentsTransformer:
     def cvt_node_env_value_map_ctl(self, wf_nodes_meta, wf_node_env_map_pool, wf_env_pool) -> dict:
         nodes_env_value_map = {}
         for node_id, node_meta in wf_nodes_meta.items():
-            module_info = node_meta.get('class_info')
+            module_info = node_meta.get('module_info')
             if not module_info: continue
             module_env_info = module_info.get('environments')
             if not module_env_info: continue
@@ -28,4 +28,3 @@ class EnvironmentsTransformer:
                 env_id = f"{node_id}.{node_env_param_name}"
                 nodes_env_value_map[env_id] = value
         return nodes_env_value_map
-
