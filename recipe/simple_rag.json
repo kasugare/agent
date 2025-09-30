@@ -260,7 +260,7 @@
 				"base_url": ""
 			},
 			"class_info": {
-				"module_path": "app.simple_rag.retrieve.rag_retrieve",
+				"module_path": "simple_rag.retrieve.rag_retrieve",
 				"class_name": "RagRetrieve",
 				"environments": {
 					"params": [
@@ -348,7 +348,7 @@
 				"base_url": ""
 			},
 			"class_info": {
-				"module_path": "app.simple_rag.generate.rag_generate",
+				"module_path": "simple_rag.generate.rag_generate",
 				"class_name": "RagGenerator",
 				"environments": {
 					"params": [
@@ -460,7 +460,7 @@
 				"base_url": ""
 			},
 			"class_info": {
-				"module_path": "app.simple_rag.output.rag_output",
+				"module_path": "simple_rag.output.rag_output",
 				"class_name": "RagOutput",
 				"environments": {}
 			},
@@ -629,6 +629,9 @@
 				"type": "sequence",
 				"conditions": {}
 			},
+			"env_info": [
+
+			],
 			"params_info": [
 				{
 					"refer_type": "direct",
@@ -638,6 +641,13 @@
 				{
 					"refer_type": "indirect",
 					"key": "answer",
+					"value": "Generation_TAVl73_node.generate_answer.answer"
+				}
+			],
+			"result_info": [
+				{
+					"refer_type": "direct",
+					"key": "output_prompt",
 					"value": "Generation_TAVl73_node.generate_answer.answer"
 				}
 			]
