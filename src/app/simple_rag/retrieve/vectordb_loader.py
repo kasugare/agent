@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from .vectordb_classes import BaseVectorDB, QdrantDB
-from typing import Dict, Optional, Type
 from langchain.embeddings.base import Embeddings
+from typing import Dict, Optional, Type
 import importlib
 
 
@@ -14,7 +14,7 @@ class VectorDBLoader:
     """
 
     # Mapping of DB types to their respective LangChain classes
-    DB_TYPES = {
+    _DB_TYPES = {
         'qdrant': QdrantDB
     }
     _instance = None
@@ -70,7 +70,7 @@ class VectorDBLoader:
             Initialized VectorDB instance or None if loading fails
         """
         # Check if the DB type is supported
-        if db_type.lower() not in self.DB_TYPES:
+        if db_type.lower() not in self._DB_TYPES:
             self._logger.error(f"Unsupported vector database type: {db_type}")
             return None
 
@@ -81,11 +81,12 @@ class VectorDBLoader:
 
         try:
             # Get the appropriate class for the DB type
-            db_class = self.DB_TYPES[db_type.lower()]
+            db_class = self._DB_TYPES[db_type.lower()]
 
             # Initialize the DB instance with the appropriate parameters
             if db_type.lower() in ['qdrant'] and collection_name:
                 db = db_class(
+                    logger=self._logger,
                     connection_string=connection_string,
                     collection_name=collection_name,
                     embedding_model=embedding_model,
@@ -119,7 +120,7 @@ class VectorDBLoader:
         Returns:
             Dictionary of DB types and whether their dependencies are installed
         """
-        return {db_type: self.check_dependencies(db_type) for db_type in self.DB_TYPES}
+        return {db_type: self.check_dependencies(db_type) for db_type in self._DB_TYPES}
 
     def get_embedding_models(self) -> Dict[str, Type[Embeddings]]:
         """

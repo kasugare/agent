@@ -18,6 +18,12 @@ class DataIoController:
         self._data_access_controller = DataIOAccessController(logger)
         self._data_access = self._data_access_controller.get_data_access_instance()
 
+    def set_cache_key_ctl(self, wf_key):
+        self._data_access.set_cache_key_access(wf_key)
+
+    def clear_ctl(self):
+        self._data_access.clear_access()
+
     def set_init_nodes_env_params_ctl(self, nodes_env_value_map):
         if not nodes_env_value_map:
             return
@@ -77,7 +83,7 @@ class DataIoController:
         for edge_id, edge_meta in wf_edges_meta.items():
             if service_id != edge_id.split("-")[-1]:
                 continue
-            refer_params_info = edge_meta.get('params_info')
+            refer_params_info = edge_meta.get('param_info')
             for ref_param_map in refer_params_info:
                 refer_type = ref_param_map.get('refer_type')
                 key = ref_param_map.get('key')
@@ -90,11 +96,20 @@ class DataIoController:
                 params[param_name] = value
         return params
 
-    def get_data_pool_ctl(self):
-        data_pool = self._data_access.get_all()
-        return data_pool
+    def find_io_value_control(self, value_id):
+        data_pool = self.get_data_pool_ctl()
+        for io_key, io_value in data_pool.items():
+            if io_key == value_id:
+                return io_value
+            elif io_key[0] in ["I","O"] and io_key[2:] == value_id:
+                return io_value
+        return None
 
     def get_param_value_control(self, value_id):
         param_value = self._data_access.get_data(value_id)
         return param_value
+
+    def get_data_pool_ctl(self):
+        data_pool = self._data_access.get_all()
+        return data_pool
 

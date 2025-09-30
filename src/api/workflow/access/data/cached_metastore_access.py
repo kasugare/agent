@@ -9,6 +9,7 @@ class CachedMetastoreAccess:
     def __init__(self, logger):
         self._logger = logger
         self._thread_lock = threading.Lock()
+
         self._dag_meta = {}
         self._edge_map = {}
 
@@ -17,6 +18,7 @@ class CachedMetastoreAccess:
         self._wf_nodes_meta = {}
         self._wf_node_service_pool = {}
         self._wf_edges_meta = []
+        self._wf_custom_result_meta = {}
         self._wf_forward_edge_graph = {}
         self._wf_forward_graph = {}
         self._wf_backward_graph = {}
@@ -24,6 +26,24 @@ class CachedMetastoreAccess:
         self._start_nodes = []
         self._end_nodes = []
         self._edges_param_map = {}
+
+    def set_cache_key_access(self, wf_key):
+        self._cache_key = wf_key
+
+    def clear_access(self):
+        self._wf_meta.clear()
+        self._wf_comm_meta.clear()
+        self._wf_nodes_meta.clear()
+        self._wf_node_service_pool.clear()
+        self._wf_edges_meta.clear()
+        self._wf_custom_result_meta.clear()
+        self._wf_forward_edge_graph.clear()
+        self._wf_forward_graph.clear()
+        self._wf_backward_graph.clear()
+        self._wf_resources_meta.clear()
+        self._start_nodes.clear()
+        self._end_nodes.clear()
+        self._edges_param_map.clear()
 
     def set_wf_meta_access(self, wf_meta: Dict) -> None:
         self._wf_meta = wf_meta
@@ -45,6 +65,17 @@ class CachedMetastoreAccess:
 
     def get_edges_meta_access(self) -> List:
         return deepcopy(self._wf_edges_meta)
+
+    def set_custom_result_meta_access(self, custom_result_meta: Dict) -> None:
+        self._wf_custom_result_meta = custom_result_meta
+
+    def get_custom_result_meta_access(self):
+        custom_result_meta = self._wf_custom_result_meta
+        return custom_result_meta
+
+    def get_custom_result_meta_by_service_id_access(self, service_id):
+        custom_result = self._wf_custom_result_meta.get(service_id)
+        return custom_result
 
     def set_forward_edge_graph_meta_access(self, wf_forward_edge_graph: Dict) -> None:
         self._wf_forward_edge_graph = wf_forward_edge_graph

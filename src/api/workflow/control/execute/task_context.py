@@ -68,7 +68,7 @@ class TaskContext:
 
     def _extract_params_map(self, edge_info):
         self._logger.debug(f" # Step 3. extract data_mapper")
-        params_info = edge_info.get('params_info')
+        params_info = edge_info.get('param_info')
         params_map = {}
         for param_info in params_info:
             key_path = param_info.get('key')

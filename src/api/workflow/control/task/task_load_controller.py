@@ -8,7 +8,6 @@ class TaskLoadController:
     def __init__(self, logger, datastore):
         self._logger = logger
         self._datastore = datastore
-        self._node_graph = {}
 
     def make_task_map(self, active_service_ids=[]):
         task_map = {}

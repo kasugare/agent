@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+#!/usr/bin/env python
+
 from jinja2 import Template, Environment, meta
 from typing import Dict, Any, List
 

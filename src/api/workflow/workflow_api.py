@@ -42,7 +42,7 @@ class WorkflowEngine(BaseRouter):
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self, logger=None, db_conn=None):
+    def __init__(self, logger, db_conn=None):
         super().__init__(logger, tags=['serving'])
         self._datastore = DataStoreService(logger)
         self._taskstore = TaskLoadService(logger, self._datastore)
@@ -52,12 +52,22 @@ class WorkflowEngine(BaseRouter):
         self._job_Q = Queue()
         self._act_meta = {}
 
+    def _clean_all(self):
+        self._datastore.clear()
+
     def setup_routes(self):
         @self.router.post(path='/workflow/meta')
         async def create_workflow(workflow) -> None:
             wf_meta = json.loads(workflow)
+            self._clean_all()
             self._metastore.change_wf_meta(wf_meta)
-            # return self._metastore.get_dag()
+
+        @self.router.post(path='/workflow/clear')
+        async def call_data_clear():
+            self._logger.error("################################################################")
+            self._logger.error("#                         < Clear All >                        #")
+            self._logger.error("################################################################")
+            self._clean_all()
 
         @self.router.post(path='/workflow/run')
         async def call_chained_model_service(request: Dict[str, Any]):

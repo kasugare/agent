@@ -5,8 +5,9 @@ from .prompt_template import PromptTemplateEngine
 from .llm_loader import LanguageModelLoader
 
 class RagGenerator:
-    def __init__(self, logger, api_key):
+    def __init__(self, logger, base_url, api_key):
         self._logger = logger
+        self._base_url = base_url
         self._api_key = api_key
 
     def generate_prompt(self, question, prompt_template, retrieved_documents):
@@ -18,9 +19,9 @@ class RagGenerator:
         prompt = prompt_template_engine.render(prompt_context)
         return prompt
 
-    async def generate_answer(self, prompt, llm_type, model_name, base_url, temperature):
+    async def generate_answer(self, prompt, llm_type, model_name, temperature):
         model_loader = LanguageModelLoader(self._logger)
-        llm = model_loader.load_llm(llm_type=llm_type, model= model_name, base_url=base_url, temperature=temperature, api_key=self._api_key)
+        llm = model_loader.load_llm(llm_type=llm_type, model= model_name, base_url=self._base_url, temperature=temperature, api_key=self._api_key)
         answer = await llm.generate(prompt=prompt)
         self._logger.debug(answer)
         return answer['text']

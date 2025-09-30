@@ -52,9 +52,9 @@ class WorkflowExecutionOrchestrator:
         try:
             service_pool = self._meta_pack['service_pool']
             service_info = service_pool.get(service_id)
-            class_info = service_info.get('class_info')
-            if not class_info: return {}
-            environments_map = class_info.get('environments')
+            module_info = service_info.get('module_info')
+            if not module_info: return {}
+            environments_map = module_info.get('environments')
             if not environments_map: return {}
             env_params_info = environments_map.get('params')
             if not env_params_info: return {}
@@ -129,6 +129,18 @@ class WorkflowExecutionOrchestrator:
             for schema in results_schema:
                 result_name = schema['key']
                 result_map[result_name] = result
+
+        custom_result_meta = self._datastore.get_custom_result_meta_by_service_id_service(service_id)
+        if custom_result_meta:
+            for result_meta in custom_result_meta:
+                refer_type = result_meta.get('refer_type')
+                custom_key = result_meta.get('key')
+                if refer_type.lower() == 'indirect':
+                    ref_value_id = result_meta.get('value')
+                    value = self._datastore.find_io_value_service(ref_value_id)
+                else:
+                    value = result_meta.get('value')
+                result_map[custom_key] = value
         return result_map
 
     def _check_all_completed(self, task_map):
@@ -208,8 +220,11 @@ class WorkflowExecutionOrchestrator:
                 elif task_state in [TaskState.COMPLETED]:
                     self._logger.debug(f" - Step 4. [COMPLETED] done task execution : {service_id}")
                     task_result = task.get_result()
-                    result = self._result_mapper(service_id, task_result)
-                    self._datastore.set_service_result_service(service_id, result)
+                    customed_task_result = self._result_mapper(service_id, task_result)
+                    task = task_map.get(service_id)
+                    task.set_result(customed_task_result)
+
+                    self._datastore.set_service_result_service(service_id, customed_task_result)
                     next_service_ids = self._get_next_service_ids(service_id)
                     for next_service_id in next_service_ids:
                         self._job_Q.put_nowait(next_service_id)
@@ -271,14 +286,10 @@ class WorkflowExecutionOrchestrator:
     def _show_task_info(self, task):
         service_id = task.get_service_id()
         service_role = task.get_role()
-        # node_info = task.get_node_info()
-
         self._logger.debug(f" - service_id: {service_id}")
         self._logger.debug(f" - role: {service_role}")
-        # self._logger.debug(f" - node_info: {node_info}")
         self._logger.debug(f" - envs: {task.get_env_params()}")
         self._logger.debug(f" - params: {task.get_params()}")
         self._logger.debug(f" - State: {task.get_state()}")
         self._logger.debug(f" - Error: {task.get_error()}")
         self._logger.debug(f" - Result: {task.get_result()}")
-        # self._logger.debug(f" - Data: {service_io_data}")

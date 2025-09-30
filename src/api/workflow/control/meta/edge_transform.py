@@ -82,5 +82,5 @@ class EdgeTransformer:
                 params_info = self._set_default_params_info(src_service_id, src_service_info)
                 params_info = self._add_data_type_on_params_info(params_info, src_service_info)
                 edge_params_map[start_edge_id] = params_info
-            edge_params_map[edge_id] = edge_info.get('params_info')
+            edge_params_map[edge_id] = edge_info.get('param_info')
         return edge_params_map

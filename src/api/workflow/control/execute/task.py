@@ -26,7 +26,7 @@ class Task(TaskContext):
     def set_params(self, params=None):
         self._params = params
 
-    def _set_result(self, result):
+    def set_result(self, result):
         self._result = result
 
     def get_env_params(self):
@@ -58,7 +58,7 @@ class Task(TaskContext):
             self._state = TaskState.RUNNING
             self._start_time = datetime.now()
             result = self._executor.run(self._params)
-            self._set_result(result)
+            self.set_result(result)
             self._state = TaskState.COMPLETED
         except Exception as e:
             self._state = TaskState.FAILED

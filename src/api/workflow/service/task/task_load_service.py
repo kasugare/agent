@@ -16,3 +16,6 @@ class TaskLoadService:
     def gen_active_tasks_service(self, act_service_ids=[]):
         task_map = self._task_controller.make_task_map(act_service_ids)
         return task_map
+
+    def clear(self):
+        pass

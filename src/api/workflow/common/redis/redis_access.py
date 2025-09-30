@@ -48,3 +48,6 @@ class RedisAccess:
             self._redis_client.delete(key)
         except Exception as e:
             self._logger.error(f"Redis DELETE failed: {e}")
+
+    def flush(self):
+        pass

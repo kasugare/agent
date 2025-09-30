@@ -16,6 +16,15 @@ class DataStoreService:
         self._metastore_controller = MetastoreController(logger)
         self._taskpool_controller = TaskPoolController(logger)
 
+    def clear(self):
+        self._data_controller.clear_ctl()
+        self._metastore_controller.clear_ctl()
+        self._taskpool_controller.clear_ctl()
+
+    def set_cache_key_service(self, wf_key):
+        self._data_controller.set_cache_key_ctl(wf_key)
+        self._metastore_controller.set_cache_key_ctl(wf_key)
+
     def _extract_param_name(self, key_path):
         param_name = key_path.split('.')[-1]
         return param_name
@@ -55,6 +64,10 @@ class DataStoreService:
         param_value = self._data_controller.get_param_value_control(value_id)
         return param_value
 
+    def find_io_value_service(self, value_id):
+        io_value = self._data_controller.find_io_value_control(value_id)
+        return io_value
+
     def get_service_info_service(self, service_id) -> Dict:
         data_pool = self.get_service_data_pool_service()
         service_node_info = data_pool.get(service_id)
@@ -68,7 +81,15 @@ class DataStoreService:
         return wf_meta
 
     def set_comm_meta_service(self, wf_comm_meta):
+        project_id = wf_comm_meta.get('proj_id')
+        workflow_id = wf_comm_meta.get('wf_id')
+        wf_key = f"{project_id}-{workflow_id}"
+        self.set_cache_key_service(wf_key)
         self._metastore_controller.set_comm_meta_ctl(wf_comm_meta)
+
+    def get_comm_meta_service(self):
+        wf_comm_meta = self._metastore_controller.get_comm_meta_ctl()
+        return wf_comm_meta
 
     def set_nodes_meta_service(self, wf_nodes_meta):
         self._metastore_controller.set_nodes_meta_ctl(wf_nodes_meta)
@@ -90,6 +111,17 @@ class DataStoreService:
     def get_edge_info_by_edge_id(self, edge_id):
         wf_edge_meta = self._metastore_controller.get_edge_meta_by_edge_id_ctl(edge_id)
         return wf_edge_meta
+
+    def set_custom_result_meta_service(self, custom_result_meta):
+        self._metastore_controller.set_custom_result_meta_ctl(custom_result_meta)
+
+    def get_custom_result_meta_service(self):
+        custom_result_meta = self._metastore_controller.get_custom_result_meta_ctl()
+        return custom_result_meta
+
+    def get_custom_result_meta_by_service_id_service(self, service_id):
+        custom_result_meta = self._metastore_controller.get_custom_result_meta_by_service_id_ctl(service_id)
+        return custom_result_meta
 
     def set_forward_edge_graph_meta_service(self, wf_forward_edge_edge_graph):
         self._metastore_controller.set_forward_edge_graph_meta_ctl(wf_forward_edge_edge_graph)

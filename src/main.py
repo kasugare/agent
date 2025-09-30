@@ -8,8 +8,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 import multiprocessing
 import uvicorn
-from common.dependancy import create_redis_client
-from common.create_module import CreateModule
 
 # create_module = CreateModule()
 # create_module.create_all_packages('/data/kelly/pycharm_projects/agent/src/app/_simple_rag')

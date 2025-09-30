@@ -11,7 +11,7 @@ class MetastoreAccessController:
         if self._access_type == 'local':
             return CachedMetastoreAccess(self._logger)
         elif self._access_type == 'remote':
-            return RemoteCachedMetastoreAccess()
+            return RemoteCachedMetastoreAccess(self._logger)
         else:
             self._logger.error(f"Access type is None")
             return None

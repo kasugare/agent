@@ -11,12 +11,14 @@ class MetaParseController:
         self._env_transformer = EnvironmentsTransformer(logger)
 
     def extract_wf_common_info_ctl(self, wf_meta: dict) -> dict:
+        wf_metadata = wf_meta.get('metadata')
         wf_comm_meta = {
-            'wf_id': wf_meta.get('workflow_id'),
+            'proj_id': wf_metadata.get('project_id'),
+            'wf_id': wf_metadata.get('workflow_id'),
+            'wf_version': wf_metadata.get('version'),
+            'wf_type': wf_metadata.get('type'),
             'wf_name': wf_meta.get('name'),
-            'wf_version': wf_meta.get('version'),
             'wf_description': wf_meta.get('description'),
-            'run_type': wf_meta.get('run_mode')
         }
         return wf_comm_meta
 
@@ -83,7 +85,7 @@ class MetaParseController:
         for edge_id, edge_info in edges_meta.items():
             curr_node = edge_info.get('source')
             next_node = edge_info.get('target')
-            param_map_list = edge_info.get('params_info')
+            param_map_list = edge_info.get('param_info')
             if not forward_edge_graph.get(next_node):
                 forward_edge_graph[next_node] = {}
             if curr_node in forward_edge_graph.keys():
@@ -165,6 +167,17 @@ class MetaParseController:
     def extract_node_env_value_map_ctl(self, wf_nodes_meta, wf_node_env_map_pool, wf_env_pool) -> dict:
         nodes_env_value_map = self._env_transformer.cvt_node_env_value_map_ctl(wf_nodes_meta, wf_node_env_map_pool, wf_env_pool)
         return nodes_env_value_map
+
+    def extract_custom_result_meta_ctl(self, wf_edges_meta: dict) -> dict:
+        custom_result_meta = {}
+        for edge_id, edge_meta in wf_edges_meta.items():
+            service_id = edge_meta.get('target')
+            if not service_id:
+                service_id = edge_meta.get('source')
+            custom_result_info = edge_meta.get('result_info')
+            if custom_result_info:
+                custom_result_meta[service_id] = custom_result_info
+        return custom_result_meta
 
     def extract_params_map_ctl(self, start_nodes, wf_service_pool, wf_edges_meta) -> dict:
         edge_params_map = self._edge_transformer.cvt_params_map_ctl(start_nodes, wf_service_pool, wf_edges_meta)

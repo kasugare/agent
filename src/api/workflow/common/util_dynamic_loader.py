@@ -2,10 +2,10 @@
 #!/usr/bin/env python
 
 
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List
 from concurrent.futures import ThreadPoolExecutor
+from api.workflow.common.util_lib_installer import LibraryInstaller
 from common.conf_system import getHomeDir
-from common.create_module import CreateModule
 import weakref
 import traceback
 import importlib
@@ -24,7 +24,7 @@ class DynamicLoader:
         self._add_path(f"{getHomeDir()}/src")
         self._active_clients = weakref.WeakSet()
         self._thread_pool = ThreadPoolExecutor(max_workers=10)
-        self._create_module = CreateModule()
+        self._lib_installer = LibraryInstaller()
 
     def _load_module(self, module_path: str, reload: bool = False) -> Any:
         """ module_path: "app.test.test_class" """
@@ -37,7 +37,6 @@ class DynamicLoader:
                 module = importlib.reload(module)
             self._loaded_modules[module_path] = module
             return module
-
         except ImportError as e:
             self._logger.error(f"failed load a module {module_path} - {e}")
             raise
@@ -56,7 +55,7 @@ class DynamicLoader:
 
     def create_instance(self, module_path: str, class_name: str, env_params: Dict[str, Any] = None, instance_key: str = None) -> Any:
         try:
-            self._create_module.install_requirements_from_module(module_path)
+            self._lib_installer.install_requirements_from_module(module_path)
 
             if env_params is None:
                 env_params = {"logger": self._logger}
@@ -64,7 +63,8 @@ class DynamicLoader:
                 env_params['logger'] = self._logger
 
             # module_path = module_path.replace('app._simple_rag.', '')
-            module = importlib.import_module(module_path)
+            module = self._load_module(module_path)
+            # module = importlib.import_module(module_path)
 
             if not hasattr(module, class_name):
                 raise AttributeError(f"'{class_name}'(class) is not exist in '{module_path}'.")

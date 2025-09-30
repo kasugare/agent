@@ -4,7 +4,6 @@
 import urllib.parse
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional
-from ailand.common.logger import Logger
 from langchain.embeddings.base import Embeddings
 from langchain.schema import Document
 from langchain_community.embeddings import HuggingFaceEmbeddings
@@ -16,7 +15,7 @@ from qdrant_client.http.models import Distance, VectorParams, Filter, FieldCondi
 class BaseVectorDB(ABC):
     """Base class for LangChain vector database integrations."""
 
-    def __init__(self, connection_string: str, embedding_model: Optional[Embeddings] = None):
+    def __init__(self, logger, connection_string: str, embedding_model: Optional[Embeddings] = None):
         """
         Initialize the base vector database.
 
@@ -24,7 +23,7 @@ class BaseVectorDB(ABC):
             connection_string: Path or URL to the vector database
             embedding_model: LangChain embeddings model (defaults to HuggingFace if None)
         """
-        self.logger = Logger()
+        self._logger = logger
         self.connection_string = connection_string
         self.is_url = self._is_url(connection_string)
         self.embedding_model = embedding_model or HuggingFaceEmbeddings()
@@ -73,7 +72,7 @@ class BaseVectorDB(ABC):
             ids = self.vectorstore.add_documents(documents)
             return ids
         except Exception as e:
-            self.logger.error(f"Error adding documents: {e}")
+            self._logger.error(f"Error adding documents: {e}")
             return []
 
     async def search(self, query: str, top_k: int = 5, exclude_pages: list[int] = None) -> List[Dict[str, Any]]:
@@ -92,23 +91,11 @@ class BaseVectorDB(ABC):
             raise ValueError("Vector store not initialized. Call connect() first.")
 
         try:
-            print("# Step 1")
-            print(exclude_pages)
             if exclude_pages is not None:
-                print("# Step 2")
                 exclude_filter = self.build_page_not_in_filter(exclude_pages=exclude_pages)
-                print("# Step 3")
                 results = self.vectorstore.similarity_search_with_score(query, k=top_k, filter=exclude_filter)
-                print("# Step 4")
             else:
-                print("# Step 5")
-                # Search using similarity search
-                print(query)
-                print(top_k)
                 results = await self.vectorstore.asimilarity_search_with_score(query, k=top_k)
-                print("# Step 6")
-            # Format results
-            print("# Step 7")
             formatted_results = []
             for doc, score in results:
                 formatted_results.append({
@@ -116,10 +103,9 @@ class BaseVectorDB(ABC):
                     'metadata': doc.metadata,
                     'score': score
                 })
-            print("# Step 8")
             return formatted_results
         except Exception as e:
-            self.logger.error(f"Error searching documents: {e}")
+            self._logger.error(f"Error searching documents: {e}")
             return []
 
     @abstractmethod
@@ -147,7 +133,7 @@ class BaseVectorDB(ABC):
 class QdrantDB(BaseVectorDB):
     """Qdrant implementation using LangChain."""
 
-    def __init__(self, connection_string: str, collection_name: str = "default_collection",
+    def __init__(self, logger, connection_string: str, collection_name: str = "default_collection",
                  embedding_model: Optional[Embeddings] = None):
         """
         Initialize Qdrant with LangChain.
@@ -157,7 +143,7 @@ class QdrantDB(BaseVectorDB):
             collection_name: Name of the collection
             embedding_model: LangChain embeddings model
         """
-        super().__init__(connection_string, embedding_model)
+        super().__init__(logger, connection_string, embedding_model)
         self.collection_name = collection_name
 
     def connect(self) -> bool:
@@ -191,7 +177,7 @@ class QdrantDB(BaseVectorDB):
                         vectors_config=VectorParams(size=self._get_dimension(), distance=Distance.COSINE)
                     )
 
-                    self.logger.info(f"Created new collection '{self.collection_name}' in Qdrant")
+                    self._logger.info(f"Created new collection '{self.collection_name}' in Qdrant")
 
                 # Initialize vector store
                 self.vectorstore = Qdrant(
@@ -215,7 +201,7 @@ class QdrantDB(BaseVectorDB):
                         vectors_config=VectorParams(size=1536, distance=Distance.COSINE),
                     )
 
-                    self.logger.info(f"Created new collection '{self.collection_name}' in Qdrant")
+                    self._logger.info(f"Created new collection '{self.collection_name}' in Qdrant")
 
                 self.vectorstore = Qdrant(
                     client=client,
@@ -225,7 +211,7 @@ class QdrantDB(BaseVectorDB):
 
             return True
         except Exception as e:
-            self.logger.error(f"Failed to connect to Qdrant: {e}")
+            self._logger.error(f"Failed to connect to Qdrant: {e}")
             return False
 
     def delete(self, document_ids: List[str]) -> bool:
@@ -245,7 +231,7 @@ class QdrantDB(BaseVectorDB):
 
             return True
         except Exception as e:
-            self.logger.error(f"Error deleting documents from Qdrant: {e}")
+            self._logger.error(f"Error deleting documents from Qdrant: {e}")
             return False
 
     def build_page_not_in_filter(self, exclude_pages: list[int]) -> Filter:

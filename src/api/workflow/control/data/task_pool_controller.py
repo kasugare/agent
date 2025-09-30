@@ -14,3 +14,6 @@ class TaskPoolController:
     def get_task_map_control(self):
         task_map = self._task_pool_access.get_task_map_access()
         return task_map
+
+    def clear_ctl(self):
+        self._task_pool_access.clear_access()

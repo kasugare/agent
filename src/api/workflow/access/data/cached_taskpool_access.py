@@ -5,6 +5,7 @@ from typing import Dict, List, Any
 from copy import deepcopy
 import threading
 
+
 class CachedTaskPoolAccess:
     def __init__(self, logger):
         self._logger = logger
@@ -16,3 +17,13 @@ class CachedTaskPoolAccess:
 
     def get_task_map_access(self):
         return self._task_pool
+
+    def clear_access(self):
+        try:
+            self._thread_lock.acquire()
+            self._task_pool.clear()
+        except Exception as e:
+            self._data_pool = {}
+        finally:
+            self._thread_lock.release()
+

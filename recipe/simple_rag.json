@@ -1,8 +1,10 @@
 {
 	"name": "Simple RAG",
-	"version": "1.0",
+	"description": "Simple RAG Workflow",
 	"metadata": {
-		"description": "Simple RAG Workflow",
+		"project_id": "PROJGENRAG_01",
+		"workflow_id": "SIMPLERAG_WF_001",
+		"version": "1.0",
 		"type": "RAG"
 	},
 	"environments": [
@@ -112,7 +114,7 @@
 				"base_url": ""
 			},
 			"module_info": {
-				"module_path": "simple_rag.retrieve.rag_retrieve",
+				"module_path": "app.simple_rag.retrieve.rag_retrieve",
 				"class_name": "RagRetrieve",
 				"environments": {
 					"params": [
@@ -200,10 +202,16 @@
 				"base_url": ""
 			},
 			"module_info": {
-				"module_path": "simple_rag.generate.rag_generate",
+				"module_path": "app.simple_rag.generate.rag_generate",
 				"class_name": "RagGenerator",
 				"environments": {
 					"params": [
+						{
+							"required": true,
+							"key": "base_url",
+							"type": "string",
+							"default_value": "http://ailand.ai:30804/v1"
+						},
 						{
 							"required": false,
 							"key": "api_key",
@@ -269,12 +277,6 @@
 							},
 							{
 								"required": true,
-								"key": "base_url",
-								"type": "string",
-								"default_value": "http://ailand.ai:30804/v1"
-							},
-							{
-								"required": true,
 								"key": "temperature",
 								"type": "float",
 								"default_value": 0.7
@@ -312,7 +314,7 @@
 				"base_url": ""
 			},
 			"module_info": {
-				"module_path": "simple_rag.output.rag_output",
+				"module_path": "app.simple_rag.output.rag_output",
 				"class_name": "RagOutput",
 				"environments": {}
 			},
@@ -339,7 +341,7 @@
 						"output": [
 							{
 								"required": true,
-								"key": "output",
+								"key": "answer",
 								"type": "json"
 							}
 						]
@@ -455,6 +457,11 @@
 			},
 			"env_info": [
 				{
+					"refer_type": "direct",
+					"key": "base_url",
+					"value": "http://127.0.0.1:21434/v1"
+				},
+				{
 					"refer_type": "indirect",
 					"key": "api_key",
 					"value": "APIKEY.api-key"
@@ -475,11 +482,6 @@
 					"refer_type": "direct",
 					"key": "model_name",
 					"value": "gemma3:12b"
-				},
-				{
-					"refer_type": "direct",
-					"key": "base_url",
-					"value": "http://192.15.90.108:21434/v1"
 				},
 				{
 					"refer_type": "direct",
@@ -516,7 +518,7 @@
 			"result_info": [
 				{
 					"refer_type": "indirect",
-					"key": "top_k",
+					"key": "customized_top_k",
 					"value": "Retrieval_724KHk_node.retrieve.top_k"
 				}
 			]

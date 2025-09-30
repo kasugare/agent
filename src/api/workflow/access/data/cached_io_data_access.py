@@ -9,10 +9,22 @@ import threading
 class CachedIODataAccess:
     def __init__(self, logger):
         self._logger = logger
+        self._cache_key = None
 
         self._thread_lock = threading.Lock()
-        # self._service_data_pool = {}
         self._data_pool = {}
+
+    def set_cache_key_access(self, wf_key):
+        self._cache_key = wf_key
+
+    def clear_access(self):
+        try:
+            self._thread_lock.acquire()
+            self._data_pool.clear()
+        except Exception as e:
+            self._data_pool = {}
+        finally:
+            self._thread_lock.release()
 
     def get_data(self, key):
         value = None

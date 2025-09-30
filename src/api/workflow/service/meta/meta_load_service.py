@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# 통짜 복사
 
 from common.conf_system import getRecipeDir, getRecipeFile
 from api.workflow.control.meta.meta_parse_controller import MetaParseController
@@ -121,6 +120,10 @@ class MetaLoadService:
         nodes_env_value_map = self._meta_controller.extract_node_env_value_map_ctl(wf_nodes_meta, wf_node_env_map_pool, wf_env_pool)
         return nodes_env_value_map
 
+    def extract_custom_result_meta_service(self, wf_edges_meta: Dict) -> Dict:
+        custom_result_meta = self._meta_controller.extract_custom_result_meta_ctl(wf_edges_meta)
+        return custom_result_meta
+
     def extract_params_map_service(self, start_nodes, wf_service_pool, wf_edges_meta) -> Dict:
         edge_params_map = self._meta_controller.extract_params_map_ctl(start_nodes, wf_service_pool, wf_edges_meta)
         return edge_params_map
@@ -159,43 +162,46 @@ class MetaLoadService:
         self._datastore.set_edges_meta_service(wf_edges_meta)
         self._print_debug_data(wf_edges_meta)
 
-
         self._logger.error("# [DAG Loader] Step 07. Extract node - environment mapper")
         wf_node_env_map_pool = self.extract_wf_node_env_service(wf_edges_meta)
-        print(wf_node_env_map_pool)
+        self._print_debug_data(wf_node_env_map_pool)
 
         self._logger.error("# [DAG Loader] Step 08. Extract node's environment params")
         nodes_env_value_map = self.extract_node_environments_value_map_service(wf_nodes_meta, wf_node_env_map_pool, wf_env_pool)
         self._datastore.set_init_nodes_env_params_service(nodes_env_value_map)
         self._print_debug_data(nodes_env_value_map)
 
+        self._logger.error("# [DAG Loader] Step 09. Extract node's customized result set")
+        custom_result_meta = self.extract_custom_result_meta_service(wf_edges_meta)
+        self._datastore.set_custom_result_meta_service(custom_result_meta)
+        self._print_debug_data(custom_result_meta)
 
-        self._logger.error("# [DAG Loader] Step 09. Extract Forward-Edge graph")
+        self._logger.error("# [DAG Loader] Step 10. Extract Forward-Edge graph")
         wf_forward_edge_graph = self.extract_forward_edge_graph_service(wf_edges_meta)
         self._datastore.set_forward_edge_graph_meta_service(wf_forward_edge_graph)
         self._print_debug_data(wf_forward_edge_graph)
 
-        self._logger.error("# [DAG Loader] Step 10. Extract Forward-graph")
+        self._logger.error("# [DAG Loader] Step 11. Extract Forward-graph")
         wf_forward_graph = self.extract_forward_graph_service(wf_edges_meta)
         self._datastore.set_forward_graph_meta_service(wf_forward_graph)
         self._print_debug_data(wf_forward_graph)
 
-        self._logger.error("# [DAG Loader] Step 11. Extract backward-graph")
+        self._logger.error("# [DAG Loader] Step 12. Extract backward-graph")
         wf_backward_graph = self.extract_backward_graph_service(wf_edges_meta)
         self._datastore.set_backward_graph_meta_service(wf_backward_graph)
         self._print_debug_data(wf_backward_graph)
 
-        self._logger.error("# [DAG Loader] Step 12. Extract Start Node from forward_graph")
+        self._logger.error("# [DAG Loader] Step 13. Extract Start Node from forward_graph")
         start_nodes = self.find_start_nodes_service(wf_forward_graph)
         self._datastore.set_start_nodes_meta_service(start_nodes)
         self._print_debug_data(start_nodes)
 
-        self._logger.error("# [DAG Loader] Step 13. Extract End Node from backward_graph")
+        self._logger.error("# [DAG Loader] Step 14. Extract End Node from backward_graph")
         end_nodes = self.find_end_nodes_service(wf_backward_graph)
         self._datastore.set_end_nodes_meta_service(end_nodes)
         self._print_debug_data(end_nodes)
 
-        self._logger.error("# [DAG Loader] Step 14. Extract service params-map")
+        self._logger.error("# [DAG Loader] Step 15. Extract service params-map")
         edges_param_map = self.extract_params_map_service(start_nodes, wf_service_pool, wf_edges_meta)
         self._datastore.set_edges_param_map_service(edges_param_map)
         self._print_debug_data(edges_param_map)
