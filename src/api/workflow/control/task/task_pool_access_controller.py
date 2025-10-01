@@ -1,6 +1,10 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from common.conf_system import getAccessPoolType
 from api.workflow.access.data.cached_taskpool_access import CachedTaskPoolAccess
 from api.workflow.access.data.remote_cached_taskpool_access import RemoteCachedTaskPoolAccess
+
 
 class TaskPoolAccessController:
     def __init__(self, logger):

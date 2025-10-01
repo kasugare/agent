@@ -8,7 +8,7 @@ import shutil
 
 
 class LibraryInstaller:
-    def __init__(self, logger=None):
+    def __init__(self, logger):
         self._logger = logger
         self._instance_pool = {}
         self.project_dir = os.path.dirname(os.path.abspath(__file__))
@@ -65,7 +65,7 @@ class LibraryInstaller:
     def install_requirements_from_module(self, module_path: str, req_name: str = "requirements.txt"):
         parts = module_path.split(".")
 
-        zip_path =  "/Users/hanati/workspace/agent/src/" + os.path.join(*parts[:-1]) + ".zip"
+        zip_path = "/Users/hanati/workspace/agent/src/" + os.path.join(*parts[:-1]) + ".zip"
 
         module_dir = parts[-2]
         req_path = f"{module_dir}/{req_name}"

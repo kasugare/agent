@@ -4,6 +4,7 @@
 from api.workflow.control.meta.edge_transform import EdgeTransformer
 from api.workflow.control.meta.env_transform import EnvironmentsTransformer
 
+
 class MetaParseController:
     def __init__(self, logger):
         self._logger = logger

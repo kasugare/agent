@@ -1,23 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import time
-import json
-import uuid
+
 from api.workflow.service.meta.meta_load_service import MetaLoadService
 from api.workflow.service.data.data_store_service import DataStoreService
 from api.workflow.service.task.task_load_service import TaskLoadService
+from api.workflow.service.execute.workflow_executor import WorkflowExecutor
 from api.workflow.service.execute.action_planner import ActionPlanningService
-from api.workflow.service.execute.workflow_execution_orchestrator import WorkflowExecutionOrchestrator
-from api.workflow.common.websocket.ws_protocol import ClientMessage, ServerMessage
-from api.workflow.workflow_schema import WebSocketMessage
-from api.workflow.common.websocket.ws_connection_manager import WSConnectionManager
-from starlette.responses import HTMLResponse
-from starlette.websockets import WebSocketDisconnect
-from pydantic import ValidationError
-from multiprocessing import Queue
-from typing import Dict, Any
-from abc import abstractmethod
+from api.workflow.control.execute.workflow_execution_orchestrator import WorkflowExecutionOrchestrator
+from api.workflow.service.stream.web_stream_connection_manager import WSConnectionManager
+from api.workflow.service.stream.web_stream_handler import WebStreamHandler
 from fastapi import APIRouter, WebSocket
+from multiprocessing import Queue
+from abc import abstractmethod
+from typing import Dict, Any
+import time
+import json
+import uuid
 
 
 class BaseRouter:
@@ -47,30 +45,34 @@ class WorkflowEngine(BaseRouter):
         self._datastore = DataStoreService(logger)
         self._taskstore = TaskLoadService(logger, self._datastore)
         self._metastore = MetaLoadService(logger, self._datastore)
+        self._workflow_executor = WorkflowExecutor(logger, self._datastore, self._metastore, self._taskstore)
         self._act_planner = ActionPlanningService(logger, self._datastore, self._metastore, self._taskstore)
-        self._ws_connection_manager = WSConnectionManager()
+        self._ws_manager = WSConnectionManager(logger)
         self._job_Q = Queue()
         self._act_meta = {}
-
-    def _clean_all(self):
-        self._datastore.clear()
 
     def setup_routes(self):
         @self.router.post(path='/workflow/meta')
         async def create_workflow(workflow) -> None:
+            self._logger.error("################################################################")
+            self._logger.error("#                         < Set Meta >                         #")
+            self._logger.error("################################################################")
+            self._datastore.clear()
             wf_meta = json.loads(workflow)
-            self._clean_all()
             self._metastore.change_wf_meta(wf_meta)
 
-        @self.router.post(path='/workflow/clear')
+        @self.router.get(path='/workflow/clear')
         async def call_data_clear():
             self._logger.error("################################################################")
             self._logger.error("#                         < Clear All >                        #")
             self._logger.error("################################################################")
-            self._clean_all()
+            self._datastore.clear()
 
         @self.router.post(path='/workflow/run')
         async def call_chained_model_service(request: Dict[str, Any]):
+            self._logger.error("################################################################")
+            self._logger.error("#                            < RUN >                           #")
+            self._logger.error("################################################################")
             start_node = request.get('from')
             if start_node:
                 request.pop('from')
@@ -82,6 +84,7 @@ class WorkflowEngine(BaseRouter):
             else:
                 request_id = "AUTO_%X" %(int(time.time() * 10000))
             request['request_id'] = request_id
+
 
             act_meta_pack = self._act_planner.gen_action_meta_pack(start_node, end_node, request)
             self._act_meta = act_meta_pack
@@ -157,73 +160,13 @@ class WorkflowEngine(BaseRouter):
                 task_obj._print_service_info()
                 self._logger.debug("*" * 100)
 
-        @self.router.get("/")
-        async def get():
-            return HTMLResponse(html)
+        @self.router.websocket("/workflow/chat")
+        async def websocket_endpoint(websocket: WebSocket):
+            self._logger.error("################################################################")
+            self._logger.error("#                        < Web Socket >                        #")
+            self._logger.error("################################################################")
+            connection_id = str(uuid.uuid4())
 
-        @self.router.websocket("/ws/{user_id}")
-        async def websocket_endpoint(websocket: WebSocket, user_id: str):
-            await self._ws_connection_manager.connect(websocket, user_id)
-            try:
-                await self._ws_connection_manager.broadcast("system", f"{user_id} joined the chat")
-                while True:
-                    client_message = await websocket.receive_text()
-                    self._logger.debug(client_message)
-
-                    client_message = WebSocketMessage.model_validate_json(client_message)
-                    request_id = client_message.request_id
-
-                    if client_message.type == "init":
-                        service_result = ""
-                        init_response = WebSocketMessage(type="init", payload={"status": service_result}, request_id=request_id)
-                        await self._ws_connection_manager.send_to_user(user_id=user_id, response=init_response)
-                    elif client_message.type == "chat":
-                        service_result = ""
-                        chat_response = WebSocketMessage(type="chat", payload={"response": service_result}, request_id=request_id)
-                        await self._ws_connection_manager.send_to_user(user_id=user_id, response=chat_response)
-                    else:
-                        error_response = WebSocketMessage(type="error", payload={"message": "Invalid protocol type"})
-                        await self._ws_connection_manager.send_to_user(user_id=user_id, response=error_response)
-
-            except WebSocketDisconnect:
-                self._ws_connection_manager.disconnect(user_id)
-                await self._ws_connection_manager.broadcast("system", f"{user_id} disconnected")
-
-        html = """
-        <!DOCTYPE html>
-        <html>
-          <body>
-            <h2>Chat Room</h2>
-            <div id="chat" style="height:200px; overflow:auto; border:1px solid #ccc;"></div>
-            <helloworld id="msgInput" placeholder="Type message..." autofocus />
-            <button onclick="sendMsg()">Send</button>
-        
-            <script>
-          const userId = prompt("Enter your user_id");
-          const ws = new WebSocket("ws://" + location.host + "/ws/" + userId);
-          const chatBox = document.getElementById("chat");
-          const helloworld = document.getElementById("msgInput");
-        
-          ws.onmessage = (e) => {
-            try {
-              const msg = JSON.parse(e.data);
-              const el = document.createElement("div");
-              el.textContent = `[${msg.user}] ${msg.text}`; // 이름 + 메시지 출력
-              chatBox.appendChild(el);
-              chatBox.scrollTop = chatBox.scrollHeight;
-            } catch {
-              console.warn("invalid msg:", e.data);
-            }
-          };
-        
-          function sendMsg() {
-            if (ws.readyState === WebSocket.OPEN) {
-              ws.send(helloworld.value);
-              helloworld.value = "";
-            }
-          }
-        </script>
-        
-          </body>
-        </html>
-        """
+            await self._ws_manager.connect(websocket, connection_id)
+            stream_handler = WebStreamHandler(self._logger, self._ws_manager)
+            stream_handler.run_stream(connection_id)

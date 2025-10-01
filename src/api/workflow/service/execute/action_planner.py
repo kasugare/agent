@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+
 class ActionPlanningService:
     def __init__(self, logger, datastore, metastore, taskstore):
         self._logger = logger

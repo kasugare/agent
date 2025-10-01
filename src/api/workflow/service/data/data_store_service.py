@@ -18,8 +18,13 @@ class DataStoreService:
 
     def clear(self):
         self._data_controller.clear_ctl()
-        self._metastore_controller.clear_ctl()
         self._taskpool_controller.clear_ctl()
+        self._metastore_controller.clear_ctl()
+
+    def clear_data(self):
+        self._data_controller.clear_ctl()
+        self._taskpool_controller.clear_ctl()
+
 
     def set_cache_key_service(self, wf_key):
         self._data_controller.set_cache_key_ctl(wf_key)

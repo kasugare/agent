@@ -1,13 +1,12 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from typing import Dict,Set
 from fastapi import WebSocket
-import time
 import json
 
-def now_ms() -> int:
-    return int(time.time() * 1000)
 
 class WSConnectionManager:
-
     def __init__(self):
         self.active_connections: Dict[str, WebSocket] = {}
 
@@ -36,4 +35,3 @@ class WSConnectionManager:
         import json
         for ws in self.active_connections.values():
             await ws.send_text(json.dumps(payload))
-

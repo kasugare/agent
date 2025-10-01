@@ -24,7 +24,7 @@ class DynamicLoader:
         self._add_path(f"{getHomeDir()}/src")
         self._active_clients = weakref.WeakSet()
         self._thread_pool = ThreadPoolExecutor(max_workers=10)
-        self._lib_installer = LibraryInstaller()
+        self._lib_installer = LibraryInstaller(logger)
 
     def _load_module(self, module_path: str, reload: bool = False) -> Any:
         """ module_path: "app.test.test_class" """
