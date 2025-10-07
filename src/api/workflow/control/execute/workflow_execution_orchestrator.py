@@ -53,52 +53,93 @@ class WorkflowExecutionOrchestrator:
             service_pool = self._meta_pack['service_pool']
             service_info = service_pool.get(service_id)
             module_info = service_info.get('module_info')
-            if not module_info: return {}
-            environments_map = module_info.get('environments')
-            if not environments_map: return {}
-            env_params_info = environments_map.get('params')
-            if not env_params_info: return {}
+            if not module_info:
+                return {}
+
+            sys_env_map = module_info.get('sys_environments')
+            if not sys_env_map:
+                return {}
+
+            env_params_info = sys_env_map.get('params')
+            if not env_params_info:
+                return {}
+
             node_id = service_info.get('node_id')
             env_params_map = {env_param_map.get('key'): f"E.{node_id}.{env_param_map.get('key')}"
                              for env_param_map in env_params_info if env_param_map.get('key')}
             for env_name, env_value_id in env_params_map.items():
                 env_value = self._datastore.get_param_value_service(env_value_id)
-                map_env_value = self._map_template(service_id, env_value)
-                env_params_map[env_name] = map_env_value
+                env_params_map[env_name] = self._map_template(service_id, env_value)
             return env_params_map
         except Exception as e:
             return {}
 
-    def _get_params(self, service_id):
-        def get_edge_params(edge_param_id):
-            edges_param_map = self._meta_pack['act_edges_param_map']
-            param_map_list = edges_param_map.get(edge_param_id)
-            params = {}
-            if not param_map_list:
-                return params
-            for param_map in param_map_list:
-                param_name = param_map.get('key')
+    def _get_assets(self, service_id):
+        try:
+            service_pool = self._meta_pack['service_pool']
+            service_info = service_pool.get(service_id)
+            module_info = service_info.get('module_info')
+            if not module_info:
+                return {}
 
+            asset_env_map = module_info.get('asset_environments')
+            if not asset_env_map:
+                return {}
+
+            asset_params_info = asset_env_map.get('params')
+            if not asset_params_info:
+                return {}
+
+            node_id = service_info.get('node_id')
+            asset_params_map = {asset_param_map.get('key'): f"A.{node_id}.{asset_param_map.get('key')}"
+                             for asset_param_map in asset_params_info if asset_param_map.get('key')}
+            for asset_name, asset_value_id in asset_params_map.items():
+                env_value = self._datastore.get_param_value_service(asset_value_id)
+                asset_params_map[asset_name] = self._map_template(service_id, env_value)
+            return asset_params_map
+        except Exception as e:
+            return {}
+
+    def _extract_param_value(self, service_id, param_map_list) -> dict:
+        params = {}
+        for param_map in param_map_list:
+            param_name = param_map.get('key')
+            if 'value' in param_map.keys():
                 if param_map.get('refer_type') == 'direct':
                     value_id = f"I.{service_id}.{param_name}"
                 else:
                     addr_value = param_map.get('value')
                     value_id = f"O.{addr_value}"
+                extract_params_value = self._datastore.get_param_value_service(value_id)
+                params[param_name] = extract_params_value
+            elif 'values' in param_map.keys():
+                value_param_map_list = param_map.get('values')
+                sub_service_id = f"{service_id}.{param_name}"
+                sub_params = self._extract_param_value(sub_service_id, value_param_map_list)
+                params.update({param_name:sub_params})
+        return params
 
-                value = self._datastore.get_param_value_service(value_id)
-                params[param_name] = value
+    def _get_params(self, service_id):
+        def get_edge_params(edge_param_id, edges_param_map):
+            param_map_list = edges_param_map.get(edge_param_id)
+            params = {}
+            if not param_map_list:
+                return params
+            params = self._extract_param_value(service_id, param_map_list)
             return params
 
         backward_graph = self._meta_pack['backward_graph']
         prev_service_ids = backward_graph.get(service_id)
+        edges_param_map = self._meta_pack['act_edges_param_map']
         param_map = {}
         if not prev_service_ids:
             edge_params_id = f"None-{service_id}"
-            param_map = get_edge_params(edge_params_id)
+            param_map = get_edge_params(edge_params_id, edges_param_map)
             prev_service_ids = []
+
         for prev_service_id in prev_service_ids:
             edge_params_id = f"{prev_service_id}-{service_id}"
-            param_map = get_edge_params(edge_params_id)
+            param_map = get_edge_params(edge_params_id, edges_param_map)
         return param_map
 
     def _get_start_nodes(self):
@@ -201,15 +242,28 @@ class WorkflowExecutionOrchestrator:
                                 runnable = False
                     else:
                         runnable = True
+
                     if runnable:
-                        params_info = self._get_params(service_id)
-                        self._datastore.set_service_params_service(service_id, params_info)
                         env_params = self._get_envs(service_id)
                         task.set_env_params(env_params)
-                        task.set_params(params_info)
-                        task.set_state(TaskState.RUNNING)
-                        self._job_Q.put_nowait(service_id)
 
+                        asset_params = self._get_assets(service_id)
+                        task.set_asset_params(asset_params)
+
+                        func_params = self._get_params(service_id)
+                        print(func_params)
+                        task.set_params(func_params)
+                        task.set_state(TaskState.RUNNING)
+                        self._datastore.set_service_params_service(service_id, func_params)
+
+                        self._logger.debug("< Env >")
+                        self._logger.info(f"  - {env_params}")
+                        self._logger.debug("< Asset >")
+                        self._logger.info(f"  - {asset_params}")
+                        self._logger.debug("< Function >")
+                        self._logger.info(f"  - {func_params}")
+
+                        self._job_Q.put_nowait(service_id)
                 elif task_state in [TaskState.RUNNING]:
                     if task.get_location() == 'inner':
                         self._execute_task(task)

@@ -75,7 +75,7 @@ class BaseVectorDB(ABC):
             self._logger.error(f"Error adding documents: {e}")
             return []
 
-    async def search(self, query: str, top_k: int = 5, exclude_pages: list[int] = None) -> List[Dict[str, Any]]:
+    async def search(self, query: str, top_k: int=5, exclude_pages: list[int]=None, score_threshold: float=0.1) -> List[Dict[str, Any]]:
         """
         Search for similar documents.
 
@@ -95,7 +95,7 @@ class BaseVectorDB(ABC):
                 exclude_filter = self.build_page_not_in_filter(exclude_pages=exclude_pages)
                 results = self.vectorstore.similarity_search_with_score(query, k=top_k, filter=exclude_filter)
             else:
-                results = await self.vectorstore.asimilarity_search_with_score(query, k=top_k)
+                results = await self.vectorstore.asimilarity_search_with_score(query, k=top_k, score_threshold=score_threshold)
             formatted_results = []
             for doc, score in results:
                 formatted_results.append({

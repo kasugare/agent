@@ -12,7 +12,7 @@ class EnvironmentsTransformer:
         for node_id, node_meta in wf_nodes_meta.items():
             module_info = node_meta.get('module_info')
             if not module_info: continue
-            module_env_info = module_info.get('environments')
+            module_env_info = module_info.get('sys_environments')
             if not module_env_info: continue
             env_params = module_env_info.get('params')
             if not env_params: continue

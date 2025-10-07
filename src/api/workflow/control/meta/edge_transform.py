@@ -12,8 +12,10 @@ class EdgeTransformer:
             mapper_info = service_info['params']['input']
         elif find_type == 'value':
             mapper_info = service_info['result']['output']
+        elif find_type == 'values':
+            return 'object', False
         else:
-            return None
+            return None, None
 
         for data_map in mapper_info:
             if data_map.get('key') == param_key:
@@ -29,13 +31,13 @@ class EdgeTransformer:
             tar_data_type, required = self._get_data_type(param_key_path, tar_service_info, find_type='key')
             param_map['key_data_type'] = tar_data_type
             param_map['key_required'] = required
+
             if refer_type == 'indirect':
                 src_value_path = param_map.get('value')
                 src_data_type, _ = self._get_data_type(src_value_path, tar_service_info, find_type='value')
                 if not src_data_type:
                     src_data_type = tar_data_type
                 param_map['value_data_type'] = src_data_type
-
             elif refer_type == 'direct':
                 src_value = param_map.get('value')
                 param_map['value_data_type'] = type(src_value).__name__
@@ -48,13 +50,14 @@ class EdgeTransformer:
             src_service_id = edge_info.get('source')
             tar_service_id = edge_info.get('target')
             edge_id = f"{src_service_id}-{tar_service_id}"
+
             src_service_info = wf_service_pool.get(src_service_id)
             tar_service_info = wf_service_pool.get(tar_service_id)
             edges_map[edge_id] = edge_info
             edges_map[edge_id]['source_info'] = src_service_info
             edges_map[edge_id]['target_info'] = tar_service_info
             params_info = edge_info.get('param_info')
-            self._add_data_type_on_params_info(params_info, tar_service_info)
+            params_info = self._add_data_type_on_params_info(params_info, tar_service_info)
         return edges_map
 
     def _set_default_params_info(self, service_id, service_info):

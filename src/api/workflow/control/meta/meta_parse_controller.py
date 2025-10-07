@@ -3,6 +3,7 @@
 
 from api.workflow.control.meta.edge_transform import EdgeTransformer
 from api.workflow.control.meta.env_transform import EnvironmentsTransformer
+from api.workflow.control.meta.assets_transform import AssetsTransformer
 
 
 class MetaParseController:
@@ -10,6 +11,15 @@ class MetaParseController:
         self._logger = logger
         self._edge_transformer = EdgeTransformer(logger)
         self._env_transformer = EnvironmentsTransformer(logger)
+        self._asset_transformer = AssetsTransformer(logger)
+
+    def _extract_node_id(self, edge_info):
+        service_id = edge_info.get('target')
+        if service_id == 'None' or service_id == None:
+            service_id = edge_info.get('service')
+        splited_service_id = service_id.split(".")
+        node_id = splited_service_id[0]
+        return node_id
 
     def extract_wf_common_info_ctl(self, wf_meta: dict) -> dict:
         wf_metadata = wf_meta.get('metadata')
@@ -35,17 +45,9 @@ class MetaParseController:
         return env_pool
 
     def extract_wf_node_env_map_ctl(self, wf_edges_meta: dict) -> dict:
-        def extract_node_id(edge_info):
-            service_id = edge_info.get('target')
-            if service_id == 'None' or service_id == None:
-                service_id = edge_info.get('service')
-            splited_service_id = service_id.split(".")
-            node_id = splited_service_id[0]
-            return node_id
-
         node_env_map_pool = {}
         for edge_id, edge_meta in wf_edges_meta.items():
-            node_id = extract_node_id(edge_meta)
+            node_id = self._extract_node_id(edge_meta)
             env_info = edge_meta.get('env_info')
             for env_map in env_info:
                 try:
@@ -57,6 +59,22 @@ class MetaParseController:
                 except Exception as e:
                     self._logger.error("not existed node-env parma key")
         return node_env_map_pool
+
+    def extract_wf_node_asset_map_ctl(self, wf_edges_meta: dict) -> dict:
+        node_asset_map_pool = {}
+        for edge_id, edge_meta in wf_edges_meta.items():
+            node_id = self._extract_node_id(edge_meta)
+            asset_info = edge_meta.get('asset_info')
+            for asset_map in asset_info:
+                try:
+                    key = asset_map.pop('key')
+                    if node_asset_map_pool.get(node_id):
+                        node_asset_map_pool[node_id][key] = asset_map
+                    else:
+                        node_asset_map_pool[node_id] = {key: asset_map}
+                except Exception as e:
+                    self._logger.error("not existed node-env parma key")
+        return node_asset_map_pool
 
     def extract_wf_to_nodes_ctl(self, wf_meta: dict) -> dict:
         nodes = wf_meta.get('nodes')
@@ -168,6 +186,10 @@ class MetaParseController:
     def extract_node_env_value_map_ctl(self, wf_nodes_meta, wf_node_env_map_pool, wf_env_pool) -> dict:
         nodes_env_value_map = self._env_transformer.cvt_node_env_value_map_ctl(wf_nodes_meta, wf_node_env_map_pool, wf_env_pool)
         return nodes_env_value_map
+
+    def extract_node_asset_value_map_ctl(self, wf_nodes_meta, wf_node_asset_map_pool, wf_env_pool) -> dict:
+        nodes_asset_value_map = self._asset_transformer.cvt_node_asset_value_map_ctl(wf_nodes_meta, wf_node_asset_map_pool, wf_env_pool)
+        return nodes_asset_value_map
 
     def extract_custom_result_meta_ctl(self, wf_edges_meta: dict) -> dict:
         custom_result_meta = {}

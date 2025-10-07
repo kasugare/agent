@@ -184,7 +184,7 @@ class OpenAICompatibleLLM(BaseLLM):
             self._logger.error(f"Completion error: {e}")
             raise
 
-    async def generate(self, prompt: str, stream: bool = False, **kwargs) -> dict:
+    async def generate(self, message: list, stream: bool = False, **kwargs) -> dict:
         """
         BaseLLM 호환을 위한 generate 메서드
 
@@ -198,7 +198,7 @@ class OpenAICompatibleLLM(BaseLLM):
         """
         try:
             # 채팅 형식으로 변환하여 호출
-            messages = [{"role": "user", "content": prompt}]
+            # messages = [{"role": "user", "content": prompt}]
 
             completion = await self.chat_completions_create(
                 messages=messages,

@@ -5,8 +5,6 @@ from api.workflow.service.meta.meta_load_service import MetaLoadService
 from api.workflow.service.data.data_store_service import DataStoreService
 from api.workflow.service.task.task_load_service import TaskLoadService
 from api.workflow.service.execute.workflow_executor import WorkflowExecutor
-from api.workflow.service.execute.action_planner import ActionPlanningService
-from api.workflow.control.execute.workflow_execution_orchestrator import WorkflowExecutionOrchestrator
 from api.workflow.service.stream.web_stream_connection_manager import WSConnectionManager
 from api.workflow.service.stream.web_stream_handler import WebStreamHandler
 from fastapi import APIRouter, WebSocket
@@ -42,14 +40,12 @@ class WorkflowEngine(BaseRouter):
 
     def __init__(self, logger, db_conn=None):
         super().__init__(logger, tags=['serving'])
+        self._job_Q = Queue()
         self._datastore = DataStoreService(logger)
         self._taskstore = TaskLoadService(logger, self._datastore)
         self._metastore = MetaLoadService(logger, self._datastore)
-        self._workflow_executor = WorkflowExecutor(logger, self._datastore, self._metastore, self._taskstore)
-        self._act_planner = ActionPlanningService(logger, self._datastore, self._metastore, self._taskstore)
+        self._workflow_executor = WorkflowExecutor(logger, self._datastore, self._metastore, self._taskstore, self._job_Q)
         self._ws_manager = WSConnectionManager(logger)
-        self._job_Q = Queue()
-        self._act_meta = {}
 
     def setup_routes(self):
         @self.router.post(path='/workflow/meta')
@@ -84,16 +80,7 @@ class WorkflowEngine(BaseRouter):
             else:
                 request_id = "AUTO_%X" %(int(time.time() * 10000))
             request['request_id'] = request_id
-
-
-            act_meta_pack = self._act_planner.gen_action_meta_pack(start_node, end_node, request)
-            self._act_meta = act_meta_pack
-            if act_meta_pack.get('act_start_nodes'):
-                workflow_engine = WorkflowExecutionOrchestrator(self._logger, self._datastore, act_meta_pack, self._job_Q)
-                result = workflow_engine.run_workflow(request)
-            else:
-                self._logger.error(f"# Not generated task_map, check DAG meta")
-                result = "# Not generated task_map, check DAG meta"
+            result = self._workflow_executor.run_workflow(request, start_node, end_node)
             return {"result": result}
 
         @self.router.get(path='/workflow/metapack')
@@ -121,7 +108,8 @@ class WorkflowEngine(BaseRouter):
             self._logger.error("################################################################")
             self._logger.error("#                        < Active DAG >                        #")
             self._logger.error("################################################################")
-            for k, v in self._act_meta.items():
+            act_meta = self._workflow_executor.get_act_meta()
+            for k, v in act_meta.items():
                 self._logger.info(f" - {k}")
                 if isinstance(v, dict):
                     for kk, vv in v.items():
@@ -132,13 +120,15 @@ class WorkflowEngine(BaseRouter):
                 else:
                     self._logger.debug(f" \t- {v}")
                 self._logger.debug("*" * 200)
+            return act_meta
 
         @self.router.get(path='/workflow/tasks')
         async def call_task_pool():
             self._logger.error("################################################################")
             self._logger.error("#                       < Active Tasks >                       #")
             self._logger.error("################################################################")
-            act_task_map = self._act_meta.get('act_task_map')
+            act_meta = self._workflow_executor.get_act_meta()
+            act_task_map = act_meta.get('act_task_map')
             if not act_task_map:
                 return
             for task_id, task_obj in act_task_map.items():
@@ -159,6 +149,7 @@ class WorkflowEngine(BaseRouter):
                 self._logger.debug(f"\t- node_type:  {node_type}")
                 task_obj._print_service_info()
                 self._logger.debug("*" * 100)
+            return act_task_map
 
         @self.router.websocket("/workflow/chat")
         async def websocket_endpoint(websocket: WebSocket):
@@ -168,5 +159,5 @@ class WorkflowEngine(BaseRouter):
             connection_id = str(uuid.uuid4())
 
             await self._ws_manager.connect(websocket, connection_id)
-            stream_handler = WebStreamHandler(self._logger, self._ws_manager)
-            stream_handler.run_stream(connection_id)
+            stream_handler = WebStreamHandler(self._logger, self._ws_manager, self._datastore, self._metastore, self._taskstore)
+            await stream_handler.run_stream(connection_id)

@@ -37,6 +37,9 @@ class DataStoreService:
     def set_init_nodes_env_params_service(self, nodes_env_value_map):
         self._data_controller.set_init_nodes_env_params_ctl(nodes_env_value_map)
 
+    def set_init_nodes_asset_params_service(self, nodes_asset_value_map):
+        self._data_controller.set_init_nodes_asset_params_ctl(nodes_asset_value_map)
+
     def set_init_service_params_service(self, wf_edges_meta):
         self._data_controller.set_init_service_params_ctl(wf_edges_meta)
 

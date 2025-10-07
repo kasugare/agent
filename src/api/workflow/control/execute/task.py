@@ -15,6 +15,7 @@ class Task(TaskContext):
         self._start_time = None
         self._end_time = None
         self._env_params = {}
+        self._asset_params = {}
         self._params = {}
         self._result = None
 
@@ -22,6 +23,11 @@ class Task(TaskContext):
         self._env_params = env_params
         executor = self.get_executor()
         executor.set_env(env_params)
+
+    def set_asset_params(self, asset_params=None):
+        self._asset_params = asset_params
+        executor = self.get_executor()
+        executor.set_asset(asset_params)
 
     def set_params(self, params=None):
         self._params = params

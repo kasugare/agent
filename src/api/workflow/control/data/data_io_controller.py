@@ -31,15 +31,36 @@ class DataIoController:
             value_id = f"E.{env_id}"
             self._data_access.set_data(value_id, value)
 
+    def set_init_nodes_asset_params_ctl(self, nodes_asset_value_map):
+        if not nodes_asset_value_map:
+            return
+        for asset_id, value in nodes_asset_value_map.items():
+            value_id = f"A.{asset_id}"
+            self._data_access.set_data(value_id, value)
+
+    def _set_params_map_ctl(self, service_id, params_map):
+        param_name = params_map.get('key')
+        if 'value' in params_map.keys():
+            if params_map.get('refer_type') == 'direct':
+                value = params_map.get('value')
+                self.set_service_params_ctl(service_id, params_map={param_name: value})
+        elif 'values' in params_map.keys():
+            for value_info in params_map.get('values'):
+                sub_service_id = f"{service_id}.{param_name}"
+                self._set_params_map_ctl(sub_service_id, value_info)
+
     def set_init_service_params_ctl(self, wf_edges_meta):
         for edge_id, edge_meta in wf_edges_meta.items():
             service_id = edge_meta.get('target')
             params_info = edge_meta.get('param_info')
             for params_map in params_info:
-                if params_map.get('refer_type') == 'direct':
-                    param_name = params_map.get('key')
-                    value = params_map.get('value')
-                    self.set_service_params_ctl(service_id, params_map={param_name: value})
+                self._set_params_map_ctl(service_id, params_map)
+
+    def set_service_asset_ctrl(self, service_id, asset_map: dict):
+        self._set_data_ctl(service_id, asset_map, io_type="A")
+
+    def set_service_env_ctrl(self, service_id, env_map: dict):
+        self._set_data_ctl(service_id, env_map, io_type="E")
 
     def set_service_params_ctl(self, service_id, params_map: dict):
         self._set_data_ctl(service_id, params_map, io_type="I")
@@ -49,7 +70,7 @@ class DataIoController:
 
     def _set_data_ctl(self, service_id, data_map, io_type):
         """ value_id = {io_type}.{service_id}.{param_name}"""
-        if io_type not in ['I', 'O', 'E']:
+        if io_type not in ['I', 'O', 'E', 'A']:
             raise Exception
 
         for key_name, value in data_map.items():
@@ -71,6 +92,7 @@ class DataIoController:
     def _get_service_value_ctl(self, key_name, io_type='O'):
         """ key_name = {node_id}.{service_name}.{param_name}
             value_id = {io_type}.{node_id}.{service_name}.{param_name}"""
+
         value_id = f"{io_type}.{key_name}"
         value = self._data_access.get_data(value_id)
         return value
