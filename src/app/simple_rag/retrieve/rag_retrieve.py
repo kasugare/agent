@@ -19,8 +19,8 @@ class RagRetrieve:
         self._vectordb_path = vectordb_path
         self._api_key = api_key
 
-    async def retrieve(self, query, top_k, collection_name, check_embedding_ctx_length=False, threshold=0.1):
-        # collection_name: as vectorDB's table
+    async def retrieve(self, query, top_k, check_embedding_ctx_length=False, threshold=0.1):
+        # collection_name: as vectorDB's table == knowledge name
         # check_embedding_ctx_length: ??
 
         embedding_model = OpenAIEmbeddings(openai_api_base=self._embedding_server_path, model=self._embed_model_nm, api_key=self._api_key, check_embedding_ctx_length=check_embedding_ctx_length)
@@ -29,7 +29,7 @@ class RagRetrieve:
             self._vector_db = vector_db_loader.load(
                 db_type=self._vectordb_type,
                 connection_string=self._vectordb_path,
-                collection_name=collection_name,
+                collection_name=self._knowledge_id,
                 embedding_model=embedding_model
             )
 

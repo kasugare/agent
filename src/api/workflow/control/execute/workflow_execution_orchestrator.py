@@ -251,7 +251,6 @@ class WorkflowExecutionOrchestrator:
                         task.set_asset_params(asset_params)
 
                         func_params = self._get_params(service_id)
-                        print(func_params)
                         task.set_params(func_params)
                         task.set_state(TaskState.RUNNING)
                         self._datastore.set_service_params_service(service_id, func_params)

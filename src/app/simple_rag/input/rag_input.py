@@ -4,9 +4,10 @@
 class RagInput:
     def __init__(self, logger, asset_info={}):
         self._logger = logger
-
-    def query_input(self, query: str) -> str:
-        return query
+        self._set_asset(**asset_info)
 
     def _set_asset(self):
         None
+
+    def query_input(self, query: str) -> str:
+        return query

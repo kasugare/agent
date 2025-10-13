@@ -3,6 +3,7 @@
 
 from typing import Dict, List, Any
 
+
 class EdgeTransformer:
     def __init__(self, logger):
         self._logger = logger
@@ -24,6 +25,20 @@ class EdgeTransformer:
                 return data_type, required
         return None, None
 
+    def _set_default_params_info(self, service_id, service_info):
+        params_info = []
+        input_params = service_info['params']['input']
+        for input_map in input_params:
+            params_name = input_map.get('key')
+            params_value = f"{service_id}.{params_name}"
+            params_map = {
+                'refer_type': 'direct',
+                'key': params_name,
+                'value': params_value
+            }
+            params_info.append(params_map)
+        return params_info
+
     def _add_data_type_on_params_info(self, params_info, tar_service_info):
         for param_map in params_info:
             refer_type = param_map.get('refer_type')
@@ -32,15 +47,15 @@ class EdgeTransformer:
             param_map['key_data_type'] = tar_data_type
             param_map['key_required'] = required
 
-            if refer_type == 'indirect':
+            if refer_type == 'direct':
+                src_value = param_map.get('value')
+                param_map['value_data_type'] = type(src_value).__name__
+            else:
                 src_value_path = param_map.get('value')
                 src_data_type, _ = self._get_data_type(src_value_path, tar_service_info, find_type='value')
                 if not src_data_type:
                     src_data_type = tar_data_type
                 param_map['value_data_type'] = src_data_type
-            elif refer_type == 'direct':
-                src_value = param_map.get('value')
-                param_map['value_data_type'] = type(src_value).__name__
         return params_info
 
     def cvt_service_edges(self, wf_config: Dict, wf_service_pool: Dict) -> Dict:
@@ -57,22 +72,8 @@ class EdgeTransformer:
             edges_map[edge_id]['source_info'] = src_service_info
             edges_map[edge_id]['target_info'] = tar_service_info
             params_info = edge_info.get('param_info')
-            params_info = self._add_data_type_on_params_info(params_info, tar_service_info)
+            self._add_data_type_on_params_info(params_info, tar_service_info)
         return edges_map
-
-    def _set_default_params_info(self, service_id, service_info):
-        params_info = []
-        input_params = service_info['params']['input']
-        for input_map in input_params:
-            params_name = input_map.get('key')
-            params_value = f"{service_id}.{params_name}"
-            params_map = {
-                'refer_type': 'direct',
-                'key': params_name,
-                'value': params_value
-            }
-            params_info.append(params_map)
-        return params_info
 
     def cvt_params_map_ctl(self, start_nodes, wf_service_pool, wf_edges_meta) -> dict:
         edge_params_map = dict()
@@ -86,4 +87,11 @@ class EdgeTransformer:
                 params_info = self._add_data_type_on_params_info(params_info, src_service_info)
                 edge_params_map[start_edge_id] = params_info
             edge_params_map[edge_id] = edge_info.get('param_info')
+        for k, v in edge_params_map.items():
+            print(f"<{k}>")
+            if isinstance(v, list):
+                for vv in v:
+                    print(f"\t - {vv}")
+            else:
+                print(f"\t - {vv}")
         return edge_params_map

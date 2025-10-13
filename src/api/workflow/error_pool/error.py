@@ -17,3 +17,21 @@ class NotExistedData(Exception):
 
     def __str__(self):
         return self._errorMessage
+
+
+class AssetKeyError(Exception):
+    def __init__(self):
+        super().__init__("Asset's keys mismatch detected between dictionaries")
+        self._errorMessage = "Asset's keys mismatch detected between dictionaries"
+
+    def __str__(self):
+        return self._errorMessage
+
+
+class EnvironmentKeyError(Exception):
+    def __init__(self):
+        super().__init__("Environment's keys mismatch detected between dictionaries")
+        self._errorMessage = "Environment's keys mismatch detected between dictionaries"
+
+    def __str__(self):
+        return self._errorMessage

@@ -23,7 +23,7 @@ class OpenAICompatibleLLM(BaseLLM):
     - 기타 OpenAI API 스펙을 따르는 모든 서버
     """
 
-    def __init__(self, logger, model: str, base_url: Optional[str], temperature: float, max_tokens: int, api_key: Optional[str], **kwargs):
+    def __init__(self, logger, model: str, base_url: Optional[str] = None, api_key: Optional[str] = None, temperature: float = 0.7, **kwargs):
         """
         OpenAI 호환 LLM 클래스 초기화
 
@@ -39,35 +39,44 @@ class OpenAICompatibleLLM(BaseLLM):
         """
         super().__init__(logger)
         self._logger = logger
-        self._model = model
-        self._base_url = base_url
-        self._api_key = api_key or "dummy"  # 로컬 서버용 더미 키
-        self._temperature = temperature
-        self._max_tokens = max_tokens
-        self._timeout = 180.0
-        self._max_retries = 3
+        self.model = model
+        self.base_url = base_url
+        self.api_key = api_key or "dummy"  # 로컬 서버용 더미 키
+        self.temperature = temperature
+        self.max_tokens = None
+        self.timeout = 180.0
+        self.max_retries = 3
 
         # OpenAI 클라이언트 초기화
         client_kwargs = {
-            "api_key": self._api_key,
-            "timeout": self._timeout,
-            "max_retries": self._max_retries,
+            "api_key": self.api_key,
+            "timeout": self.timeout,
+            "max_retries": self.max_retries,
             **kwargs
         }
 
-        if self._base_url:
-            client_kwargs["base_url"] = self._base_url
+        if self.base_url:
+            client_kwargs["base_url"] = self.base_url
 
         # 동기/비동기 클라이언트 생성
         self.client = OpenAI(**client_kwargs)
         self.async_client = AsyncOpenAI(**client_kwargs)
 
-        self._logger.debug(f"OpenAI Compatible LLM initialized: {self._model} @ {self._base_url or 'OpenAI'}")
+        self._logger.debug(f"OpenAI Compatible LLM initialized: {self.model} @ {self.base_url or 'OpenAI'}")
 
-    async def chat_completions_create(self, messages: List[Dict[str, str]], model: Optional[str] = None, temperature: Optional[float] = None,
-                                      max_tokens: Optional[int] = None, top_p: Optional[float] = None, frequency_penalty: Optional[float] = None,
-                                      presence_penalty: Optional[float] = None, stop: Optional[Union[str, List[str]]] = None, stream: bool = False,
-                                      **kwargs) -> Union[ChatCompletion, AsyncGenerator[ChatCompletionChunk, None]]:
+    async def chat_completions_create(
+            self,
+            messages: List[Dict[str, str]],
+            model: Optional[str] = None,
+            temperature: Optional[float] = None,
+            max_tokens: Optional[int] = None,
+            top_p: Optional[float] = None,
+            frequency_penalty: Optional[float] = None,
+            presence_penalty: Optional[float] = None,
+            stop: Optional[Union[str, List[str]]] = None,
+            stream: bool = False,
+            **kwargs
+    ) -> Union[ChatCompletion, AsyncGenerator[ChatCompletionChunk, None]]:
         """
         채팅 완성 생성 (OpenAI chat.completions.create 호환)
 
@@ -88,15 +97,15 @@ class OpenAICompatibleLLM(BaseLLM):
         """
         # 파라미터 설정
         params = {
-            "model": model or self._model,
+            "model": model or self.model,
             "messages": messages,
-            "temperature": temperature if temperature is not None else self._temperature,
+            "temperature": temperature if temperature is not None else self.temperature,
             "stream": stream
         }
 
         # 선택적 파라미터 추가
-        if max_tokens is not None or self._max_tokens is not None:
-            params["max_tokens"] = max_tokens or self._max_tokens
+        if max_tokens is not None or self.max_tokens is not None:
+            params["max_tokens"] = max_tokens or self.max_tokens
         if top_p is not None:
             params["top_p"] = top_p
         if frequency_penalty is not None:
@@ -118,10 +127,19 @@ class OpenAICompatibleLLM(BaseLLM):
             self._logger.error(f"Chat completion error: {e}")
             raise
 
-    async def completions_create(self, prompt: Union[str, List[str]], model: Optional[str] = None, temperature: Optional[float] = None,
-                                 max_tokens: Optional[int] = None, top_p: Optional[float] = None, frequency_penalty: Optional[float] = None,
-                                 presence_penalty: Optional[float] = None, stop: Optional[Union[str, List[str]]] = None, stream: bool = False,
-                                 **kwargs) -> Completion:
+    async def completions_create(
+            self,
+            prompt: Union[str, List[str]],
+            model: Optional[str] = None,
+            temperature: Optional[float] = None,
+            max_tokens: Optional[int] = None,
+            top_p: Optional[float] = None,
+            frequency_penalty: Optional[float] = None,
+            presence_penalty: Optional[float] = None,
+            stop: Optional[Union[str, List[str]]] = None,
+            stream: bool = False,
+            **kwargs
+    ) -> Completion:
         """
         텍스트 완성 생성 (OpenAI completions.create 호환)
 
@@ -141,14 +159,14 @@ class OpenAICompatibleLLM(BaseLLM):
             Completion 객체
         """
         params = {
-            "model": model or self._model,
+            "model": model or self.model,
             "prompt": prompt,
-            "temperature": temperature if temperature is not None else self._temperature,
+            "temperature": temperature if temperature is not None else self.temperature,
             "stream": stream
         }
 
-        if max_tokens is not None or self._max_tokens is not None:
-            params["max_tokens"] = max_tokens or self._max_tokens
+        if max_tokens is not None or self.max_tokens is not None:
+            params["max_tokens"] = max_tokens or self.max_tokens
         if top_p is not None:
             params["top_p"] = top_p
         if frequency_penalty is not None:
@@ -166,7 +184,7 @@ class OpenAICompatibleLLM(BaseLLM):
             self._logger.error(f"Completion error: {e}")
             raise
 
-    async def generate(self, messages: list, stream: bool = False, **kwargs) -> dict:
+    async def generate(self, prompt: str, stream: bool = False, **kwargs) -> dict:
         """
         BaseLLM 호환을 위한 generate 메서드
 
@@ -180,7 +198,7 @@ class OpenAICompatibleLLM(BaseLLM):
         """
         try:
             # 채팅 형식으로 변환하여 호출
-            # messages = [{"role": "user", "content": prompt}]
+            messages = [{"role": "user", "content": prompt}]
 
             completion = await self.chat_completions_create(
                 messages=messages,
@@ -193,7 +211,7 @@ class OpenAICompatibleLLM(BaseLLM):
                 return {
                     "text": "[스트리밍 모드]",
                     "tokens": 0,
-                    "model": self._model,
+                    "model": self.model,
                     "stream": True
                 }
             else:
@@ -213,7 +231,11 @@ class OpenAICompatibleLLM(BaseLLM):
             self._logger.error(f"Generate method error: {e}")
             raise
 
-    async def stream_chat(self, messages: List[Dict[str, str]], **kwargs) -> AsyncGenerator[str, None]:
+    async def stream_chat(
+            self,
+            messages: List[Dict[str, str]],
+            **kwargs
+    ) -> AsyncGenerator[str, None]:
         """
         스트리밍 채팅 제너레이터
 
@@ -251,7 +273,7 @@ class OpenAICompatibleLLM(BaseLLM):
             return [model.id for model in models.data]
         except Exception as e:
             self._logger.warning(f"Failed to get models list: {e}")
-            return [self._model]  # 기본 모델만 반환
+            return [self.model]  # 기본 모델만 반환
 
     async def get_available_models_async(self) -> List[str]:
         """
@@ -265,17 +287,17 @@ class OpenAICompatibleLLM(BaseLLM):
             return [model.id for model in models.data]
         except Exception as e:
             self._logger.warning(f"Failed to get models list: {e}")
-            return [self._model]
+            return [self.model]
 
     def set_model(self, model: str):
         """모델 변경"""
-        self._model = model
+        self.model = model
         self._logger.info(f"Model changed to: {model}")
 
     def set_temperature(self, temperature: float):
         """온도 설정 변경"""
         if 0.0 <= temperature <= 2.0:
-            self._temperature = temperature
+            self.temperature = temperature
             self._logger.info(f"Temperature changed to: {temperature}")
         else:
             raise ValueError("Temperature must be between 0.0 and 2.0")
@@ -283,7 +305,7 @@ class OpenAICompatibleLLM(BaseLLM):
     def set_max_tokens(self, max_tokens: int):
         """최대 토큰 수 변경"""
         if max_tokens > 0:
-            self._max_tokens = max_tokens
+            self.max_tokens = max_tokens
             self._logger.info(f"Max tokens changed to: {max_tokens}")
         else:
             raise ValueError("Max tokens must be positive")
@@ -307,7 +329,7 @@ class OpenAICompatibleLLM(BaseLLM):
             return False
 
     def __repr__(self) -> str:
-        return f"OpenAICompatibleLLM(model='{self._model}', base_url='{self._base_url}')"
+        return f"OpenAICompatibleLLM(model='{self.model}', base_url='{self.base_url}')"
 
 
 # 편의를 위한 팩토리 함수들
