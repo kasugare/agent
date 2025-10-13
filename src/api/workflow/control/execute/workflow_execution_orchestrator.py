@@ -158,7 +158,7 @@ class WorkflowExecutionOrchestrator:
 
     def _result_mapper(self, service_id, result):
         service_pool = self._meta_pack['service_pool']
-        results_schema = service_pool[service_id]['result']['output']
+        results_schema = service_pool[service_id]['result']
         result_map = {}
         if isinstance(result, dict):
             schema_keys = [schema_map.get('key') for schema_map in results_schema if schema_map.get('key')]

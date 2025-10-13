@@ -51,25 +51,19 @@
 			"services": {
 				"query_input": {
 					"function": "query_input",
-					"params": {
-						"format": "json",
-						"input": [
-							{
-								"required": true,
-								"key": "query",
-								"type": "string"
-							}
-						]
-					},
-					"result": {
-						"format": "json",
-						"output": [
-							{
-								"key": "query",
-								"type": "string"
-							}
-						]
-					}
+					"params": [
+						{
+							"required": true,
+							"key": "query",
+							"type": "string"
+						}
+					],
+					"result": [
+						{
+							"key": "query",
+							"type": "string"
+						}
+					]
 				}
 			}
 		},
@@ -135,43 +129,37 @@
 			"services": {
 				"retrieve": {
 					"function": "retrieve",
-					"params": {
-						"format": "json",
-						"input": [
-							{
-								"required": true,
-								"key": "query",
-								"type": "string"
-							},
-							{
-								"required": true,
-								"key": "top_k",
-								"type": "int",
-								"default_value": 0.8
-							},
-							{
-								"required": true,
-								"key": "testthreshold",
-								"type": "float",
-								"default_value": 0.1
-							}
-						]
-					},
+					"params": [
+						{
+							"required": true,
+							"key": "query",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "top_k",
+							"type": "int",
+							"default_value": 0.8
+						},
+						{
+							"required": true,
+							"key": "testthreshold",
+							"type": "float",
+							"default_value": 0.1
+						}
+					],
 					"header": {},
 					"body": {},
-					"result": {
-						"format": "json",
-						"output": [
-							{
-								"key": "retrieved_documents",
-								"type": "object"
-							},
-							{
-								"key": "document_sources",
-								"type": "object"
-							}
-						]
-					}
+					"result": [
+						{
+							"key": "retrieved_documents",
+							"type": "object"
+						},
+						{
+							"key": "document_sources",
+							"type": "object"
+						}
+					]
 				}
 			}
 		},
@@ -205,32 +193,26 @@
 			"services": {
 				"generate_prompt": {
 					"function": "generate_prompt",
-					"params": {
-						"format": "json",
-						"input": [
-							{
-							  "required": true,
-							  "key": "prompt_templates",
-							  "type": "object"
-							},
-							{
-								"required": false,
-								"key": "prompt_context",
-								"type": "object"
-							}
-						]
-					},
+					"params": [
+						{
+						  "required": true,
+						  "key": "prompt_templates",
+						  "type": "object"
+						},
+						{
+							"required": false,
+							"key": "prompt_context",
+							"type": "object"
+						}
+					],
 					"header": {},
 					"body": {},
-					"result": {
-						"format": "json",
-						"output": [
-							{
-								"key": "prompt",
-								"type": "object"
-							}
-						]
-					}
+					"result": [
+						{
+							"key": "prompt",
+							"type": "object"
+						}
+					]
 				}
 			}
 		},
@@ -291,37 +273,31 @@
 			"services": {
 				"generate_answer": {
 					"function": "generate_answer",
-					"params": {
-						"format": "json",
-						"input": [
-							{
-								"required": true,
-								"key": "prompt",
-								"type": "string"
-							},
-							{
-								"required": true,
-								"key": "temperature",
-								"type": "float",
-								"default_value": 0.7
-							},
-							{
-								"required": true,
-								"key": "max_tokens",
-								"type": "int",
-								"default_value": 512
-							}
-						]
-					},
-					"result": {
-						"format": "json",
-						"output": [
-							{
-								"key": "answer",
-								"type": "string"
-							}
-						]
-					}
+					"params": [
+						{
+							"required": true,
+							"key": "prompt",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "temperature",
+							"type": "float",
+							"default_value": 0.7
+						},
+						{
+							"required": true,
+							"key": "max_tokens",
+							"type": "int",
+							"default_value": 512
+						}
+					],
+					"result": [
+						{
+							"key": "answer",
+							"type": "string"
+						}
+					]
 				}
 			}
 		},
@@ -356,31 +332,25 @@
 			"services": {
 				"output": {
 					"function": "output",
-					"params": {
-						"format": "json",
-						"input": [
-							{
-								"required": true,
-								"key": "output_prompt",
-								"type": "object"
-							},
-							{
-								"required": true,
-								"key": "answer",
-								"type": "string"
-							}
-						]
-					},
-					"result": {
-						"format": "json",
-						"output": [
-							{
-								"required": true,
-								"key": "answer",
-								"type": "json"
-							}
-						]
-					}
+					"params": [
+						{
+							"required": true,
+							"key": "output_prompt",
+							"type": "object"
+						},
+						{
+							"required": true,
+							"key": "answer",
+							"type": "string"
+						}
+					],
+					"result":[
+						{
+							"required": true,
+							"key": "answer",
+							"type": "json"
+						}
+					]
 				}
 			}
 		}

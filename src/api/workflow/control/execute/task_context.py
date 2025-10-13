@@ -27,8 +27,6 @@ class TaskContext:
         self._node_type = str(service_info.get('node_type')).lower()
         self._location = service_info.get('location')
         # self._params_map = self._extract_params_map(edge_info)
-        self._params_format = self._extract_params_format(service_info)
-        self._result_format = self._extract_results_format(service_info)
 
         if self._node_type == 'rest-api':
             if self._role == 'start':
@@ -125,9 +123,6 @@ class TaskContext:
     def get_node_type(self):
         return self._node_type
 
-    def get_result_format(self):
-        return self._result_format
-
     def get_service_info(self):
         return self._service_info
 
@@ -161,7 +156,5 @@ class TaskContext:
         self._logger.debug(f" - (common) node_type:\t {self._node_type}")
         self._logger.debug(f" - (common) params_map")
         self._logger.debug(f" - (common) result_format")
-        print_result(self._result_format)
-        print_connection()
         self._logger.debug(f" - (API) connection_info")
         # print_connection(self._conn_info)

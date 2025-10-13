@@ -10,9 +10,9 @@ class EdgeTransformer:
 
     def _get_data_type(self, param_key: str, service_info: Dict, find_type: str) -> Any:
         if find_type == 'key':
-            mapper_info = service_info['params']['input']
+            mapper_info = service_info['params']
         elif find_type == 'value':
-            mapper_info = service_info['result']['output']
+            mapper_info = service_info['result']
         elif find_type == 'values':
             return 'object', False
         else:
@@ -27,7 +27,7 @@ class EdgeTransformer:
 
     def _set_default_params_info(self, service_id, service_info):
         params_info = []
-        input_params = service_info['params']['input']
+        input_params = service_info['params']
         for input_map in input_params:
             params_name = input_map.get('key')
             params_value = f"{service_id}.{params_name}"
