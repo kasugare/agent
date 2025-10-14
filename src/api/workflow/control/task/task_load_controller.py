@@ -19,6 +19,7 @@ class TaskLoadController:
                 for active_edge_id in active_edge_ids:
                     if active_edge_id.find(service_id) > -1:
                         active_service_ids.append(service_id)
+
         active_service_ids = list(set(active_service_ids))
         for active_service_id in active_service_ids:
             service_info = service_pool.get(active_service_id)

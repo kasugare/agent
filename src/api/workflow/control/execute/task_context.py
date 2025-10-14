@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from api.workflow.access.execute.api_executor import ApiExecutor
 from api.workflow.access.execute.start_executor import StartExecutor
 from api.workflow.access.execute.end_executor import EndExecutor
-from api.workflow.access.execute.api_executor import ApiExecutor
 from api.workflow.access.execute.module_executor import ModuleExecutor
 import time
 
@@ -11,13 +11,21 @@ import time
 class TaskContext:
     def __init__(self, logger, service_id, service_info):
         self._logger = logger
-        self._service_info = service_info
+
         self._service_id = service_id
+        self._service_info = service_info
         self._task_id = self._gen_task_id()
-        self._params_value_map = None
-        self._executor = None
+
         self._conn_info = None
         self._location = None
+        self._executor = None
+
+        self._env_params = {}
+        self._asset_params = {}
+        self._params = {}
+        self._result = None
+        self._error = None
+        self._state = None
 
         self._init_context(service_info)
 
@@ -26,7 +34,8 @@ class TaskContext:
         self._role = service_info.get('role')
         self._node_type = str(service_info.get('node_type')).lower()
         self._location = service_info.get('location')
-        # self._params_map = self._extract_params_map(edge_info)
+        self._logger.critical(self._node_type)
+        self._logger.critical(self._role)
 
         if self._node_type == 'rest-api':
             if self._role == 'start':
@@ -42,37 +51,19 @@ class TaskContext:
             else:
                 self._conn_info = self._extract_module_info(service_info)
         elif self._node_type == 'module':
-            self._conn_info = self._extract_module_info(service_info)
-            self._set_class_executor(**self._conn_info)
+            if self._role == 'generation':
+                self._conn_info = self._extract_module_info(service_info)
+                self._set_class_executor(**self._conn_info)
+            else:
+                self._conn_info = self._extract_module_info(service_info)
+                self._set_class_executor(**self._conn_info)
         else:
             self._conn_info = self._extract_api_info(service_info)
             self._set_api_executor(**self._conn_info)
 
-        # self._print_service_info()
-
     def _gen_task_id(self):
         task_id = "%X" %(int(time.time()*10000000))
         return task_id
-
-    def _extract_params_format(self, service_info):
-        params_map = service_info.get('params')
-        params_format = params_map.get('helloworld')
-        return params_format
-
-    def _extract_results_format(self, result_info):
-        result_map = result_info.get('result')
-        result_format = result_map.get('output')
-        return result_format
-
-    def _extract_params_map(self, edge_info):
-        self._logger.debug(f" # Step 3. extract data_mapper")
-        params_info = edge_info.get('param_info')
-        params_map = {}
-        for param_info in params_info:
-            key_path = param_info.get('key')
-            param_name = key_path.split('.')[-1]
-            params_map[param_name] = param_info
-        return params_map
 
     def _extract_api_info(self, service_info):
         api_info = service_info.get('api_info')
@@ -132,29 +123,39 @@ class TaskContext:
     def get_location(self):
         return self._location
 
-    def _print_service_info(self):
-        def print_params(params_format):
-            for params_info in params_format:
-                param_name = params_info.get('key')
-                value_type = params_info.get('type')
-                required = params_info.get('required')
-                self._logger.debug(f"          L  [{required}] param_name: {param_name} ({value_type}) ")
+    def set_env_params(self, env_params=None):
+        self._env_params = env_params
+        executor = self.get_executor()
+        executor.set_env(env_params)
 
-        def print_result(results_format):
-            for result_info in results_format:
-                param_name = result_info.get('key')
-                value_type = result_info.get('type')
-                self._logger.debug(f"          L  param_name:  {param_name}  ({value_type}) ")
+    def set_asset_params(self, asset_params=None):
+        self._asset_params = asset_params
+        executor = self.get_executor()
+        executor.set_asset(asset_params)
 
-        def print_connection():
-            for k, v in self._conn_info.items():
-                self._logger.debug(f"      L  {k}:\t{v}")
+    def set_params(self, params=None):
+        self._params = params
 
-        self._logger.debug(f" - (common) task_type:\t {self._task_type}")
-        self._logger.debug(f" - (common) role:    \t {self._role}")
-        self._logger.debug(f" - (common) location:\t {self._location}")
-        self._logger.debug(f" - (common) node_type:\t {self._node_type}")
-        self._logger.debug(f" - (common) params_map")
-        self._logger.debug(f" - (common) result_format")
-        self._logger.debug(f" - (API) connection_info")
-        # print_connection(self._conn_info)
+    def get_params(self):
+        return self._params
+
+    def get_env_params(self):
+        return self._env_params
+
+    def set_result(self, result):
+        self._result = result
+
+    def get_result(self):
+        return self._result
+
+    def set_error(self, error):
+        self._error = error
+
+    def get_error(self):
+        return self._error
+
+    def set_state(self, state):
+        self._state = state
+
+    def get_state(self):
+        return self._state

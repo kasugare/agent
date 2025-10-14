@@ -15,7 +15,7 @@ class RagGenerator:
         self._base_url = base_url
         self._api_key = api_key
 
-    async def generate_answer(self, prompt, temperature, max_tokens):
+    async def generate_answer(self, prompt, temperature, max_tokens, messages=None):
         model_loader = LanguageModelLoader(self._logger)
         llm = model_loader.load_llm(llm_type=self._llm_type, model=self._model_name, base_url=self._base_url, temperature=temperature, max_tokens=max_tokens, api_key=self._api_key)
 
@@ -36,12 +36,22 @@ class RagGenerator:
         #         'content': '두번째 프롬프트', # <-- prev prompt
         #     }
         # ]
-        messages = [
-            {
-                'role': 'user',
-                'content': prompt
-            }
-        ]
-        answer = await llm.generate(messages=messages)
-        self._logger.debug(answer)
-        return answer['text']
+        req_message = {
+            'role': 'user',
+            'content': prompt
+        }
+        if not messages:
+            messages = [req_message]
+        else:
+            messages.append(req_message)
+        # answer = await llm.generate(messages=messages)
+        # self._logger.debug(answer)
+        # return answer['text']
+        answer = "Answer"
+        answer_conext = {
+            'role': 'assistant',
+            'content': answer
+        }
+        messages.append(answer_conext)
+        print(messages)
+        return answer, messages

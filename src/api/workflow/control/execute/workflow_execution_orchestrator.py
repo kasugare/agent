@@ -100,6 +100,11 @@ class WorkflowExecutionOrchestrator:
         except Exception as e:
             return {}
 
+    def _extract_forced_param_value(self, service_id, param_name):
+        value_id = f"O.{service_id}.{param_name}"
+        extract_param_value = self._datastore.get_param_value_service(value_id)
+        return extract_param_value
+
     def _extract_param_value(self, service_id, param_map_list) -> dict:
         params = {}
         for param_map in param_map_list:
@@ -166,6 +171,10 @@ class WorkflowExecutionOrchestrator:
             inter_res_keys = list(set(res_keys).intersection(set(schema_keys)))
             for res_key in inter_res_keys:
                 result_map[res_key] = result.get(res_key)
+        elif isinstance(result, list) or isinstance(result, tuple):
+            schema_keys = [schema_map.get('key') for schema_map in results_schema if schema_map.get('key')]
+            for _index, res_key in enumerate(schema_keys):
+                result_map[res_key] = result[_index]
         else:
             for schema in results_schema:
                 result_name = schema['key']
@@ -251,17 +260,13 @@ class WorkflowExecutionOrchestrator:
                         task.set_asset_params(asset_params)
 
                         func_params = self._get_params(service_id)
+                        if task.get_role() == 'generation':
+                            param_value = self._extract_forced_param_value(service_id, "messages")
+                            func_params['messages'] = param_value
+
                         task.set_params(func_params)
                         task.set_state(TaskState.RUNNING)
                         self._datastore.set_service_params_service(service_id, func_params)
-
-                        self._logger.debug("< Env >")
-                        self._logger.info(f"  - {env_params}")
-                        self._logger.debug("< Asset >")
-                        self._logger.info(f"  - {asset_params}")
-                        self._logger.debug("< Function >")
-                        self._logger.info(f"  - {func_params}")
-
                         self._job_Q.put_nowait(service_id)
                 elif task_state in [TaskState.RUNNING]:
                     if task.get_location() == 'inner':

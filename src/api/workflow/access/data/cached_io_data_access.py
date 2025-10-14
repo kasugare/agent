@@ -34,7 +34,7 @@ class CachedIODataAccess:
             value = self._data_pool[key]
         except KeyError as e:
             self._logger.error(f"{e} is not existed in data pool")
-            raise NotExistedData
+            # raise NotExistedData
         except Exception as e:
             self._logger.error(e)
         finally:

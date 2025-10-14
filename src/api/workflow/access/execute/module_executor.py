@@ -24,9 +24,6 @@ class ModuleExecutor(DynamicLoader):
     def set_asset(self, asset_params):
         self._asset_params = asset_params
 
-    def set_params(self, func_params):
-        self._func_params = func_params
-
     def get_env(self):
         return self._env_params
 

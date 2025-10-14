@@ -147,7 +147,7 @@ class WorkflowEngine(BaseRouter):
                 self._logger.debug(f"\t- result:     {result}")
                 self._logger.debug(f"\t- Error:      {error}")
                 self._logger.debug(f"\t- node_type:  {node_type}")
-                task_obj._print_service_info()
+                task_obj.print_service_info()
                 self._logger.debug("*" * 100)
             return act_task_map
 

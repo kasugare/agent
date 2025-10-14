@@ -1,74 +1,28 @@
-#!/usr/bin/env python
+# !/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 from api.workflow.control.execute.task_context import TaskContext
 from api.workflow.control.execute.task_state import TaskState
 from datetime import datetime
 
-
 class Task(TaskContext):
     def __init__(self, logger, service_id, service_info):
         super().__init__(logger, service_id, service_info)
         self._logger = logger
-        self._state = self.set_state()
-        self._error = None
+        self.set_state(TaskState.PENDING)
         self._start_time = None
         self._end_time = None
-        self._env_params = {}
-        self._asset_params = {}
-        self._params = {}
-        self._result = None
-
-    def set_env_params(self, env_params=None):
-        self._env_params = env_params
-        executor = self.get_executor()
-        executor.set_env(env_params)
-
-    def set_asset_params(self, asset_params=None):
-        self._asset_params = asset_params
-        executor = self.get_executor()
-        executor.set_asset(asset_params)
-
-    def set_params(self, params=None):
-        self._params = params
-
-    def set_result(self, result):
-        self._result = result
-
-    def get_env_params(self):
-        return self._env_params
-
-    def get_params(self):
-        return self._params
-
-    def set_state(self, state=TaskState.PENDING):
-        self._state = state
-        return state
-
-    def get_state(self):
-        return self._state
-
-    def get_error(self):
-        return self._error
-
-    def set_task(self, task_name, executor, **kwargs):
-        self._task_name = task_name
-        self._executor = executor
-        self.set_params(kwargs)
-
-    def get_result(self):
-        return self._result
 
     def execute(self):
         try:
-            self._state = TaskState.RUNNING
+            self.set_state(TaskState.RUNNING)
             self._start_time = datetime.now()
-            result = self._executor.run(self._params)
+            result = self._executor.run(self.get_params())
             self.set_result(result)
-            self._state = TaskState.COMPLETED
+            self.set_state(TaskState.COMPLETED)
         except Exception as e:
-            self._state = TaskState.FAILED
-            self._error = e
+            self.set_state(TaskState.FAILED)
+            self.set_error(e)
             self._logger.error(e)
         finally:
             self._end_time = datetime.now()
@@ -76,6 +30,32 @@ class Task(TaskContext):
 
     def cancel(self):
         if self._state in (TaskState.PENDING, TaskState.SCHEDULED, TaskState.QUEUED):
-            self._state = TaskState.CANCELED
+            self.set_state(TaskState.CANCELED)
             return True
         return False
+
+    def print_service_info(self):
+        def print_params(params_format):
+            for params_info in params_format:
+                param_name = params_info.get('key')
+                value_type = params_info.get('type')
+                required = params_info.get('required')
+                self._logger.debug(f"          L  [{required}] param_name: {param_name} ({value_type}) ")
+
+        def print_result(results_format):
+            for result_info in results_format:
+                param_name = result_info.get('key')
+                value_type = result_info.get('type')
+                self._logger.debug(f"          L  param_name:  {param_name}  ({value_type}) ")
+
+        def print_connection():
+            for k, v in self._conn_info.items():
+                self._logger.debug(f"      L  {k}:\t{v}")
+
+        self._logger.debug(f" - (common) task_type:\t {self.get_task_type()}")
+        self._logger.debug(f" - (common) role:    \t {self.get_role()}")
+        self._logger.debug(f" - (common) location:\t {self.get_location()}")
+        self._logger.debug(f" - (common) node_type:\t {self.get_node_type()}")
+        self._logger.debug(f" - (common) params_map")
+        self._logger.debug(f" - (common) result_format")
+        self._logger.debug(f" - (API) connection_info")
