@@ -50,22 +50,27 @@ class WorkflowEngine(BaseRouter):
     def setup_routes(self):
         @self.router.post(path='/workflow/meta')
         async def create_workflow(workflow) -> None:
+            # REQ: HEADER {request_id, session_id}, BODY: {meta}
             self._logger.error("################################################################")
             self._logger.error("#                         < Set Meta >                         #")
             self._logger.error("################################################################")
             self._datastore.clear()
             wf_meta = json.loads(workflow)
             self._metastore.change_wf_meta(wf_meta)
+            # RES: Success/Error
 
         @self.router.get(path='/workflow/clear')
         async def call_data_clear():
+            # REQ: HEADER {request_id, session_id}, BODY: {}
             self._logger.error("################################################################")
             self._logger.error("#                         < Clear All >                        #")
             self._logger.error("################################################################")
             self._datastore.clear()
+            # RES: Success/Error
 
         @self.router.post(path='/workflow/run')
         async def call_chained_model_service(request: Dict[str, Any]):
+            # REQ: HEADER {request_id, session_id}, BODY: {from(opt), to(opt), question: "질의"}
             self._logger.error("################################################################")
             self._logger.error("#                            < RUN >                           #")
             self._logger.error("################################################################")
@@ -82,6 +87,7 @@ class WorkflowEngine(BaseRouter):
             request['request_id'] = request_id
             result = self._workflow_executor.run_workflow(request, start_node, end_node)
             return {"result": result}
+            # RES: Success/Error, result: {"answer": "답변"}
 
         @self.router.get(path='/workflow/metapack')
         async def call_meta_pack():
@@ -95,6 +101,7 @@ class WorkflowEngine(BaseRouter):
 
         @self.router.get(path='/workflow/datapool')
         async def call_data_pool():
+            # REQ: HEADER {request_id, session_id}, BODY: {(opt) node_id}
             self._logger.error("################################################################")
             self._logger.error("#                         < Data Pool >                        #")
             self._logger.error("################################################################")
@@ -102,6 +109,7 @@ class WorkflowEngine(BaseRouter):
             for k, v in data_pool.items():
                 self._logger.debug(f" - {k} : \t{v}")
             return data_pool
+        # RES: Success/Error, result: {datapool 내용}
 
         @self.router.get(path='/workflow/act_dag')
         async def call_active_dag():
@@ -153,6 +161,7 @@ class WorkflowEngine(BaseRouter):
 
         @self.router.websocket("/workflow/chat")
         async def websocket_endpoint(websocket: WebSocket):
+            # REQ: HEADER {request_id, session_id}, BODY: {}
             self._logger.error("################################################################")
             self._logger.error("#                        < Web Socket >                        #")
             self._logger.error("################################################################")

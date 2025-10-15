@@ -6,12 +6,13 @@ from api.workflow.control.execute.workflow_execution_orchestrator import Workflo
 
 
 class WorkflowExecutor:
-    def __init__(self, logger, datastore, metastore, taskstore, job_Q):
+    def __init__(self, logger, datastore, metastore, taskstore, job_Q, stream_Q=None):
         self._logger = logger
         self._datastore = datastore
         self._metastore = metastore
         self._taskstore = taskstore
         self._job_Q = job_Q
+        self._stream_Q = stream_Q
         self._act_planner = ActionPlanningService(logger, self._datastore, self._metastore, self._taskstore)
         self._act_meta = {}
 
@@ -23,7 +24,7 @@ class WorkflowExecutor:
 
         self._act_meta = act_meta_pack
         if act_meta_pack.get('act_start_nodes'):
-            workflow_engine = WorkflowExecutionOrchestrator(self._logger, self._datastore, act_meta_pack, self._job_Q)
+            workflow_engine = WorkflowExecutionOrchestrator(self._logger, self._datastore, act_meta_pack, self._job_Q, self._stream_Q)
             result = workflow_engine.run_workflow(context)
         else:
             self._logger.error(f"# Not generated task_map, check DAG meta")

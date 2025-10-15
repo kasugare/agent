@@ -23,6 +23,71 @@ def gen_task_order(task_id: str, service_id: str, edge_id: str, api_url_info, ed
     }
     return message
 
+def gen_req_auth_key():
+    req_message = {
+        "protocol": "REQ_AUTH_KEY",
+        "timestamp": {
+            "req_time": time.time()
+        },
+        "payload": {
+            "request_id": "REQ_01",
+        }
+    }
+
+    res_message = {
+        "protocol": "RES_AUTH_KEY",
+        "timestamp": {
+            "req_time": time.time(),
+            "res_time": time.time()
+        },
+        "status": "success",
+        "result": {
+            "request_id": "REQ_01",
+            "auth_key": "FDSAFDSAFDSAFDSAFSAD"
+        }
+    }
+
+def gen_req_chat():
+    req_message = {
+        "protocol": "REQ_CHAT_QUESTION", # <-- 숫자 210000
+        "timestamp": {
+            "req_time": time.time()
+        },
+        "payload": {
+            "request_id": "REQ_01",
+            "auth_key": "FDSAFDSAFDSAFDSAFSAD",
+            "question": "test"
+        }
+    }
+
+    res_message = {
+        "protocol": "RES_STATUS",
+        "timestamp": {
+            "req_time": time.time(),
+            "res_time": time.time()
+        },
+        "status": "success",
+        "result": {
+            "request_id": "REQ_01",
+            "node_status": {
+                "node_id": "STATUS: RUNNING/PENDING/...."
+            }
+        }
+    }
+
+    res_message = {
+        "protocol": "RES_CHAT_ANSWER",
+        "timestamp": {
+            "req_time": time.time(),
+            "res_time": time.time()
+        },
+        "status": "success",
+        "result": {
+            "request_id": "REQ_01",
+            "auth_key": "FDSAFDSAFDSAFDSAFSAD"
+        }
+    }
+
 
 class WebSocketMessage(BaseModel):
     type: Annotated[str, Field(max_length=20, description="Type of data", examples=["connect"])]

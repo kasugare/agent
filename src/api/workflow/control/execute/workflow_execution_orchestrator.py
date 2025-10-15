@@ -10,11 +10,12 @@ import time
 
 
 class WorkflowExecutionOrchestrator:
-    def __init__(self, logger, datastore, meta_pack, job_Q):
+    def __init__(self, logger, datastore, meta_pack, job_Q, stream_Q=None):
         self._logger = logger
         self._datastore = datastore
         self._meta_pack = meta_pack
         self._job_Q = job_Q
+        self._stream_Q = stream_Q
 
     def _get_next_service_ids(self, service_id):
         edges_graph = self._meta_pack['act_forward_graph']
@@ -228,7 +229,15 @@ class WorkflowExecutionOrchestrator:
                     break
                 task = task_map.get(service_id)
                 task_state = task.get_state()
-                self._logger.critical(f"# REQ: {service_id} - {task_state}")
+
+                time.sleep(0.5)
+
+                if self._stream_Q:
+                    status_message = {
+                        "service_id": service_id,
+                        "status": str(task_state)
+                    }
+                    self._stream_Q.put_nowait(status_message)
 
                 if task_state in [TaskState.PENDING]:
                     self._logger.debug(f" - Step 1. [PENDING  ] wait order to run: {service_id}")
