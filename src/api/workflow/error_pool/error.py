@@ -35,3 +35,12 @@ class EnvironmentKeyError(Exception):
 
     def __str__(self):
         return self._errorMessage
+
+
+class NotDefinedProtocolMessage(Exception):
+    def __init__(self):
+        super().__init__("Not defined protocol message format")
+        self._errorMessage = "Not defined protocol message format"
+
+    def __str__(self):
+        return self._errorMessage

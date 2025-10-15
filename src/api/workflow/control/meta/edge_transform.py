@@ -87,11 +87,4 @@ class EdgeTransformer:
                 params_info = self._add_data_type_on_params_info(params_info, src_service_info)
                 edge_params_map[start_edge_id] = params_info
             edge_params_map[edge_id] = edge_info.get('param_info')
-        for k, v in edge_params_map.items():
-            print(f"<{k}>")
-            if isinstance(v, list):
-                for vv in v:
-                    print(f"\t - {vv}")
-            else:
-                print(f"\t - {vv}")
         return edge_params_map

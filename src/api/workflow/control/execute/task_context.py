@@ -34,8 +34,6 @@ class TaskContext:
         self._role = service_info.get('role')
         self._node_type = str(service_info.get('node_type')).lower()
         self._location = service_info.get('location')
-        self._logger.critical(self._node_type)
-        self._logger.critical(self._role)
 
         if self._node_type == 'rest-api':
             if self._role == 'start':

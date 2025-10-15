@@ -1,95 +1,208 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from typing import Annotated, Dict, Optional
-from pydantic import BaseModel, Field
+from common.util_datetime import tzHtime
 import time
 
 
-def gen_task_order(task_id: str, service_id: str, edge_id: str, api_url_info, edge_info) -> dict:
-    if not task_id:
-        task_id = "%X" %(int(time.time() * 1000000))
+def req_auth_key_protocol() -> dict:
     message = {
-        'protocol': 'REQ_TASK_RUN',
-        'task_id': task_id,
-        'service_id': service_id,
-        'orders': {
-            'endpoint': api_url_info,
-            'task_meta': {
-                'edge_id': edge_id,
-                'edge_info': edge_info
+        "protocol": "REQ_AUTH_KEY",
+        "header": {
+            "timestamp": {
+                "req_time": "",
+                "res_time": ""
+            },
+            "request_id": "key-001",
+            "session_id": "sid-001"
+        },
+        "payload": {}
+    }
+    return message
+
+
+def SYS_AUTH_KEY_MSG(request_id, auth_key):
+    message = {
+        "protocol": "RES_AUTH_KEY",
+        "request_id": request_id,
+        "result": {
+            "auth_key": auth_key
+        }
+    }
+    return message
+
+
+def RES_AUTH_KEY(request_id: str, session_id: str, req_time, auth_key: str, error=None) -> dict:
+    """
+        result = {
+            "auth_key": "api-key-001"
+        }
+    """
+    if not error:
+        msg_state = "success"
+    else:
+        msg_state = "error"
+
+    message = {
+        "protocol": "RES_AUTH_KEY",
+        "header": {
+            "timestamp": {
+                "req_time": req_time,
+                "res_time": tzHtime(time.time()*1000)
+            },
+            "request_id": request_id,
+            "session_id": session_id
+        },
+        "payload": {
+            "status_code": 200,
+            "message": msg_state,
+            "result": {
+                "auth_key": auth_key
             }
         }
     }
     return message
 
-def gen_req_auth_key():
-    req_message = {
-        "protocol": "REQ_AUTH_KEY",
-        "timestamp": {
-            "req_time": time.time()
+def req_run_query() -> dict:
+    message = {
+        "protocol": "REQ_CHAT_QUERY",
+        "header": {
+            "timestamp": {
+                "req_time": "",
+                "res_time": ""
+            },
+            "request_id": "chat-001",
+            "session_id": "sid-001",
+            "auth_key": "key-001"
         },
         "payload": {
-            "request_id": "REQ_01",
+            "question": "blablabla..."
         }
     }
+    return message
 
-    res_message = {
-        "protocol": "RES_AUTH_KEY",
-        "timestamp": {
-            "req_time": time.time(),
-            "res_time": time.time()
-        },
-        "status": "success",
+
+def SYS_WF_RESULT_MSG(request_id, answer) -> dict:
+    message = {
+        "protocol": "RES_CHAT_QUERY",
+        "request_id": request_id,
         "result": {
-            "request_id": "REQ_01",
-            "auth_key": "FDSAFDSAFDSAFDSAFSAD"
+            "answer": answer
         }
     }
+    return message
 
-def gen_req_chat():
-    req_message = {
-        "protocol": "REQ_CHAT_QUESTION", # <-- 숫자 210000
-        "timestamp": {
-            "req_time": time.time()
+
+def RES_WF_RESULT(request_id: str, session_id: str, req_time: str, result: dict, error=None) -> dict:
+    """
+        result = {
+            "answer": "blablabla..."
+        }
+    """
+
+    if not error:
+        msg_state = "success"
+    else:
+        msg_state = "error"
+
+    message = {
+        "protocol": "RES_CHAT_QUERY",
+        "header": {
+            "timestamp": {
+                "req_time": req_time,
+                "res_time": tzHtime(time.time()*1000)
+            },
+            "request_id": request_id,
+            "session_id": session_id
         },
         "payload": {
-            "request_id": "REQ_01",
-            "auth_key": "FDSAFDSAFDSAFDSAFSAD",
-            "question": "test"
+            "status_code": 200,
+            "message": msg_state,
+            "result": result
         }
     }
+    return message
 
-    res_message = {
-        "protocol": "RES_STATUS",
-        "timestamp": {
-            "req_time": time.time(),
-            "res_time": time.time()
+
+def req_nodes_state() -> dict:
+    message = {
+        "protocol": "REQ_NODES_STATUS",
+        "header": {
+            "timestamp": {
+                "req_time": "",
+                "res_time": ""
+            },
+            "request_id": "ndsts-001",
+            "session_id": "sid-001",
+            "auth_key": "key-001"
         },
-        "status": "success",
+        "payload": {
+            "node_ids": ["nd-001"]
+        }
+    }
+    return message
+
+
+def SYS_NODE_STATUS(request_id, node_id, service_name, status, timestamp) -> dict:
+    message = {
+        "protocol": "RES_NODE_STATUS",
+        "request_id": request_id,
         "result": {
-            "request_id": "REQ_01",
-            "node_status": {
-                "node_id": "STATUS: RUNNING/PENDING/...."
+            "node_id": node_id,
+            "service_name": service_name,
+            "status": status,
+            "timestamp": timestamp
+        }
+    }
+    return message
+
+
+def RES_NODE_STATUS(request_id: str, session_id: str, req_time: str, node_status: dict, error=None) -> dict:
+    """
+        nodes_status = [
+            {
+                "node_id": "nd-001",
+                "data": "STATUS: RUNNING/PENDING/....",
+                "timestamp": ""
             }
-        }
-    }
+        ]
+    """
+    if not error:
+        msg_state = "success"
+    else:
+        msg_state = "error"
 
-    res_message = {
-        "protocol": "RES_CHAT_ANSWER",
-        "timestamp": {
-            "req_time": time.time(),
-            "res_time": time.time()
+    message = {
+        "protocol": "RES_NODE_STATUS",
+        "header": {
+            "timestamp": {
+                "req_time": req_time,
+                "res_time": tzHtime(time.time()*1000)
+            },
+            "request_id": request_id,
+            "session_id": session_id
         },
-        "status": "success",
-        "result": {
-            "request_id": "REQ_01",
-            "auth_key": "FDSAFDSAFDSAFDSAFSAD"
+        "payload": {
+            "status_code": 200,
+            "message": msg_state,
+            "result": node_status
         }
     }
+    return message
 
-
-class WebSocketMessage(BaseModel):
-    type: Annotated[str, Field(max_length=20, description="Type of data", examples=["connect"])]
-    payload: Annotated[Dict, Field(description="Payload of websocket protocol")]
-    request_id: Annotated[Optional[str], Field(default="", max_length=50, description="request uuid", examples=["3abaae15-ecf1-40ba-9dce-45b452d008f1"])]
+def RES_NOT_ALLOWED_MSG(error_msg, user_message):
+    message = {
+        "protocol": "RES_NOT_ALLOWED_MESSAGE",
+        "header": {
+            "timestamp": {
+                "res_time": tzHtime(time.time() * 1000)
+            }
+        },
+        "payload": {
+            "status_code": 400,
+            "message": "error",
+            "error_msg": error_msg,
+            "input_msg": user_message
+        }
+    }
+    return message

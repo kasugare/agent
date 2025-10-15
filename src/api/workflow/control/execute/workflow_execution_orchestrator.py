@@ -3,6 +3,7 @@
 
 from api.workflow.control.execute.task_state import TaskState
 from api.workflow.control.execute.env_template import AutoTemplateRenderer
+from api.workflow.protocol.protocol_message import SYS_NODE_STATUS
 from jinja2 import Template, meta, Environment
 from threading import Thread
 import traceback
@@ -211,13 +212,11 @@ class WorkflowExecutionOrchestrator:
             self._logger.error(e)
 
     def _timeout(self, timeout):
+        self._logger.critical("Step 1")
         time.sleep(timeout)
         self._job_Q.put_nowait("SIGTERM")
 
-    def _run_exec_handler(self, task_map):
-        # executor = Thread(target=self._timeout, args=(3,))
-        # executor.start()
-
+    def _run_exec_handler(self, task_map, request_id=None):
         result = None
         start_ts = time.time()
         while True:
@@ -225,18 +224,20 @@ class WorkflowExecutionOrchestrator:
                 self._logger.debug("<<< WAIT Q >>>")
                 service_id = self._job_Q.get()
                 if service_id == "SIGTERM":
+                    self._logger.critical("Step 2")
                     self._logger.error("Exit process")
                     break
                 task = task_map.get(service_id)
                 task_state = task.get_state()
 
-                time.sleep(0.5)
+                time.sleep(0.1)
 
                 if self._stream_Q:
-                    status_message = {
-                        "service_id": service_id,
-                        "status": str(task_state)
-                    }
+                    splited_service_id = service_id.split('.')
+                    node_id = splited_service_id[0]
+                    service_name = splited_service_id[1]
+                    status = str(task_state)
+                    status_message = SYS_NODE_STATUS(request_id, node_id, service_name, status, int(time.time()))
                     self._stream_Q.put_nowait(status_message)
 
                 if task_state in [TaskState.PENDING]:
@@ -326,7 +327,7 @@ class WorkflowExecutionOrchestrator:
                 else:
                     break
                 self._show_task(task_map)
-                self._show_task_info(task)
+                # self._show_task_info(task)
             except Exception as e:
                 self._logger.error(e)
                 self._logger.error(traceback.print_exc())
@@ -340,13 +341,13 @@ class WorkflowExecutionOrchestrator:
 
     def run_workflow(self, request_params):
         self._logger.critical(f" # user params: {request_params}")
+        request_id = request_params.get('request_id')
         self._set_start_jobs(request_params)
         task_map = self._meta_pack.get('act_task_map')
-        result = self._run_exec_handler(task_map)
+        result = self._run_exec_handler(task_map, request_id)
         return result
 
     def _show_task(self, task_map):
-        self._logger.warn(f"-" * 100)
         for service_id, task in task_map.items():
             self._logger.warn(f" - [{task.get_state()}] {service_id}")
 

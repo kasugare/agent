@@ -3,12 +3,17 @@
 
 from api.workflow.common.util_async_sync_bridge import AsyncSyncBridge
 from api.workflow.service.execute.workflow_executor import WorkflowExecutor
-from api.workflow.protocol.protocol_message import WebSocketMessage
+from api.workflow.error_pool.error import NotDefinedProtocolMessage
+from api.workflow.protocol.protocol_parser import ProtocolParser
+from api.workflow.protocol.protocol_message import SYS_AUTH_KEY_MSG, RES_AUTH_KEY
+from api.workflow.protocol.protocol_message import SYS_WF_RESULT_MSG, RES_WF_RESULT
+from api.workflow.protocol.protocol_message import SYS_NODE_STATUS, RES_NODE_STATUS
+from api.workflow.protocol.protocol_message import RES_NOT_ALLOWED_MSG
 from uvicorn.protocols.utils import ClientDisconnected
 from starlette.websockets import WebSocketDisconnect
 from multiprocessing import Queue
 from threading import Thread
-import asyncio
+import time
 
 
 class WebStreamHandler:
@@ -20,20 +25,71 @@ class WebStreamHandler:
         self._datastore = datastore
         self._metastore = metastore
         self._taskstore = taskstore
+
+        self._protocol = ProtocolParser(logger)
         self._workflow_executor = WorkflowExecutor(logger, datastore, metastore, taskstore, self._job_Q, self._stream_Q)
 
-    def _run_workflow(self):
-        context = {'query': '에이전트의 기본 구성 요소는?', 'request_id': '1234567890'}
-        result = self._workflow_executor.run_workflow(context)
-        return result
+        self._req_message_pool = {}
 
-    def _run_send_status(self, connection_id, loop=None):
+    def _run_send_status(self, connection_id):
+        def get_seesion_in_message(request_id):
+            req_message = self._req_message_pool.get(request_id)
+            session_id = req_message['header']['session_id']
+            req_time = req_message['header']['timestamp']['req_time']
+            return session_id, req_time
+
         while self._ws_manager:
-            status_message = self._stream_Q.get()
-            if isinstance(status_message, dict):
-                AsyncSyncBridge.sync_to_async(self._ws_manager.send_message)(connection_id, status_message)
-            else:
+            send_message = self._stream_Q.get()
+            send_message = self._protocol.message_to_dict(send_message)
+            self._logger.debug(f"[S->S] {send_message}")
+            protocol, request_id, result = self._protocol.parse_system_protocl(send_message)
+
+            if protocol == 'RES_AUTH_KEY':
+                session_id, req_time = get_seesion_in_message(request_id)
+                send_protocol_message = RES_AUTH_KEY(request_id, session_id, req_time, result)
+                del self._req_message_pool[request_id]
+
+            elif protocol == 'RES_CHAT_QUERY':
+                session_id, req_time = get_seesion_in_message(request_id)
+                send_protocol_message = RES_WF_RESULT(request_id, session_id, req_time, result)
+
+            elif protocol == "RES_NODE_STATUS":
+                session_id, req_time = get_seesion_in_message(request_id)
+                send_protocol_message = RES_NODE_STATUS(request_id, session_id, req_time, result)
+
+            elif protocol == "SIGTERM":
+                self._close()
                 break
+            else:
+                self._logger.warn(f"Wrong protocol: {protocol}")
+                continue
+
+            self._logger.debug(f"[S->C] {send_protocol_message}")
+            AsyncSyncBridge.sync_to_async(self._ws_manager.send_message)(connection_id, send_protocol_message)
+
+    def _run_gen_auth_key(self, request_id):
+        auth_key = "%X" %(int(time.time()*1000))
+        send_protocol_message = SYS_AUTH_KEY_MSG(request_id, auth_key)
+        self._stream_Q.put_nowait(send_protocol_message)
+
+    def _run_workflow(self, request_id):
+        order_sheet = self._req_message_pool.get(request_id)
+        question = order_sheet['payload']['question']
+        context = {'query': question, 'request_id': request_id}
+        result = self._workflow_executor.run_workflow(context)
+        send_protocol_message = SYS_WF_RESULT_MSG(request_id, result)
+        self._stream_Q.put_nowait(send_protocol_message)
+
+    def _run_nodes_status(self, request_id):
+        nodes_status_info = {}
+        self._stream_Q.put_nowait(nodes_status_info)
+
+    def _close(self):
+        try:
+            self._job_Q.put_nowait("SIGTERM")
+            self._stream_Q.put_nowait("SIGTERM")
+        except Exception as e:
+            pass
 
     async def run_stream(self, connection_id):
         executor = Thread(target=self._run_send_status, args=(connection_id,), daemon=True)
@@ -43,27 +99,45 @@ class WebStreamHandler:
             while True:
                 try:
                     client_message = await self._ws_manager.receive_message(connection_id)
-                    await self._ws_manager.send_message(connection_id, f"run: {client_message}")
-                    if client_message == 'call':
-                        executor = Thread(target=self._run_workflow, args=(), daemon=True)
+                    client_message = self._protocol.message_to_dict(client_message)
+                    self._logger.debug(f"[C->S] {client_message}")
+
+                    protocol, request_id = self._protocol.parse_client_protocol(client_message)
+                    self._req_message_pool[request_id] = client_message
+
+                    if protocol == 'REQ_AUTH_KEY':
+                        executor = Thread(target=self._run_gen_auth_key, args=(request_id,), daemon=True)
                         executor.start()
-                        status_message = self._stream_Q.get()
-                        await self._ws_manager.send_message(connection_id, status_message)
+
+                    elif protocol == 'REQ_CHAT_QUERY':
+                        executor = Thread(target=self._run_workflow, args=(request_id,), daemon=True)
+                        executor.start()
+
+                    elif protocol == 'REQ_NODES_STATUS':
+                        self._run_nodes_status(request_id)
+
+                    else:
+                        self._logger.warn(f"Not defined protocol: {protocol}")
+                except NotDefinedProtocolMessage as e:
+                    self._logger.error(e)
+                    error_message = RES_NOT_ALLOWED_MSG(e.__str__(), client_message)
+                    self._logger.warn(error_message)
+                    await self._ws_manager.send_message(connection_id, error_message)
                 except (WebSocketDisconnect, ClientDisconnected):
-                    self._job_Q.put_nowait("SIGTERM")
+                    self._close()
                     self._ws_manager.disconnect(connection_id)
                     break
                 except Exception as e:
-                    self._job_Q.put_nowait("SIGTERM")
-                    error_response = WebSocketMessage(type="error", payload={"message": e.__str__()}, request_id="")
-                    self._ws_manager.send_message(connection_id, error_response)
-                    break
+                    error_message = RES_NOT_ALLOWED_MSG(e.__str__(), client_message)
+                    self._logger.warn(error_message)
+                    await self._ws_manager.send_message(connection_id, error_message)
+                    self._close()
         except RuntimeError as e:
-            self._job_Q.put_nowait("SIGTERM")
             if str(e).startswith('Cannot call "receive" once a disconnect'):
-                print("[INFO] Received after disconnect; ignoring")
+                self._logger.error("Received after disconnect; ignoring")
             else:
                 raise
         except Exception as e:
-            self._job_Q.put_nowait("SIGTERM")
             self._logger.error(e)
+        finally:
+            self._close()
