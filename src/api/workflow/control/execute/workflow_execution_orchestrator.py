@@ -236,7 +236,7 @@ class WorkflowExecutionOrchestrator:
                     splited_service_id = service_id.split('.')
                     node_id = splited_service_id[0]
                     service_name = splited_service_id[1]
-                    status = str(task_state)
+                    status = str(task_state).split('.')[1]
                     status_message = SYS_NODE_STATUS(request_id, node_id, service_name, status, int(time.time()))
                     self._stream_Q.put_nowait(status_message)
 

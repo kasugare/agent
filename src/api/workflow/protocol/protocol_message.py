@@ -32,17 +32,7 @@ def SYS_AUTH_KEY_MSG(request_id, auth_key):
     return message
 
 
-def RES_AUTH_KEY(request_id: str, session_id: str, req_time, auth_key: str, error=None) -> dict:
-    """
-        result = {
-            "auth_key": "api-key-001"
-        }
-    """
-    if not error:
-        msg_state = "success"
-    else:
-        msg_state = "error"
-
+def RES_AUTH_KEY(request_id: str, session_id: str, req_time, result: str) -> dict:
     message = {
         "protocol": "RES_AUTH_KEY",
         "header": {
@@ -55,10 +45,8 @@ def RES_AUTH_KEY(request_id: str, session_id: str, req_time, auth_key: str, erro
         },
         "payload": {
             "status_code": 200,
-            "message": msg_state,
-            "result": {
-                "auth_key": auth_key
-            }
+            "message": "success",
+            "result": [result]
         }
     }
     return message
@@ -76,7 +64,9 @@ def req_run_query() -> dict:
             "auth_key": "key-001"
         },
         "payload": {
-            "question": "blablabla..."
+            "params": {
+                "question": "blablabla..."
+            }
         }
     }
     return message
@@ -118,60 +108,40 @@ def RES_WF_RESULT(request_id: str, session_id: str, req_time: str, result: dict,
         "payload": {
             "status_code": 200,
             "message": msg_state,
-            "result": result
+            "result": [result]
         }
     }
     return message
 
-
-def req_nodes_state() -> dict:
-    message = {
-        "protocol": "REQ_NODES_STATUS",
-        "header": {
-            "timestamp": {
-                "req_time": "",
-                "res_time": ""
-            },
-            "request_id": "ndsts-001",
-            "session_id": "sid-001",
-            "auth_key": "key-001"
-        },
-        "payload": {
-            "node_ids": ["nd-001"]
-        }
-    }
-    return message
 
 
 def SYS_NODE_STATUS(request_id, node_id, service_name, status, timestamp) -> dict:
     message = {
         "protocol": "RES_NODE_STATUS",
         "request_id": request_id,
-        "result": {
-            "node_id": node_id,
-            "service_name": service_name,
-            "status": status,
-            "timestamp": timestamp
-        }
+        "result": [
+            {
+                "node_id": node_id,
+                "service_name": service_name,
+                "status": status,
+                "timestamp": timestamp
+            }
+        ]
     }
     return message
 
 
-def RES_NODE_STATUS(request_id: str, session_id: str, req_time: str, node_status: dict, error=None) -> dict:
+def RES_NODES_STATUS(request_id: str, session_id: str, req_time: str, nodes_status: dict) -> dict:
     """
         nodes_status = [
             {
                 "node_id": "nd-001",
-                "data": "STATUS: RUNNING/PENDING/....",
+                "service_name": "{node`s service_name}",
+                "status": "PENDING/SCHEDULED/QUEUE/RUNNING/COMPLETED/FAILED/PAUSED/STOPED/SKIPPED/BLOCKED",
                 "timestamp": ""
             }
         ]
     """
-    if not error:
-        msg_state = "success"
-    else:
-        msg_state = "error"
-
     message = {
         "protocol": "RES_NODE_STATUS",
         "header": {
@@ -184,13 +154,35 @@ def RES_NODE_STATUS(request_id: str, session_id: str, req_time: str, node_status
         },
         "payload": {
             "status_code": 200,
-            "message": msg_state,
-            "result": node_status
+            "message": "success",
+            "result": nodes_status
         }
     }
     return message
 
-def RES_NOT_ALLOWED_MSG(error_msg, user_message):
+
+def RES_UNAUTHRIZED_MSG(error_code, error_msg):
+    message = {
+        "protocol": "RES_UNAUTH",
+        "header": {
+            "timestamp": {
+                "res_time": tzHtime(time.time() * 1000)
+            }
+        },
+        "payload": {
+            "status_code": 401,
+            "message": "error",
+            "error": [
+                {
+                    "error_code": error_code,
+                    "error_message": error_msg
+                }
+            ]
+        }
+    }
+    return message
+
+def RES_NOT_ALLOWED_MSG(error_code, error_msg):
     message = {
         "protocol": "RES_NOT_ALLOWED_MESSAGE",
         "header": {
@@ -199,10 +191,14 @@ def RES_NOT_ALLOWED_MSG(error_msg, user_message):
             }
         },
         "payload": {
-            "status_code": 400,
+            "status_code": 406,
             "message": "error",
-            "error_msg": error_msg,
-            "input_msg": user_message
+            "error": [
+                {
+                    "error_code": error_code,
+                    "error_message": error_msg
+                }
+            ]
         }
     }
     return message
