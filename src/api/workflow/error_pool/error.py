@@ -40,7 +40,25 @@ class EnvironmentKeyError(Exception):
 class NotDefinedProtocolMessage(Exception):
     def __init__(self):
         super().__init__("Not defined protocol message format")
+        self._errorCode = "NotDefinedProtocolMessage"
         self._errorMessage = "Not defined protocol message format"
 
     def __str__(self):
         return self._errorMessage
+
+    def error_code(self):
+        return self._errorCode
+
+
+
+class UnauthorizedKeyError(Exception):
+    def __init__(self):
+        super().__init__("Not authorized key")
+        self._errorCode = "UnauthorizedKeyError"
+        self._errorMessage = "auth key is not allowed key"
+
+    def __str__(self):
+        return self._errorMessage
+
+    def error_code(self):
+        return self._errorCode

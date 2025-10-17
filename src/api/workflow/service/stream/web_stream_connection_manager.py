@@ -25,6 +25,7 @@ class WSConnectionManager:
 
     async def send_message(self, connection_id, message):
         try:
+            self._logger.debug(f"[S->C] {connection_id}: {message}")
             websocket = self._conn_pool.get(connection_id)
             await websocket.send_json(message)
         except Exception as e:
