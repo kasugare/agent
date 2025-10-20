@@ -8,11 +8,14 @@ from api.workflow.service.execute.workflow_executor import WorkflowExecutor
 from api.workflow.service.stream.web_stream_connection_manager import WSConnectionManager
 from api.workflow.service.stream.web_stream_handler import WebStreamHandler
 from api.workflow.protocol.schema import BaseResponse
-import api.workflow.protocol.workflow_schema as schema
 from api.workflow.protocol.workflow_headers import HeaderModel, get_headers
+from api.workflow.error_pool.error import NotDefinedWorkflowMetaException
+from error.parent_exception import InvalidInputException
+from error.parent_exception import NotDefinedMetaException
 from fastapi import APIRouter, WebSocket, Depends
 from multiprocessing import Queue
 from abc import abstractmethod
+import api.workflow.protocol.workflow_schema as schema
 import uuid
 
 
@@ -55,18 +58,20 @@ class WorkflowEngine(BaseRouter):
             self._logger.info("################################################################")
             self._datastore.clear()
             wf_meta = req.meta
+
+            if not wf_meta:
+                self._logger.warn("InvalidInputException: invalid workflow meta")
+                raise InvalidInputException(err_detail="Invalid workflow meta")
             self._metastore.change_wf_meta(wf_meta)
             return {}
 
 
         @self.router.get(path='/workflow/clear', response_model=BaseResponse[schema.ResCallDataClear])
         async def call_data_clear(headers: HeaderModel = Depends(get_headers), req: schema.ReqCallDataClear = ...):
-            # REQ: HEADER {request_id, session_id}, BODY: {}
             self._logger.info("################################################################")
             self._logger.info("#                         < Clear All >                        #")
             self._logger.info("################################################################")
             self._datastore.clear()
-            # RES: Success/Error
             return {}
 
         @self.router.post(path='/workflow/run', response_model=BaseResponse[schema.ResCallChainedModelService])
@@ -76,12 +81,18 @@ class WorkflowEngine(BaseRouter):
             self._logger.info("#                            < RUN >                           #")
             self._logger.info("################################################################")
             start_node, end_node, parameter = req.from_node, req.to_node, req.parameter
-            result = self._workflow_executor.run_workflow(parameter, start_node, end_node)
-            response = {
-                "result": {
-                    "answer": result
+            try:
+                result = self._workflow_executor.run_workflow(parameter, start_node, end_node)
+                response = {
+                    "result": {
+                        "answer": result
+                    }
                 }
-            }
+            except NotDefinedWorkflowMetaException as e:
+                raise NotDefinedMetaException(err_detail="Not defined workflow meta")
+
+            except AttributeError as e:
+                raise InvalidInputException(err_detail="Not defined node_id(s)")
             return response
 
         @self.router.get(path='/workflow/metapack')
@@ -100,8 +111,6 @@ class WorkflowEngine(BaseRouter):
             self._logger.info("#                         < Data Pool >                        #")
             self._logger.info("################################################################")
             data_pool = self._datastore.get_service_data_pool_service()
-            for k, v in data_pool.items():
-                self._logger.debug(f" - {k} : \t{v}")
             response = {
                 'result': {
                     'node_id': req.node_id,

@@ -57,7 +57,7 @@ class BaseHandler:
 
 
     async def _watch_routes(self):
-        self._logger.critical(f"watch changeable route-path: routes.json")
+        self._logger.debug(f"watch changeable route-path: routes.json")
         try:
             async for changes in awatch(self._routes_file_path):
                 await self._sync_routes()

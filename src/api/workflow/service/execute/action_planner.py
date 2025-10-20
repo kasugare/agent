@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from api.workflow.error_pool.error import NotDefinedWorkflowMetaException
+
 
 class ActionPlanningService:
     def __init__(self, logger, datastore, metastore, taskstore):
@@ -87,7 +89,6 @@ class ActionPlanningService:
     def _cvt_service_range(self, from_service_id=None, to_service_id=None):
         forward_graph = self._datastore.get_forward_graph_meta_service()
         backward_graph = self._datastore.get_backward_graph_meta_service()
-        print(forward_graph)
 
         if not from_service_id and not to_service_id:
             service_graph = forward_graph
@@ -145,40 +146,53 @@ class ActionPlanningService:
         return task_map
 
     def gen_action_meta_pack(self, start_node, end_node, request):
-        action_meta_pack = self._datastore.get_meta_pack_service()
-        self._logger.info(f" # Step 1. Forward Graph")
-        act_forward_graph = self.gen_action_forward_graph_service(start_node, end_node)
-        self._print_map(act_forward_graph)
+        try:
+            action_meta_pack = self._datastore.get_meta_pack_service()
+            if not action_meta_pack.get('start_nodes'):
+                raise NotDefinedWorkflowMetaException
 
-        self._logger.info(f" # Step 2. Backward Graph")
-        act_backward_graph = self.gen_action_backward_graph_service(act_forward_graph)
-        self._print_map(act_backward_graph)
+            self._logger.info(f" # Step 1. Forward Graph")
+            act_forward_graph = self.gen_action_forward_graph_service(start_node, end_node)
+            # self._print_map(act_forward_graph)
 
-        self._logger.info(f" # Step 3. Start Service Node")
-        act_start_nodes = self.gen_start_nodes_service(act_forward_graph)
-        self._logger.debug(f"  start nodes: {act_start_nodes}")
+            self._logger.info(f" # Step 2. Backward Graph")
+            act_backward_graph = self.gen_action_backward_graph_service(act_forward_graph)
+            # self._print_map(act_backward_graph)
 
-        self._logger.info(f" # Step 4. End Service Node")
-        act_end_nodes = self.gen_end_nodes_service(act_backward_graph)
-        self._logger.debug(f"  end nodes: {act_end_nodes}")
+            self._logger.info(f" # Step 3. Start Service Node")
+            act_start_nodes = self.gen_start_nodes_service(act_forward_graph)
+            self._logger.debug(f"  start nodes: {act_start_nodes}")
 
-        self._logger.info(f" # Step 5. Extract task-edge_param_map")
-        act_edges_param_map = self.gen_action_edges_param_map(act_start_nodes, request)
-        self._print_map(act_edges_param_map)
+            self._logger.info(f" # Step 4. End Service Node")
+            act_end_nodes = self.gen_end_nodes_service(act_backward_graph)
+            self._logger.debug(f"  end nodes: {act_end_nodes}")
 
-        self._logger.info(f" # Step 6. Generate Active Tasks")
-        action_service_ids = self.gen_action_service_ids(act_forward_graph, act_backward_graph)
-        act_task_map = self.gen_action_tasks(action_service_ids)
-        self._datastore.set_task_map_service(act_task_map)
-        self._print_map(act_task_map)
+            self._logger.info(f" # Step 5. Extract task-edge_param_map")
+            act_edges_param_map = self.gen_action_edges_param_map(act_start_nodes, request)
+            # self._print_map(act_edges_param_map)
 
-        action_meta_pack['act_forward_graph'] = act_forward_graph
-        action_meta_pack['act_backward_graph'] = act_backward_graph
-        action_meta_pack['act_start_nodes'] = act_start_nodes
-        action_meta_pack['act_end_nodes'] = act_end_nodes
-        action_meta_pack['act_edges_param_map'] = act_edges_param_map
-        action_meta_pack['act_task_map'] = act_task_map
-        return action_meta_pack
+            self._logger.info(f" # Step 6. Generate Active Tasks")
+            action_service_ids = self.gen_action_service_ids(act_forward_graph, act_backward_graph)
+            act_task_map = self.gen_action_tasks(action_service_ids)
+            self._datastore.set_task_map_service(act_task_map)
+            # self._print_map(act_task_map)
+
+            action_meta_pack['act_forward_graph'] = act_forward_graph
+            action_meta_pack['act_backward_graph'] = act_backward_graph
+            action_meta_pack['act_start_nodes'] = act_start_nodes
+            action_meta_pack['act_end_nodes'] = act_end_nodes
+            action_meta_pack['act_edges_param_map'] = act_edges_param_map
+            action_meta_pack['act_task_map'] = act_task_map
+            return action_meta_pack
+        except NotDefinedWorkflowMetaException as e:
+            raise NotDefinedWorkflowMetaException
+        except AttributeError as e:
+            raise AttributeError
+        except TypeError as e:
+            print("Step 2")
+        except Exception as e:
+            print(e)
+            print("Step 3")
 
     def _print_map(self, data_map):
         for k, v in data_map.items():

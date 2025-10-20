@@ -161,6 +161,50 @@ def RES_NODES_STATUS(request_id: str, session_id: str, req_time: str, nodes_stat
     return message
 
 
+def RES_EMPTY_META_MSG(error_code, error_msg):
+    message = {
+        "protocol": "RES_EMPTY_META",
+        "header": {
+            "timestamp": {
+                "res_time": tzHtime(time.time() * 1000)
+            }
+        },
+        "payload": {
+            "status_code": 405,
+            "message": "error",
+            "error": [
+                {
+                    "error_code": error_code,
+                    "error_message": error_msg
+                }
+            ]
+        }
+    }
+    return message
+
+
+def RES_INVALID_PARAMS_MSG(error_code, error_msg):
+    message = {
+        "protocol": "RES_INVALID_PARAMS",
+        "header": {
+            "timestamp": {
+                "res_time": tzHtime(time.time() * 1000)
+            }
+        },
+        "payload": {
+            "status_code": 400,
+            "message": "error",
+            "error": [
+                {
+                    "error_code": error_code,
+                    "error_message": error_msg
+                }
+            ]
+        }
+    }
+    return message
+
+
 def RES_UNAUTHRIZED_MSG(error_code, error_msg):
     message = {
         "protocol": "RES_UNAUTH",

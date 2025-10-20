@@ -50,6 +50,31 @@ class NotDefinedProtocolMessage(Exception):
         return self._errorCode
 
 
+class InvalidInputException(Exception):
+    def __init__(self):
+        super().__init__("Invalid input params")
+        self._errorCode = "InvalidInputParametersException"
+        self._errorMessage = "Invalid input params"
+
+    def __str__(self):
+        return self._errorMessage
+
+    def error_code(self):
+        return self._errorCode
+
+
+class NotDefinedWorkflowMetaException(Exception):
+    def __init__(self):
+        super().__init__("Not defined workflow meta")
+        self._errorCode = "NotDefinedWorkflowMetaException"
+        self._errorMessage = "Not defined workflow meta"
+
+    def __str__(self):
+        return self._errorMessage
+
+    def error_code(self):
+        return self._errorCode
+
 
 class UnauthorizedKeyError(Exception):
     def __init__(self):

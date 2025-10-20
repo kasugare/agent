@@ -4,19 +4,25 @@
 from api.workflow.control.execute.task_context import TaskContext
 from api.workflow.control.execute.task_state import TaskState
 from datetime import datetime
+import time
+
 
 class Task(TaskContext):
     def __init__(self, logger, service_id, service_info):
         super().__init__(logger, service_id, service_info)
         self._logger = logger
         self.set_state(TaskState.PENDING)
-        self._start_time = None
-        self._end_time = None
+        self._start_dt = 0.0
+        self._end_dt = 0.0
+
+    def get_duration(self):
+        duration = "%f" %(self._end_dt - self._start_dt)
+        return duration
 
     def execute(self):
         try:
             self.set_state(TaskState.RUNNING)
-            self._start_time = datetime.now()
+            self._start_time = time.time() * 1000
             result = self._executor.run(self.get_params())
             self.set_result(result)
             self.set_state(TaskState.COMPLETED)
@@ -25,8 +31,8 @@ class Task(TaskContext):
             self.set_error(e)
             self._logger.error(e)
         finally:
-            self._end_time = datetime.now()
-        self._logger.debug(f"{self._start_time} - {self._end_time}")
+            self._end_time = time.time() * 1000
+        self._logger.debug(f" - Process Time: {self.get_duration()}/ms")
 
     def cancel(self):
         if self._state in (TaskState.PENDING, TaskState.SCHEDULED, TaskState.QUEUED):

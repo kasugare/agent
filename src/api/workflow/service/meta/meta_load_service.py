@@ -140,6 +140,8 @@ class MetaLoadService:
         try:
             if not wf_meta:
                 wf_meta = self._datastore.get_wf_meta_file_service()
+                # return
+
 
             self._logger.info("# [DAG Loader] Step 01. Extract Common Info")
             wf_comm_meta = self.extract_wf_common_info_service(wf_meta)

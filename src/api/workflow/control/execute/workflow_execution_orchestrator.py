@@ -212,7 +212,6 @@ class WorkflowExecutionOrchestrator:
             self._logger.error(e)
 
     def _timeout(self, timeout):
-        self._logger.critical("Step 1")
         time.sleep(timeout)
         self._job_Q.put_nowait("SIGTERM")
 
@@ -224,7 +223,6 @@ class WorkflowExecutionOrchestrator:
                 self._logger.debug("<<< WAIT Q >>>")
                 service_id = self._job_Q.get()
                 if service_id == "SIGTERM":
-                    self._logger.critical("Step 2")
                     self._logger.error("Exit process")
                     break
                 task = task_map.get(service_id)

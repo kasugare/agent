@@ -31,9 +31,16 @@ class ProtocolParser:
             raise NotDefinedProtocolMessage
 
         protocol = message.get('protocol')
+        return protocol
+
+    def parse_system_result_set(self, message):
+        if not isinstance(message, dict) or not message.get('protocol'):
+            raise NotDefinedProtocolMessage
+
         request_id = message.get('request_id')
         result = message.get('result')
-        return protocol, request_id, result
+        return request_id, result
+
 
     def parse_client_protocol(self, message):
         if not isinstance(message, dict) or not message.get('protocol'):
