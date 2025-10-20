@@ -3,11 +3,10 @@
 
 from .service.launcher_service import DynamicRouterService
 from .utility.file_lock import FileLock
-from common.conf_system import getLockDir, getRouteDir
+from common.conf_system import getLockDir, getRouteDir, getAiLandContext
 from abc import ABC, abstractmethod
 from fastapi import APIRouter, FastAPI
 from watchfiles import awatch
-from typing import List
 import asyncio
 import traceback
 import pymysql
@@ -119,15 +118,7 @@ class BaseHandler:
 
     def _set_db_conn(self):
         dbConn = None
-        dbContext = {
-            # 'host': '10.167.128.212',
-            # 'port': 30003,
-            "host": '127.0.0.1',
-            "port": 13306,
-            'db': 'ailand',
-            'user': 'root',
-            'passwd': 'aip1!'
-        }
+        dbContext = getAiLandContext()
 
         try:
             dbConn = pymysql.connect(host=dbContext['host']

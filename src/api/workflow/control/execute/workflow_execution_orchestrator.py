@@ -230,8 +230,6 @@ class WorkflowExecutionOrchestrator:
                 task = task_map.get(service_id)
                 task_state = task.get_state()
 
-                time.sleep(0.1)
-
                 if self._stream_Q:
                     splited_service_id = service_id.split('.')
                     node_id = splited_service_id[0]
@@ -239,6 +237,7 @@ class WorkflowExecutionOrchestrator:
                     status = str(task_state).split('.')[1]
                     status_message = SYS_NODE_STATUS(request_id, node_id, service_name, status, int(time.time()))
                     self._stream_Q.put_nowait(status_message)
+                    time.sleep(0.1)
 
                 if task_state in [TaskState.PENDING]:
                     self._logger.debug(f" - Step 1. [PENDING  ] wait order to run: {service_id}")

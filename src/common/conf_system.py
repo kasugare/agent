@@ -56,3 +56,24 @@ def getAccessPoolType(section='WORKFLOW', option='access_pool_type'):
     access_type = conf.get(section, option)
     return access_type
 
+def getSecretKey(section='SECRETKEY', option='secret_key'):
+    conf = getConfig()
+    secret_key = conf.get(section, option)
+    return secret_key
+
+def getAiLandContext(section='AILAND'):
+    conf = getConfig()
+    host = conf.get(section, 'host')
+    port = int(conf.get(section, 'port'))
+    db = conf.get(section, 'db')
+    user = conf.get(section, 'user')
+    passwd = conf.get(section, 'passwd')
+    dbContext = {
+        'host': host,
+        'port': port,
+        'db': db,
+        'user': user,
+        'passwd': passwd
+    }
+    return dbContext
+
