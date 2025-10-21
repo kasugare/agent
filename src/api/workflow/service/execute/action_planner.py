@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from api.workflow.error_pool.error import InvalidInputException
 from api.workflow.error_pool.error import NotDefinedWorkflowMetaException
 
 
@@ -21,7 +22,7 @@ class ActionPlanningService:
         self._logger.debug(f"{space} [{count}] # Step 0: find child nodes - {next_service_ids}")
         if not next_service_ids and count == 1:
             self._logger.debug(f"{space} [{count}] # Step -1")
-            return None
+            raise InvalidInputException
         elif not next_service_ids:
             task_graph[from_service_id] = []
             return task_graph
@@ -145,37 +146,55 @@ class ActionPlanningService:
         task_map = self._taskstore.gen_active_tasks_service(action_service_ids)
         return task_map
 
-    def gen_action_meta_pack(self, start_node, end_node, request):
+    def _vaild_meta(self, action_meta_pack):
+        if not action_meta_pack.get('start_nodes'):
+            raise NotDefinedWorkflowMetaException
+
+    def _vaild_params(self, act_start_nodes, params):
+        action_meta_pack = self._datastore.get_meta_pack_service()
+        service_pool = action_meta_pack.get('service_pool')
+        data_pool = self._datastore.get_service_data_pool_service()
+        for act_start_node in act_start_nodes:
+            service_node = service_pool.get(act_start_node)
+            node_params = service_node.get('params')
+            if not node_params:
+                continue
+            if not isinstance(params, dict) or not params:
+                for node_param in node_params:
+                    is_required = node_param.get('required')
+                    param_name = node_param.get('key')
+                    if is_required:
+                        raise InvalidInputException
+
+
+    def gen_action_meta_pack(self, start_node, end_node, params):
         try:
             action_meta_pack = self._datastore.get_meta_pack_service()
-            if not action_meta_pack.get('start_nodes'):
-                raise NotDefinedWorkflowMetaException
+            self._vaild_meta(action_meta_pack)
 
             self._logger.info(f" # Step 1. Forward Graph")
             act_forward_graph = self.gen_action_forward_graph_service(start_node, end_node)
-            # self._print_map(act_forward_graph)
 
             self._logger.info(f" # Step 2. Backward Graph")
             act_backward_graph = self.gen_action_backward_graph_service(act_forward_graph)
-            # self._print_map(act_backward_graph)
 
             self._logger.info(f" # Step 3. Start Service Node")
             act_start_nodes = self.gen_start_nodes_service(act_forward_graph)
-            self._logger.debug(f"  start nodes: {act_start_nodes}")
+            # self._logger.debug(f"  start nodes: {act_start_nodes}")
+            self._vaild_params(act_start_nodes, params)
 
             self._logger.info(f" # Step 4. End Service Node")
             act_end_nodes = self.gen_end_nodes_service(act_backward_graph)
             self._logger.debug(f"  end nodes: {act_end_nodes}")
 
             self._logger.info(f" # Step 5. Extract task-edge_param_map")
-            act_edges_param_map = self.gen_action_edges_param_map(act_start_nodes, request)
-            # self._print_map(act_edges_param_map)
+            act_edges_param_map = self.gen_action_edges_param_map(act_start_nodes, params)
+            self._print_map(act_edges_param_map)
 
             self._logger.info(f" # Step 6. Generate Active Tasks")
             action_service_ids = self.gen_action_service_ids(act_forward_graph, act_backward_graph)
             act_task_map = self.gen_action_tasks(action_service_ids)
             self._datastore.set_task_map_service(act_task_map)
-            # self._print_map(act_task_map)
 
             action_meta_pack['act_forward_graph'] = act_forward_graph
             action_meta_pack['act_backward_graph'] = act_backward_graph
@@ -185,14 +204,15 @@ class ActionPlanningService:
             action_meta_pack['act_task_map'] = act_task_map
             return action_meta_pack
         except NotDefinedWorkflowMetaException as e:
+            self._logger.error(e)
             raise NotDefinedWorkflowMetaException
+        except InvalidInputException as e:
+            self._logger.warn(e)
+            raise AttributeError
         except AttributeError as e:
             raise AttributeError
-        except TypeError as e:
-            print("Step 2")
         except Exception as e:
-            print(e)
-            print("Step 3")
+            self._logger.error(e)
 
     def _print_map(self, data_map):
         for k, v in data_map.items():

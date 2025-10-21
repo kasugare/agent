@@ -115,17 +115,26 @@ def RES_WF_RESULT(request_id: str, session_id: str, req_time: str, result: dict,
 
 
 
-def SYS_NODE_STATUS(request_id, node_id, service_name, status, timestamp) -> dict:
+def SYS_NODE_STATUS(request_id, node_id, service_name, status, ps_time, params={}, results={}, envs={}, error=None) -> dict:
+    status_result = {
+        "node_id": node_id,
+        "service_name": service_name,
+        "status": status,
+        "ps_time": ps_time
+    }
+    if params:
+        status_result["params"] = params
+    if results:
+        status_result['results'] = results
+    if envs:
+        status_result['envs'] = envs
+    if error:
+        status_result['error'] = error
     message = {
         "protocol": "RES_NODE_STATUS",
         "request_id": request_id,
         "result": [
-            {
-                "node_id": node_id,
-                "service_name": service_name,
-                "status": status,
-                "timestamp": timestamp
-            }
+            status_result
         ]
     }
     return message

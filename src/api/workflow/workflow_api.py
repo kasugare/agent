@@ -80,9 +80,9 @@ class WorkflowEngine(BaseRouter):
             self._logger.info("################################################################")
             self._logger.info("#                            < RUN >                           #")
             self._logger.info("################################################################")
-            start_node, end_node, parameter = req.from_node, req.to_node, req.parameter
+            start_node, end_node, params = req.from_node, req.to_node, req.parameter
             try:
-                result = self._workflow_executor.run_workflow(parameter, start_node, end_node)
+                result = self._workflow_executor.run_workflow(params, start_node, end_node)
                 response = {
                     "result": {
                         "answer": result
@@ -105,20 +105,27 @@ class WorkflowEngine(BaseRouter):
                 self._logger.debug(f" - {k} : \t{v}")
             return meta_pack
 
-        @self.router.get(path='/workflow/datapool', response_model=BaseResponse[schema.ResCallDataPool])
-        async def call_data_pool(headers: HeaderModel = Depends(get_headers), req: schema.ReqCallDataPool = ...):
+        # @self.router.get(path='/workflow/datapool', response_model=BaseResponse[schema.ResCallDataPool])
+        # async def call_data_pool(headers: HeaderModel = Depends(get_headers), req: schema.ReqCallDataPool = ...):
+        @self.router.get(path='/workflow/datapool')
+        async def call_data_pool(request):
             self._logger.info("################################################################")
             self._logger.info("#                         < Data Pool >                        #")
             self._logger.info("################################################################")
             data_pool = self._datastore.get_service_data_pool_service()
-            response = {
-                'result': {
-                    'node_id': req.node_id,
-                    'data': data_pool,
-                    'timestamp': ""
-                }
-            }
-            return response
+            for k, v in data_pool.items():
+                splited_key = k.split(".")
+                in_type = splited_key[0]
+                service_id = (".").join(splited_key[0:])
+                self._logger.warn(f"[{in_type}] {service_id} : {v}")
+            # response = {
+            #     'result': {
+            #         'node_id': req.node_id,
+            #         'data': data_pool,
+            #         'timestamp': ""
+            #     }
+            # }
+            return data_pool
 
         @self.router.get(path='/workflow/act_dag')
         async def call_active_dag():

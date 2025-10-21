@@ -13,7 +13,7 @@ class HeaderModel(BaseModel):
 
 
 async def get_headers(
-        request_id: Annotated[str, Header(..., alias="request_id")],
-        session_id: Annotated[str, Header(..., alias="session_id")]
+        request_id: Annotated[str | None, Header(..., alias="request-id", convert_underscores=False)] = None,
+        session_id: Annotated[str | None, Header(..., alias="session-id", convert_underscores=False)] = None
 ) -> HeaderModel:
     return HeaderModel(request_id=request_id, session_id=session_id)

@@ -9,7 +9,6 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from error.exception_handler import register_exception_handlers
 from utility.swagger import SwaggerRouter
 import multiprocessing
-import uvicorn
 
 
 class CSPMiddleware(BaseHTTPMiddleware):

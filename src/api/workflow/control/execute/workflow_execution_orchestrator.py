@@ -211,6 +211,23 @@ class WorkflowExecutionOrchestrator:
         except Exception as e:
             self._logger.error(e)
 
+    def _send_status(self, request_id, service_id, task):
+        splited_service_id = service_id.split('.')
+        node_id = splited_service_id[0]
+        service_name = splited_service_id[1]
+
+        task_state = task.get_state()
+        task_params = task.get_params()
+        task_results = task.get_result()
+        task_envs = task.get_env_params()
+        task_error = task.get_error()
+
+        status = str(task_state).split('.')[1]
+        status_message = SYS_NODE_STATUS(request_id, node_id, service_name, status, int(time.time()),
+                            params=task_params, results=task_results, envs=task_envs, error=task_error)
+        self._stream_Q.put_nowait(status_message)
+        time.sleep(0.1)
+
     def _timeout(self, timeout):
         time.sleep(timeout)
         self._job_Q.put_nowait("SIGTERM")
@@ -229,13 +246,7 @@ class WorkflowExecutionOrchestrator:
                 task_state = task.get_state()
 
                 if self._stream_Q:
-                    splited_service_id = service_id.split('.')
-                    node_id = splited_service_id[0]
-                    service_name = splited_service_id[1]
-                    status = str(task_state).split('.')[1]
-                    status_message = SYS_NODE_STATUS(request_id, node_id, service_name, status, int(time.time()))
-                    self._stream_Q.put_nowait(status_message)
-                    time.sleep(0.1)
+                    self._send_status(request_id, service_id, task)
 
                 if task_state in [TaskState.PENDING]:
                     self._logger.debug(f" - Step 1. [PENDING  ] wait order to run: {service_id}")

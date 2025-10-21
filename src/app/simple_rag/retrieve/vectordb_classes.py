@@ -75,6 +75,24 @@ class BaseVectorDB(ABC):
             self._logger.error(f"Error adding documents: {e}")
             return []
 
+    def _get_filter_condition(self) -> dict:
+        # VectorDB에 설정된 값을 기반으로 조건절에서 사용
+        filter_condition = {
+            "should": [
+                {
+                    "key": "use_yn",
+                    "match": {
+                        "value": "Y"
+                    }
+                },
+                {
+                    "key": "use_yn",
+                    "is_empty": True
+                }
+            ]
+        }
+        return filter_condition
+
     async def search(self, query: str, top_k: int=5, exclude_pages: list[int]=None, score_threshold: float=0.1) -> List[Dict[str, Any]]:
         """
         Search for similar documents.
@@ -91,11 +109,12 @@ class BaseVectorDB(ABC):
             raise ValueError("Vector store not initialized. Call connect() first.")
 
         try:
-            if exclude_pages is not None:
-                exclude_filter = self.build_page_not_in_filter(exclude_pages=exclude_pages)
-                results = self.vectorstore.similarity_search_with_score(query, k=top_k, filter=exclude_filter)
-            else:
-                results = await self.vectorstore.asimilarity_search_with_score(query, k=top_k, score_threshold=score_threshold)
+            # if exclude_pages is not None:
+            #     exclude_filter = self.build_page_not_in_filter(exclude_pages=exclude_pages)
+            #     results = self.vectorstore.similarity_search_with_score(query, k=top_k, filter=exclude_filter)
+            # else:
+            filter_condition = self._get_filter_condition()
+            results = await self.vectorstore.asimilarity_search_with_score(query, k=top_k, score_threshold=score_threshold, filter=filter_condition)
             formatted_results = []
             for doc, score in results:
                 formatted_results.append({

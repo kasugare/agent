@@ -20,13 +20,14 @@ class WorkflowExecutor:
     def get_act_meta(self):
         return self._act_meta
 
-    def run_workflow(self, context, start_node=None, end_node=None):
+    def run_workflow(self, params, start_node=None, end_node=None):
         try:
-            act_meta_pack = self._act_planner.gen_action_meta_pack(start_node, end_node, context)
+            act_meta_pack = self._act_planner.gen_action_meta_pack(start_node, end_node, params)
             self._act_meta = act_meta_pack
+
             if act_meta_pack.get('act_start_nodes'):
                 workflow_engine = WorkflowExecutionOrchestrator(self._logger, self._datastore, act_meta_pack, self._job_Q, self._stream_Q)
-                result = workflow_engine.run_workflow(context)
+                result = workflow_engine.run_workflow(params)
             else:
                 self._logger.error(f"# Not generated task_map, check DAG meta")
                 result = "# Not generated task_map, check DAG meta"

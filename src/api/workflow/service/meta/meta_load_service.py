@@ -61,8 +61,8 @@ class MetaLoadService:
         current_wf_meta = self._datastore.get_wf_meta_service()
         if current_wf_meta != updated_wf_meta:
             self._logger.debug("# SYNC UPDATE")
-            self._datastore.set_wf_meta_file_service(updated_wf_meta)
-            # self.set_base_wf_meta(updated_wf_meta)
+            # self._datastore.set_wf_meta_file_service(updated_wf_meta)
+            self.set_base_wf_meta(updated_wf_meta)
 
     def extract_wf_common_info_service(self, wf_meta: Dict) -> Dict:
         wf_comm_meta = self._meta_controller.extract_wf_common_info_ctl(wf_meta)
@@ -141,7 +141,6 @@ class MetaLoadService:
             if not wf_meta:
                 wf_meta = self._datastore.get_wf_meta_file_service()
                 # return
-
 
             self._logger.info("# [DAG Loader] Step 01. Extract Common Info")
             wf_comm_meta = self.extract_wf_common_info_service(wf_meta)
