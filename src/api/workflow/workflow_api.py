@@ -108,7 +108,7 @@ class WorkflowEngine(BaseRouter):
         # @self.router.get(path='/workflow/datapool', response_model=BaseResponse[schema.ResCallDataPool])
         # async def call_data_pool(headers: HeaderModel = Depends(get_headers), req: schema.ReqCallDataPool = ...):
         @self.router.get(path='/workflow/datapool')
-        async def call_data_pool(request):
+        async def call_data_pool():
             self._logger.info("################################################################")
             self._logger.info("#                         < Data Pool >                        #")
             self._logger.info("################################################################")
@@ -116,7 +116,7 @@ class WorkflowEngine(BaseRouter):
             for k, v in data_pool.items():
                 splited_key = k.split(".")
                 in_type = splited_key[0]
-                service_id = (".").join(splited_key[0:])
+                service_id = (".").join(splited_key[1:])
                 self._logger.warn(f"[{in_type}] {service_id} : {v}")
             # response = {
             #     'result': {
