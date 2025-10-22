@@ -46,10 +46,10 @@ class CachedMetastoreAccess:
         self._edges_param_map.clear()
 
     def set_wf_meta_access(self, wf_meta: Dict) -> None:
-        self._wf_meta = wf_meta
+        self._wf_meta = deepcopy(wf_meta)
 
     def get_wf_meta_access(self) -> Dict:
-        return self._wf_meta
+        return deepcopy(self._wf_meta)
 
     def set_comm_meta_access(self, wf_comm_meta: Dict) -> None:
         self._wf_comm_meta = wf_comm_meta

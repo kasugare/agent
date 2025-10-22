@@ -59,11 +59,17 @@ class MetaFileAccess:
         return dag_info
 
     def save_wf_meta_on_file(self, wf_meta: Dict, dirpath: str = None, filename: str = None) -> None:
-        dirpath, filename = self._get_wf_file_info(dirpath, filename)
+        if not dirpath:
+            dirpath = self._dirpath
+        if not filename:
+            filename = self._filename
 
         with FileLock(self._lock_filepath):
-            if not os.path.exists(dirpath):
-                os.mkdir(dirpath)
-            filepath = os.path.join(dirpath, filename)
-            with open(filepath, 'w') as fd:
-                json.dump(wf_meta, fd, indent=2)
+            try:
+                if not os.path.exists(dirpath):
+                    os.makedirs(dirpath)
+                filepath = os.path.join(dirpath, filename)
+                with open(filepath, 'w') as fd:
+                    json.dump(wf_meta, fd, indent=2)
+            except Exception as e:
+                self._logger.error(e)

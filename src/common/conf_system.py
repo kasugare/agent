@@ -56,6 +56,19 @@ def getAccessPoolType(section='WORKFLOW', option='access_pool_type'):
     access_type = conf.get(section, option)
     return access_type
 
+def isMetaAutoLoad(section='WORKFLOW', option='auto_load'):
+    conf = getConfig()
+    is_auto_load = conf.get(section, option)
+    return is_auto_load
+
+def numOfBackupMetas(section='WORKFLOW', option='num_of_backup_metas'):
+    conf = getConfig()
+    try:
+        num_of_backup_metas = int(conf.get(section, option))
+    except Exception as e:
+        num_of_backup_metas = 20
+    return num_of_backup_metas
+
 def getSecretKey(section='SECRETKEY', option='secret_key'):
     conf = getConfig()
     secret_key = conf.get(section, option)

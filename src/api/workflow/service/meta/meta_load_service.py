@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from common.conf_system import getRecipeDir, getRecipeFile
+from common.conf_system import getRecipeDir, getRecipeFile, isMetaAutoLoad
 from api.workflow.control.meta.meta_parse_controller import MetaParseController
 from typing import Dict, List, Any
 from watchfiles import awatch
 import traceback
 import threading
 import asyncio
+import time
 import os
 
 
@@ -17,7 +18,8 @@ class MetaLoadService:
         self._meta_controller = MetaParseController(logger)
         self._datastore = datastore
         self.set_base_wf_meta()
-        self._auto_loader()
+        if isMetaAutoLoad():
+            self._auto_loader()
 
     def _auto_loader(self, dirpath: str = None, filename: str = None) -> None:
         def run_event_loop(dirpath: str, filename: str) -> None:
@@ -57,11 +59,24 @@ class MetaLoadService:
                 self.set_base_wf_meta(wf_meta)
                 self._logger.debug(updated_dag_meta)
 
-    def change_wf_meta(self, updated_wf_meta: Dict) -> None:
+    def _gen_dag_file_path(self, wf_meta, request_id):
+        if not request_id:
+            request_id = format(int(time.time() * 100000), "X")
+        wf_comm_meta = self.extract_wf_common_info_service(wf_meta)
+        proj_id = wf_comm_meta.get('proj_id')
+        wf_id = wf_comm_meta.get('wf_id')
+        dirpath = os.path.join(getRecipeDir(), proj_id)
+        filename = f"{int(time.time()*1000)}-{wf_id}-{request_id}.json"
+        return dirpath, filename
+
+    def change_wf_meta(self, updated_wf_meta: Dict, request_id: str=None ) -> None:
         current_wf_meta = self._datastore.get_wf_meta_service()
         if current_wf_meta != updated_wf_meta:
-            self._logger.debug("# SYNC UPDATE")
-            # self._datastore.set_wf_meta_file_service(updated_wf_meta)
+            self._logger.debug("# New Meta Update")
+            dirpath, filename = self._gen_dag_file_path(updated_wf_meta, request_id)
+            self._datastore.clear()
+            self._datastore.set_wf_meta_file_service(updated_wf_meta, dirpath=dirpath, filename=filename)
+            self._datastore.set_wf_meta_service(updated_wf_meta)
             self.set_base_wf_meta(updated_wf_meta)
 
     def extract_wf_common_info_service(self, wf_meta: Dict) -> Dict:
@@ -139,8 +154,8 @@ class MetaLoadService:
     def set_base_wf_meta(self, wf_meta: Dict = None):
         try:
             if not wf_meta:
-                wf_meta = self._datastore.get_wf_meta_file_service()
-                # return
+                # wf_meta = self._datastore.get_wf_meta_file_service()
+                return
 
             self._logger.info("# [DAG Loader] Step 01. Extract Common Info")
             wf_comm_meta = self.extract_wf_common_info_service(wf_meta)

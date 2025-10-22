@@ -52,17 +52,16 @@ class WorkflowEngine(BaseRouter):
 
     def setup_routes(self):
         @self.router.post(path='/workflow/meta', response_model=BaseResponse[schema.ResCreateWorkflow])
-        async def create_workflow(headers: HeaderModel = Depends(get_headers), req: schema.ReqCreateWorkflow = ...):
+        async def create_workflow(headers: HeaderModel = Depends(get_headers), request: schema.ReqCreateWorkflow = ...):
             self._logger.info("################################################################")
             self._logger.info("#                         < Set Meta >                         #")
             self._logger.info("################################################################")
-            self._datastore.clear()
-            wf_meta = req.meta
-
+            request_id = headers.request_id
+            wf_meta = request.meta
             if not wf_meta:
                 self._logger.warn("InvalidInputException: invalid workflow meta")
                 raise InvalidInputException(err_detail="Invalid workflow meta")
-            self._metastore.change_wf_meta(wf_meta)
+            self._metastore.change_wf_meta(wf_meta, request_id)
             return {}
 
 
