@@ -78,6 +78,10 @@ class MetaLoadService:
             self._datastore.set_wf_meta_file_service(updated_wf_meta, dirpath=dirpath, filename=filename)
             self._datastore.set_wf_meta_service(updated_wf_meta)
             self.set_base_wf_meta(updated_wf_meta)
+        else:
+            self._datastore.clear()
+            self._datastore.set_wf_meta_service(updated_wf_meta)
+            self.set_base_wf_meta(updated_wf_meta)
 
     def extract_wf_common_info_service(self, wf_meta: Dict) -> Dict:
         wf_comm_meta = self._meta_controller.extract_wf_common_info_ctl(wf_meta)

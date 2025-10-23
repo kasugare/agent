@@ -352,20 +352,20 @@
           "params": [
             {
               "required": true,
-              "key": "output_prompt",
-              "type": "object"
+              "key": "output_templates",
+              "type": "json"
             },
             {
               "required": true,
-              "key": "answer",
-              "type": "string"
+              "key": "output_context",
+              "type": "json"
             }
           ],
           "result": [
             {
               "required": true,
               "key": "answer",
-              "type": "json"
+              "type": "string"
             }
           ]
         }
@@ -564,27 +564,28 @@
       "param_info": [
         {
           "refer_type": "direct",
-          "key": "output_prompt",
-          "value": "{{answer}}"
+          "key": "output_templates",
+          "values": [
+            {
+              "refer_type": "direct",
+              "key": "answer",
+              "value": "{{answer}}"
+            }
+          ]
         },
         {
           "refer_type": "indirect",
-          "key": "answer",
-          "value": "Generation_TAVl73_node.generate_answer.answer"
+          "key": "output_context",
+          "values": [
+            {
+              "refer_type": "indirect",
+              "key": "answer",
+              "value": "Generation_TAVl73_node.generate_answer.answer"
+            }
+          ]
         }
       ],
-      "result_info": [
-        {
-          "refer_type": "indirect",
-          "key": "customized_top_k",
-          "value": "Retrieval_724KHk_node.retrieve.top_k"
-        },
-        {
-          "refer_type": "indirect",
-          "key": "customized_top_k2",
-          "value": "Retrieval_724KHk_node.retrieve.top_k"
-        }
-      ]
+      "result_info": []
     }
   ],
   "resources": []

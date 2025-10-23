@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from typing import List, Dict, Any, Optional, Union, AsyncGenerator
-from openai import OpenAI, AsyncOpenAI
+from openai import OpenAI, AsyncOpenAI, APIConnectionError
 from openai.types.chat import ChatCompletion, ChatCompletionChunk
 from openai.types import Completion
 from .base_llm import BaseLLM
@@ -187,18 +187,10 @@ class OpenAICompatibleLLM(BaseLLM):
                 stream=stream,
                 **kwargs
             )
-
-            if stream:
-                # 스트리밍 모드의 경우 첫 번째 청크만 반환하거나 별도 처리 필요
-                return {
-                    "text": "[스트리밍 모드]",
-                    "tokens": 0,
-                    "model": self._model,
-                    "stream": True
-                }
-            else:
-                generated_text = completion.choices[0].message.content or ""
-                return {
+            answer_context = {}
+            generated_text = completion.choices[0].message.content or ""
+            if completion.usage:
+                answer_context = {
                     "text": generated_text,
                     "tokens": completion.usage.completion_tokens if completion.usage else len(generated_text.split()),
                     "model": completion.model,
@@ -207,11 +199,25 @@ class OpenAICompatibleLLM(BaseLLM):
                         "prompt_tokens": completion.usage.prompt_tokens if completion.usage else 0,
                         "completion_tokens": completion.usage.completion_tokens if completion.usage else 0,
                         "total_tokens": completion.usage.total_tokens if completion.usage else 0
-                    } if completion.usage else None
+                    }
                 }
+        except APIConnectionError as e:
+            raise APIConnectionError
+            answer_context = {
+                "text": "질문에 대한 답변",
+                "tokens": 10,
+                "model": "MODEL",
+                "stream": False,
+                "usage": {
+                    "prompt_tokens": 0,
+                    "completion_tokens": 0,
+                    "total_tokens": 0
+                }
+            }
         except Exception as e:
             self._logger.error(f"Generate method error: {e}")
             raise
+        return answer_context
 
     async def stream_chat(self, messages: List[Dict[str, str]], **kwargs) -> AsyncGenerator[str, None]:
         """
