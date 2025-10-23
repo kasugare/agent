@@ -69,7 +69,7 @@ class MetaLoadService:
         filename = f"{int(time.time()*1000)}-{wf_id}-{request_id}.json"
         return dirpath, filename
 
-    def change_wf_meta(self, updated_wf_meta: Dict, request_id: str=None ) -> None:
+    def change_wf_meta(self, updated_wf_meta: Dict, request_id: str=None) -> None:
         current_wf_meta = self._datastore.get_wf_meta_service()
         if current_wf_meta != updated_wf_meta:
             self._logger.debug("# New Meta Update")
