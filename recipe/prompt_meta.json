@@ -326,9 +326,9 @@
 			"asset_info": [],
 			"param_info": [
 				{
-					"refer_type": "direct",
-					"key": "output_templates",
-					"values": []
+					"refer_type": "indirect",
+					"key": "query",
+					"value": "Input_zla_r0_node.query_input.query"
 				},
 				{
 					"refer_type": "indirect",

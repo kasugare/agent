@@ -66,7 +66,7 @@ class WorkflowEngine(BaseRouter):
             self._metastore.change_wf_meta(wf_meta, request_id)
             return {}
 
-        @self.router.post(path='/workflow/prompt', response_model=BaseResponse[schema.ResCreateWorkflow])
+        @self.router.post(path='/workflow/prompt', response_model=BaseResponse[dict[str, Any]])
         async def call_prompt_test(headers: HeaderModel = Depends(get_headers), request: schema.ReqCreateWorkflow = ...):
             self._logger.info("################################################################")
             self._logger.info("#                      < Prompt Tester >                       #")
