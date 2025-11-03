@@ -87,3 +87,16 @@ class UnauthorizedKeyError(Exception):
 
     def error_code(self):
         return self._errorCode
+
+
+class ExceedExecutionRetryError(Exception):
+    def __init__(self):
+        super().__init__("Exceed execution retry")
+        self._errorCode = "ExceedExecutionRetryError"
+        self._errorMessage = "The task timed out and failed after exceeding the max retry limit."
+
+    def __str__(self):
+        return self._errorMessage
+
+    def error_code(self):
+        return self._errorCode

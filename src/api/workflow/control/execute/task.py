@@ -3,35 +3,79 @@
 
 from api.workflow.control.execute.task_context import TaskContext
 from api.workflow.control.execute.task_state import TaskState
-from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor, TimeoutError
+from api.workflow.error_pool.error import ExceedExecutionRetryError
 import time
 
 
 class Task(TaskContext):
-    def __init__(self, logger, service_id, service_info):
-        super().__init__(logger, service_id, service_info)
+    def __init__(self, logger, service_id, service_info, timeout_config):
+        super().__init__(logger, service_id, service_info, timeout_config)
         self._logger = logger
-        self.set_state(TaskState.PENDING)
-        self._start_dt = 0.0
+        self._start_dt = None
         self._end_dt = 0.0
 
+        self.set_state(TaskState.PENDING)
+        self.init_retry_count()
+
     def get_duration(self):
-        duration = "%f" %(self._end_dt - self._start_dt)
+        duration = "%0.2f" %(self._end_dt - self._start_dt)
         return duration
 
-    def execute(self):
-        try:
+    def _set_current_task_state(self):
+        curr_state = self.get_state()
+        if curr_state in [TaskState.QUEUED, TaskState.RUNNING]:
             self.set_state(TaskState.RUNNING)
-            self._start_time = time.time() * 1000
-            result = self._executor.run(self.get_params())
+        elif curr_state in [TaskState.TIMEOUT]:
+            self.set_state(TaskState.RETRYING)
+
+    def _set_start_time(self):
+        if not self._start_dt:
+            self._start_dt = time.time()
+
+    def execute(self, timeout=0):
+        executor = None
+        sid = self.get_service_id()
+        try:
+            self._set_current_task_state()
+            self._set_start_time()
+
+            executor = ThreadPoolExecutor(max_workers=1)
+            params = self.get_params()
+            if isinstance(params, dict):
+                future = executor.submit(self._executor.run, **params)
+            elif isinstance(params, (list, tuple)):
+                future = executor.submit(self._executor.run, *params)
+            else:
+                future = executor.submit(self._executor.run, params)
+            if timeout == 0:
+                timeout = self.get_timeout()
+            self._logger.info(f"# {self.get_service_id()}: Run service execution, timeout: {timeout}")
+            result = future.result(timeout=timeout)
             self.set_result(result)
             self.set_state(TaskState.COMPLETED)
+        except TimeoutError as e:
+            if executor:
+                executor.shutdown(wait=False, cancel_futures=True)
+            try:
+                timeout = self.get_retry_timeout()
+                self._logger.error(f"this task has timed out. it going to retry({self.get_current_retry_count()}/{self.get_max_retries()}), set timeout: {timeout}")
+                self.set_error(e.__str__())
+                self.set_state(TaskState.TIMEOUT)
+                self.sleep_delay()
+                self.execute(timeout)
+            except ExceedExecutionRetryError as e:
+                self._logger.error(f"this task has exceed retry. this task was be failed!")
+                self.set_state(TaskState.FAILED)
+                self.set_error(e)
         except Exception as e:
+            self._logger.error(e)
             self.set_state(TaskState.FAILED)
             self.set_error(e)
-            self._logger.error(e)
         finally:
-            self._end_time = time.time() * 1000
+            if executor:
+                executor.shutdown(wait=False)
+            self._end_dt = time.time()
         self._logger.debug(f" - Process Time: {self.get_duration()}/ms")
 
     def cancel(self):

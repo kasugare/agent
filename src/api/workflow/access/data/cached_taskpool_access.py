@@ -13,7 +13,9 @@ class CachedTaskPoolAccess:
         self._task_pool = {}
 
     def set_task_map_access(self, task_map: Dict[str, Any]) -> None:
+        self._thread_lock.acquire()
         self._task_pool = task_map
+        self._thread_lock.release()
 
     def get_task_map_access(self):
         return self._task_pool

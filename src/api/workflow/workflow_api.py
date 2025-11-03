@@ -132,6 +132,8 @@ class WorkflowEngine(BaseRouter):
             self._logger.info("#                        < Active DAG >                        #")
             self._logger.info("################################################################")
             act_meta = self._workflow_executor.get_act_meta()
+            if "act_task_map" in act_meta.keys():
+                act_meta.pop('act_task_map')
             for k, v in act_meta.items():
                 self._logger.info(f" - {k}")
                 if isinstance(v, dict):
@@ -143,7 +145,7 @@ class WorkflowEngine(BaseRouter):
                 else:
                     self._logger.debug(f" \t- {v}")
                 self._logger.debug("*" * 200)
-            return act_meta
+            # return act_meta
 
         @self.router.get(path='/workflow/tasks')
         async def call_task_pool():
@@ -172,7 +174,7 @@ class WorkflowEngine(BaseRouter):
                 self._logger.debug(f"\t- node_type:  {node_type}")
                 task_obj.print_service_info()
                 self._logger.debug("*" * 100)
-            return act_task_map
+            # return act_task_map
 
         @self.router.websocket("/workflow/chat")
         async def websocket_endpoint(websocket: WebSocket):

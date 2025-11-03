@@ -5,11 +5,13 @@ from api.workflow.access.execute.api_executor import ApiExecutor
 from api.workflow.access.execute.start_executor import StartExecutor
 from api.workflow.access.execute.end_executor import EndExecutor
 from api.workflow.access.execute.module_executor import ModuleExecutor
+from api.workflow.error_pool.error import ExceedExecutionRetryError
+import math
 import time
 
 
 class TaskContext:
-    def __init__(self, logger, service_id, service_info):
+    def __init__(self, logger, service_id, service_info, timeout_conf):
         self._logger = logger
 
         self._service_id = service_id
@@ -28,6 +30,7 @@ class TaskContext:
         self._state = None
 
         self._init_context(service_info)
+        self._init_timeout(timeout_conf)
 
     def _init_context(self, service_info):
         self._task_type = service_info.get('type')
@@ -157,3 +160,48 @@ class TaskContext:
 
     def get_state(self):
         return self._state
+
+    def _init_timeout(self, timeout_config):
+        self._max_retries = timeout_config.get('max_retries', 3)
+        self._timeout = timeout_config.get('timeout', 60.0)
+        self._delay_time = timeout_config.get('delay_time', 3.0)
+        self._exponential_backoff = timeout_config.get('exponential_backoff', True)
+        self._retry_count = 0
+
+    def init_retry_count(self):
+        self._retry_count = 0
+
+    def _increased_retry_count(self):
+        self._retry_count += 1
+
+    def get_current_retry_count(self):
+        return self._retry_count
+
+    def get_max_retries(self):
+        return self._max_retries
+
+    def sleep_delay(self):
+        time.sleep(self._delay_time)
+
+    def get_timeout(self):
+        return self._timeout
+
+    def get_exponential_backoff(self):
+        return self._exponential_backoff
+
+    def get_retry_timeout(self):
+        self._increased_retry_count()
+
+        curr_retry_cnt = self.get_current_retry_count()
+        max_retry = self.get_max_retries()
+        timeout = self.get_timeout()
+
+        if curr_retry_cnt > max_retry:
+           raise ExceedExecutionRetryError
+
+        if self._exponential_backoff:
+            timeout = math.pow(timeout, curr_retry_cnt)
+            return timeout
+        else:
+            return timeout
+

@@ -1,9 +1,9 @@
 {
-	"name": "Simple RAG",
-	"description": "Simple RAG Workflow",
+	"name": "Parallel RAG",
+	"description": "Paralle RAG Workflow",
 	"metadata": {
-		"project_id": "PROJGENRAG_01",
-		"workflow_id": "SIMPLERAG_WF_001",
+		"project_id": "PARALLELWF_01",
+		"workflow_id": "PARALLELWF_WF_001",
 		"version": "1.0",
 		"type": "RAG"
 	},
@@ -160,6 +160,154 @@
 						},
 						{
 							"key": "document_sources",
+							"type": "object"
+						}
+					]
+				}
+			}
+		},
+        {
+			"node_id": "Retrieval_10NEPD_node",
+			"node_type": "module",
+			"role": "retrieval",
+			"location": "inner",
+			"containable": true,
+			"api_keys": [
+				""
+			],
+			"node_info": {
+				"id": "Retrieval",
+				"code": "RAG_RETR",
+				"version": "1.0.0",
+				"title": "Retrieval",
+				"desc": "RAG Retrieval Node"
+			},
+			"api_info": {
+				"base_url": ""
+			},
+			"module_info": {
+				"module_path": "app.simple_rag.retrieve.rag_retrieve",
+				"class_name": "RagRetrieve",
+				"sys_environments": {
+					"params": []
+				},
+				"asset_environments": {
+					"params": [
+						{
+							"required": true,
+							"key": "knowledge_id",
+							"type": "string",
+							"default": "12345"
+						},
+						{
+							"required": true,
+							"key": "embedding_server_path",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "embed_model_nm",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "vectordb_type",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "vectordb_path",
+							"type": "string"
+						},
+						{
+							"required": false,
+							"key": "api_key",
+							"type": "string"
+						}
+					]
+				}
+			},
+			"services": {
+				"retrieve": {
+					"function": "retrieve",
+					"params": [
+						{
+							"required": true,
+							"key": "query",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "top_k",
+							"type": "int",
+							"default_value": 0.8
+						},
+						{
+							"required": true,
+							"key": "threshold",
+							"type": "float",
+							"default_value": 0.1
+						}
+					],
+					"header": {},
+					"body": {},
+					"result": [
+						{
+							"key": "retrieved_documents",
+							"type": "object"
+						},
+						{
+							"key": "document_sources",
+							"type": "object"
+						}
+					]
+				}
+			}
+		},
+		{
+			"node_id": "Aggregator_KDFJ123F_node",
+			"node_type": "module",
+			"role": "aggregation",
+			"location": "inner",
+			"containable": true,
+			"api_keys": [
+				""
+			],
+			"node_info": {
+				"id": "Aggregator",
+				"code": "RAG_Aggr",
+				"version": "1.0.0",
+				"title": "Aggregator",
+				"desc": "RAG Aggregation Node"
+			},
+			"api_info": {
+				"base_url": ""
+			},
+			"module_info": {
+				"module_path": "app.simple_rag.aggregator.documents_aggregator",
+				"class_name": "DocumentsAggregator",
+				"sys_environments": {
+					"params": []
+				},
+				"asset_environments": {
+					"params": []
+				}
+			},
+			"services": {
+				"aggregate": {
+					"function": "aggregate",
+					"params": [
+						{
+							"required": true,
+							"key": "inputs",
+							"type": "object"
+						}
+					],
+					"header": {},
+					"body": {},
+					"result": [
+						{
+							"key": "data_context",
 							"type": "object"
 						}
 					]
@@ -440,8 +588,137 @@
 			],
 			"result_info": []
 		},
+        {
+            "source": "Input_zla_r0_node.query_input",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"target": "Retrieval_10NEPD_node.retrieve",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"env_info": [],
+			"asset_info": [
+				{
+					"refer_type": "direct",
+					"key": "knowledge_id",
+					"value": "know_ADSFKJ3219DD"
+				},
+				{
+					"refer_type": "direct",
+					"key": "embedding_server_path",
+					"value": "http://127.0.0.1:21434/v1"
+				},
+				{
+					"refer_type": "direct",
+					"key": "embed_model_nm",
+					"value": "nomic-embed-text:latest"
+				},
+				{
+					"refer_type": "direct",
+					"key": "vectordb_type",
+					"value": "qdrant"
+				},
+				{
+					"refer_type": "direct",
+					"key": "vectordb_path",
+					"value": "http://127.0.0.1:16333"
+				},
+				{
+					"refer_type": "direct",
+					"key": "api_key",
+					"value": "12345678890"
+				}
+			],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "query",
+					"value": "Input_zla_r0_node.query_input.query"
+				},
+				{
+					"refer_type": "direct",
+					"key": "top_k",
+					"value": 5
+				},
+				{
+					"refer_type": "direct",
+					"key": "threshold",
+					"value": 0.7
+				}
+			],
+			"result_info": []
+		},
 		{
 			"source": "Retrieval_724KHk_node.retrieve",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"target": "Aggregator_KDFJ123F_node.aggregate",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "inputs",
+					"value": "Retrieval_724KHk_node.retrieve"
+				}
+			],
+			"result_info": []
+		},
+		{
+			"source": "Retrieval_10NEPD_node.retrieve",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"target": "Aggregator_KDFJ123F_node.aggregate",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "inputs",
+					"value": "Retrieval_10NEPD_node.retrieve.retrieved_documents"
+				}
+			],
+			"result_info": []
+		},
+		{
+			"source": "Retrieval_724KHk_node.retrieve",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"target": "Aggregator_KDFJ123F_node.aggregate",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "inputs",
+					"value": "Retrieval_724KHk_node.retrieve.retrieved_documents"
+				}
+			],
+			"result_info": []
+		},
+		{
+			"source": "Aggregator_KDFJ123F_node.aggregate",
 			"source_handler": {
 				"type": "sequence",
 				"conditions": {}
@@ -487,13 +764,14 @@
 						{
 							"refer_type": "indirect",
 							"key": "docs",
-							"value": "Retrieval_724KHk_node.retrieve.retrieved_documents"
+							"value": "Aggregator_KDFJ123F_node.aggregate.data_context"
 						}
 					]
 				}
 			],
 			"result_info": []
-		},{
+		},
+		{
 			"source": "Prompt_DF321kf2_node.generate_prompt",
 			"source_handler": {
 				"type": "sequence",
@@ -551,7 +829,6 @@
 			],
 			"result_info": []
 		},
-
 		{
 			"source": "Generation_TAVl73_node.generate_answer",
 			"source_handler": {
@@ -572,11 +849,6 @@
 					"values": [
 						{
 							"refer_type": "direct",
-							"key": "question",
-							"value": "내 질문: {{query}}"
-						},
-						{
-							"refer_type": "direct",
 							"key": "answer",
 							"value": "LLM 답변: {{answer}}"
 						}
@@ -586,11 +858,6 @@
 					"refer_type": "indirect",
 					"key": "output_context",
 					"values": [
-						{
-							"refer_type": "indirect",
-							"key": "query",
-							"value": "Input_zla_r0_node.query_input.query"
-						},
 						{
 							"refer_type": "indirect",
 							"key": "answer",

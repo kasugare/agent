@@ -32,7 +32,6 @@ class MetaLoadService:
             dirpath = getRecipeDir()
         if not filename:
             filename = getRecipeFile()
-
         thread = threading.Thread(target=run_event_loop, daemon=True, args=(dirpath, filename))
         thread.start()
 
@@ -158,8 +157,8 @@ class MetaLoadService:
     def set_base_wf_meta(self, wf_meta: Dict = None):
         try:
             if not wf_meta:
-                # wf_meta = self._datastore.get_wf_meta_file_service()
-                return
+                wf_meta = self._datastore.get_wf_meta_file_service()
+                # return
 
             self._logger.info("# [DAG Loader] Step 01. Extract Common Info")
             wf_comm_meta = self.extract_wf_common_info_service(wf_meta)
@@ -211,32 +210,32 @@ class MetaLoadService:
             self._logger.info("# [DAG Loader] Step 10. Extract Forward-Edge graph")
             wf_forward_edge_graph = self.extract_forward_edge_graph_service(wf_edges_meta)
             self._datastore.set_forward_edge_graph_meta_service(wf_forward_edge_graph)
-            # self._print_debug_data(wf_forward_edge_graph)
+            self._print_debug_data(wf_forward_edge_graph)
 
             self._logger.info("# [DAG Loader] Step 11. Extract Forward-graph")
             wf_forward_graph = self.extract_forward_graph_service(wf_edges_meta)
             self._datastore.set_forward_graph_meta_service(wf_forward_graph)
-            # self._print_debug_data(wf_forward_graph)
+            self._print_debug_data(wf_forward_graph)
 
             self._logger.info("# [DAG Loader] Step 12. Extract backward-graph")
             wf_backward_graph = self.extract_backward_graph_service(wf_edges_meta)
             self._datastore.set_backward_graph_meta_service(wf_backward_graph)
-            # self._print_debug_data(wf_backward_graph)
+            self._print_debug_data(wf_backward_graph)
 
             self._logger.info("# [DAG Loader] Step 13. Extract Start Node from forward_graph")
             start_nodes = self.find_start_nodes_service(wf_forward_graph)
             self._datastore.set_start_nodes_meta_service(start_nodes)
-            # self._print_debug_data(start_nodes)
+            self._print_debug_data(start_nodes)
 
             self._logger.info("# [DAG Loader] Step 14. Extract End Node from backward_graph")
             end_nodes = self.find_end_nodes_service(wf_backward_graph)
             self._datastore.set_end_nodes_meta_service(end_nodes)
-            # self._print_debug_data(end_nodes)
+            self._print_debug_data(end_nodes)
 
             self._logger.info("# [DAG Loader] Step 15. Extract service params-map")
             edges_param_map = self.extract_params_map_service(start_nodes, wf_service_pool, wf_edges_meta)
             self._datastore.set_edges_param_map_service(edges_param_map)
-            # self._print_debug_data(edges_param_map)
+            self._print_debug_data(edges_param_map)
         except Exception as e:
             self._logger.error("Wrong workflow meta")
             raise

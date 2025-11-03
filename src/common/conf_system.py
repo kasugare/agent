@@ -59,6 +59,10 @@ def getAccessPoolType(section='WORKFLOW', option='access_pool_type'):
 def isMetaAutoLoad(section='WORKFLOW', option='auto_load'):
     conf = getConfig()
     is_auto_load = conf.get(section, option)
+    if is_auto_load.lower() == 'true':
+        is_auto_load = True
+    else:
+        is_auto_load = False
     return is_auto_load
 
 def numOfBackupMetas(section='WORKFLOW', option='num_of_backup_metas'):
@@ -90,3 +94,21 @@ def getAiLandContext(section='AILAND'):
     }
     return dbContext
 
+def getWorkflowTimeoutConfig(section='WORKFLOW_TIMEOUT'):
+    conf = getConfig()
+    max_retries = int(conf.get(section, 'max_retries'))
+    timeout = float(conf.get(section, 'timeout'))
+    delay_time = float(conf.get(section, 'delay_time'))
+    exponential_backoff = conf.get(section, 'exponential_backoff')
+    if exponential_backoff.lower() == 'true':
+        exponential_backoff = True
+    else:
+        exponential_backoff = False
+
+    timeout_config = {
+        'max_retries': max_retries,
+        'timeout': timeout,
+        'delay_time': delay_time,
+        'exponential_backoff': exponential_backoff
+    }
+    return timeout_config

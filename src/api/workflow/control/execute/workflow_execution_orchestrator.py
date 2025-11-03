@@ -4,6 +4,7 @@
 from api.workflow.control.execute.task_state import TaskState
 from api.workflow.control.execute.env_template import AutoTemplateRenderer
 from api.workflow.protocol.protocol_message import SYS_NODE_STATUS
+from api.workflow.error_pool.error import ExceedExecutionRetryError
 from jinja2 import Template, meta, Environment
 from threading import Thread
 import traceback
@@ -149,6 +150,36 @@ class WorkflowExecutionOrchestrator:
             param_map = get_edge_params(edge_params_id, edges_param_map)
         return param_map
 
+    def _get_aggr_params(self, service_id):
+        def get_edge_params(edge_param_id, edges_param_map):
+            param_map_list = edges_param_map.get(edge_param_id)
+            params = {}
+            if not param_map_list:
+                return params
+            params = self._extract_param_value(service_id, param_map_list)
+            return params
+
+        backward_graph = self._meta_pack['backward_graph']
+        prev_service_ids = backward_graph.get(service_id)
+        edges_param_map = self._meta_pack['act_edges_param_map']
+        aggr_param_map = {}
+        if not prev_service_ids:
+            return aggr_param_map
+
+        for prev_service_id in prev_service_ids:
+            edge_params_id = f"{prev_service_id}-{service_id}"
+            param_map = get_edge_params(edge_params_id, edges_param_map)
+            param_keys = param_map.keys()
+            for param_key in param_keys:
+                service_param_map = {
+                    prev_service_id: param_map.get(param_key)
+                }
+                if param_key in aggr_param_map.keys():
+                    aggr_param_map[param_key].append(service_param_map)
+                else:
+                    aggr_param_map[param_key] = [service_param_map]
+        return aggr_param_map
+
     def _get_start_nodes(self):
         start_nodes = self._meta_pack['act_start_nodes']
         return start_nodes
@@ -195,6 +226,29 @@ class WorkflowExecutionOrchestrator:
                 result_map[custom_key] = value
         return result_map
 
+    def _get_task(self, service_id):
+        task_map = self._meta_pack.get('act_task_map')
+        task_object = task_map.get(service_id)
+        return task_object
+
+    def _get_task_state(self, service_id):
+        task = self._get_task(service_id)
+        task_state = task.get_state()
+        return task_state
+
+    def _check_prev_task_compledted(self, service_id):
+        backward_graph = self._meta_pack['backward_graph']
+        prev_service_list = backward_graph.get(service_id)
+        if not prev_service_list:
+            return True
+        else:
+            for prev_service_id in prev_service_list:
+                prev_task_state = self._get_task_state(prev_service_id)
+                self._logger.debug(f" - Prev_task: {prev_service_id} - {prev_task_state}")
+                if prev_task_state != TaskState.COMPLETED:
+                    return False
+        return True
+
     def _check_all_completed(self, task_map):
         be_completed = True
         for k, task in task_map.items():
@@ -204,12 +258,9 @@ class WorkflowExecutionOrchestrator:
         return be_completed
 
     def _execute_task(self, task):
-        try:
-            task.execute()
-            service_id = task.get_service_id()
-            self._job_Q.put_nowait(service_id)
-        except Exception as e:
-            self._logger.error(e)
+        task.execute()
+        service_id = task.get_service_id()
+        self._job_Q.put_nowait(service_id)
 
     def _send_status(self, request_id, service_id, task):
         splited_service_id = service_id.split('.')
@@ -237,11 +288,13 @@ class WorkflowExecutionOrchestrator:
         start_ts = time.time()
         while True:
             try:
-                self._logger.debug("<<< WAIT Q >>>")
+                self._logger.info("<<< WAIT Q >>>")
                 service_id = self._job_Q.get()
                 if service_id == "SIGTERM":
                     self._logger.error("Exit process")
                     break
+
+                time.sleep(0.1)
                 task = task_map.get(service_id)
                 task_state = task.get_state()
 
@@ -249,17 +302,20 @@ class WorkflowExecutionOrchestrator:
                     self._send_status(request_id, service_id, task)
 
                 if task_state in [TaskState.PENDING]:
-                    self._logger.debug(f" - Step 1. [PENDING  ] wait order to run: {service_id}")
-                    task.set_state(TaskState.SCHEDULED)
-                    self._job_Q.put_nowait(service_id)
+                    self._logger.info(f" - Step 1. [PENDING  ] wait order to run: {service_id}")
+                    runnable = self._check_prev_task_compledted(service_id)
+                    self._logger.debug(f"   L RUNNABLE: {service_id} : {runnable}")
+                    if runnable:
+                        task.set_state(TaskState.SCHEDULED)
+                        self._job_Q.put_nowait(service_id)
 
                 elif task_state in [TaskState.SCHEDULED]:
-                    self._logger.debug(f" - Step 2. [SCHEDULED] prepared service resources: {service_id}")
+                    self._logger.info(f" - Step 2. [SCHEDULED] prepared service resources: {service_id}")
                     task.set_state(TaskState.QUEUED)
                     self._job_Q.put_nowait(service_id)
 
                 elif task_state in [TaskState.QUEUED]:
-                    self._logger.debug(f" - Step 3. [QUEUED   ] aggregation params and run: {service_id}")
+                    self._logger.info(f" - Step 3. [QUEUED   ] aggregation params and run: {service_id}")
                     runnable = True
                     prev_service_ids = self._get_prev_service_ids(service_id)
                     if prev_service_ids:
@@ -267,8 +323,10 @@ class WorkflowExecutionOrchestrator:
                             prev_task = task_map.get(prev_service_id)
                             if prev_task.get_state() not in [TaskState.COMPLETED, TaskState.SKIPPED]:
                                 runnable = False
+                                break
                     else:
                         runnable = True
+                    self._logger.debug(f"   L RUNNABLE: {service_id} : {runnable}")
 
                     if runnable:
                         env_params = self._get_envs(service_id)
@@ -276,25 +334,29 @@ class WorkflowExecutionOrchestrator:
 
                         asset_params = self._get_assets(service_id)
                         task.set_asset_params(asset_params)
+                        task_role = task.get_role()
 
-                        func_params = self._get_params(service_id)
-                        if task.get_role() == 'generation':
+                        self._logger.debug(f" - ROLE: {service_id} - {task_role}")
+                        if task_role == 'generation':
+                            func_params = self._get_params(service_id)
                             param_value = self._extract_forced_param_value(service_id, "messages")
                             func_params['messages'] = param_value
+                        elif task_role == 'aggregation':
+                            func_params = self._get_aggr_params(service_id)
+                        else:
+                            func_params = self._get_params(service_id)
 
                         task.set_params(func_params)
                         task.set_state(TaskState.RUNNING)
                         self._datastore.set_service_params_service(service_id, func_params)
                         self._job_Q.put_nowait(service_id)
-                elif task_state in [TaskState.RUNNING]:
-                    if task.get_location() == 'inner':
-                        self._execute_task(task)
-                    else:
-                        executor = Thread(target=self._execute_task, args=(task,))
-                        executor.start()
+                elif task_state in [TaskState.RUNNING, TaskState.RETRYING]:
+                    executor = Thread(target=self._execute_task, args=(task,), daemon=True)
+                    executor.start()
+                    # self._execute_task(task)
 
                 elif task_state in [TaskState.COMPLETED]:
-                    self._logger.debug(f" - Step 4. [COMPLETED] done task execution : {service_id}")
+                    self._logger.debug(f" - info 4. [COMPLETED] done task execution : {service_id}")
                     task_result = task.get_result()
                     customed_task_result = self._result_mapper(service_id, task_result)
                     task = task_map.get(service_id)
@@ -312,30 +374,38 @@ class WorkflowExecutionOrchestrator:
                             result = end_task.get_result()
                         break
 
+                elif task_state in [TaskState.TIMEOUT]:
+                    self._logger.info(f" - Step 5. [TIMEOUT   ] task timeout : {service_id}")
+                    self._show_task(task_map)
+                    break
+
                 elif task_state in [TaskState.FAILED]:
-                    self._logger.debug(f" - Step 5. [FAILED   ] paused task by user : {service_id}")
+                    self._logger.info(f" - Step 6. [FAILED   ] job failed : {service_id}")
                     self._show_task(task_map)
                     break
 
                 elif task_state in [TaskState.PAUSED]:
-                    self._logger.debug(f" - Step 6. [PAUSED   ] paused task by user : {service_id}")
+                    self._logger.info(f" - Step 7. [PAUSED   ] paused task by user : {service_id}")
                     break
 
                 elif task_state in [TaskState.STOPPED]:
-                    self._logger.debug(f" - Step 7. [STOP     ] stop task by user : {service_id}")
+                    self._logger.info(f" - Step 8. [STOP     ] stop task by user : {service_id}")
                     break
 
                 elif task_state in [TaskState.SKIPPED]:
-                    self._logger.debug(f" - Step 8. [SKIPPED  ] skipped task: {service_id}")
+                    self._logger.info(f" - Step 9. [SKIPPED  ] skipped task: {service_id}")
                     break
 
                 elif task_state in [TaskState.BLOCKED]:
-                    self._logger.debug(f" - Step 9. [BLOCKED  ] blocked task: {service_id}")
+                    self._logger.info(f" - Step 10. [BLOCKED  ] blocked task: {service_id}")
                     break
                 else:
                     break
                 self._show_task(task_map)
                 # self._show_task_info(task)
+            except ExceedExecutionRetryError as e:
+                break
+
             except Exception as e:
                 self._logger.error(e)
                 self._logger.error(traceback.print_exc())
@@ -343,12 +413,12 @@ class WorkflowExecutionOrchestrator:
         end_ts = time.time()
         duration = "%0.2f" %(end_ts - start_ts)
         self._logger.info(f"--- # Request Job Completed, Duration: {duration}s ---")
-        self._logger.info(f" - Result: {result}")
+        self._logger.debug(f" - Result: {result}")
         self._show_task(task_map)
         return result
 
     def run_workflow(self, request_params):
-        self._logger.critical(f" # user params: {request_params}")
+        self._logger.debug(f" # user params: {request_params}")
         request_id = request_params.get('request_id')
         self._set_start_jobs(request_params)
         task_map = self._meta_pack.get('act_task_map')
@@ -357,7 +427,7 @@ class WorkflowExecutionOrchestrator:
 
     def _show_task(self, task_map):
         for service_id, task in task_map.items():
-            self._logger.warn(f" - [{task.get_state()}] {service_id}")
+            self._logger.debug(f" - [{task.get_state()}] {service_id}")
 
     def _show_task_info(self, task):
         service_id = task.get_service_id()

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from api.workflow.control.execute.task import Task
+from common.conf_system import getWorkflowTimeoutConfig
 
 
 class TaskLoadController:
@@ -21,8 +22,9 @@ class TaskLoadController:
                         active_service_ids.append(service_id)
 
         active_service_ids = list(set(active_service_ids))
+        timeout_config = getWorkflowTimeoutConfig()
         for active_service_id in active_service_ids:
             service_info = service_pool.get(active_service_id)
-            task_obj = Task(self._logger, active_service_id, service_info)
+            task_obj = Task(self._logger, active_service_id, service_info, timeout_config)
             task_map[active_service_id] = task_obj
         return task_map

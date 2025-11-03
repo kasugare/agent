@@ -52,7 +52,7 @@ class ActionPlanningService:
         count += 1
         space = "\t" * count
         task_graph = {}
-        self._logger.debug(f"{space}@[{count}] < {from_service_id} -> {to_service_id} >")
+        self._logger.debug(f"{space}@[{count}] < FROM: {from_service_id} -> END: {to_service_id} >")
         self._logger.debug(f"{space} [{count}] # Step 0: check end nodes ")
         if from_service_id == to_service_id:
             task_graph[from_service_id] = []
@@ -63,7 +63,8 @@ class ActionPlanningService:
 
         if not next_service_ids:
             self._logger.debug(f"{space} [{count}] # Step -1")
-            return None
+            task_graph[from_service_id] = []
+            return task_graph
 
         for next_service_id in next_service_ids:
             self._logger.debug(f"{space} [{count}] # Step 2: select and find next service - {next_service_id}")
@@ -174,13 +175,15 @@ class ActionPlanningService:
 
             self._logger.info(f" # Step 1. Forward Graph")
             act_forward_graph = self.gen_action_forward_graph_service(start_node, end_node)
+            self._logger.debug(f"  act_forward_graph: {act_forward_graph}")
 
             self._logger.info(f" # Step 2. Backward Graph")
             act_backward_graph = self.gen_action_backward_graph_service(act_forward_graph)
+            self._logger.debug(f"  act_backward_graph: {act_backward_graph}")
 
             self._logger.info(f" # Step 3. Start Service Node")
             act_start_nodes = self.gen_start_nodes_service(act_forward_graph)
-            # self._logger.debug(f"  start nodes: {act_start_nodes}")
+            self._logger.debug(f"  start nodes: {act_start_nodes}")
             self._vaild_params(act_start_nodes, params)
 
             self._logger.info(f" # Step 4. End Service Node")

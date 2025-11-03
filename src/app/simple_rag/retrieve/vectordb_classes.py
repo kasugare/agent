@@ -86,8 +86,9 @@ class BaseVectorDB(ABC):
                     }
                 },
                 {
-                    "key": "use_yn",
-                    "is_empty": True
+                    "is_empty": {
+                        "key": "use_yn"
+                    }
                 }
             ]
         }

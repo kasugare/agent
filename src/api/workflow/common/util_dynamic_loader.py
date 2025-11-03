@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python
 
-
 from typing import Any, Dict, List
 from concurrent.futures import ThreadPoolExecutor
 from api.workflow.common.util_lib_installer import LibraryInstaller
@@ -16,6 +15,7 @@ import sys
 import gc
 import os
 
+
 class DynamicLoader:
     def __init__(self, logger):
         self._logger = logger
@@ -26,7 +26,7 @@ class DynamicLoader:
         self._thread_pool = ThreadPoolExecutor(max_workers=10)
         self._lib_installer = LibraryInstaller(logger)
 
-    def _load_module(self, module_path: str, reload: bool = False) -> Any:
+    def _load_module(self, module_path: str, reload: bool = True) -> Any:
         """ module_path: "app.test.test_class" """
         try:
 
