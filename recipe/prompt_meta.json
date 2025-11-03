@@ -1,0 +1,349 @@
+{
+	"name": "PROMPT_TEMPLATE_TEST",
+	"description": "Prompt Template Test",
+	"metadata": {
+		"project_id": "PROMPT_TEMPLATE_TEST",
+		"workflow_id": "PROMPT_TEMPLATE_TEST",
+		"version": "1.0",
+		"type": "PROMPT"
+	},
+	"environments": [
+		{
+			"env_code": "APIKEY",
+			"env_name": "api key",
+			"env_params": [
+				{
+					"key": "api-key",
+					"value": "12345678890"
+				}
+			]
+		}
+	],
+	"nodes": [
+		{
+			"node_id": "{{INPUT_NODE}}",
+			"node_type": "module",
+			"role": "start",
+			"location": "inner",
+			"containable": true,
+			"api_keys": [
+				""
+			],
+			"node_info": {
+				"id": "input_node",
+				"code": "RagInput",
+				"version": "1.0.0",
+				"title": "rag input",
+				"desc": "RAG Input Node"
+			},
+			"api_info": {
+				"base_url": ""
+			},
+			"module_info": {
+				"module_path": "app.simple_rag.input.rag_input",
+				"class_name": "RagInput",
+				"sys_environments": {
+					"params": []
+				},
+				"asset_environments": {
+					"params": []
+				}
+			},
+			"services": {
+				"query_input": {
+					"function": "query_input",
+					"params": [
+						{
+							"required": true,
+							"key": "query",
+							"type": "string"
+						}
+					],
+					"result": [
+						{
+							"key": "query",
+							"type": "string"
+						}
+					]
+				}
+			}
+		},
+		{
+			"node_id": "{{PROMPT_NODE}}",
+			"node_type": "module",
+			"role": "prompt",
+			"location": "inner",
+			"containable": true,
+			"api_keys": [
+				""
+			],
+			"node_info": {
+				"id": "Prompt",
+				"code": "RAG_PROM",
+				"version": "1.0.0",
+				"title": "Prompt",
+				"desc": "RAG Prompt Node"
+			},
+			"api_info": {
+				"base_url": ""
+			},
+			"module_info": {
+				"module_path": "app.simple_rag.prompt.rag_prompt",
+				"class_name": "RagPrompt",
+				"sys_environments": {
+					"params": []
+				},
+				"asset_environments": {
+					"params": []
+				}
+			},
+			"services": {
+				"generate_prompt": {
+					"function": "generate_prompt",
+					"params": [
+						{
+							"required": true,
+							"key": "prompt_templates",
+							"type": "object"
+						},
+						{
+							"required": false,
+							"key": "prompt_context",
+							"type": "object"
+						}
+					],
+					"header": {},
+					"body": {},
+					"result": [
+						{
+							"key": "prompt",
+							"type": "object"
+						}
+					]
+				}
+			}
+		},
+		{
+			"node_id": "{{GENERATE_NODE}}",
+			"node_type": "module",
+			"role": "generation",
+			"location": "inner",
+			"containable": true,
+			"api_keys": [
+				""
+			],
+			"node_info": {
+				"id": "Generation",
+				"code": "RAG_GEN",
+				"version": "1.0.23",
+				"title": "Generate Model",
+				"desc": "RAG Generation"
+			},
+			"api_info": {
+				"base_url": ""
+			},
+			"module_info": {
+				"module_path": "app.simple_rag.generate.rag_generate",
+				"class_name": "RagGenerator",
+				"sys_environments": {
+					"params": []
+				},
+				"asset_environments": {
+					"params": [
+						{
+							"required": true,
+							"key": "model_id",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "base_url",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "llm_type",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "model_name",
+							"type": "string"
+						},
+						{
+							"required": false,
+							"key": "api_key",
+							"type": "string"
+						}
+					]
+				}
+			},
+			"services": {
+				"generate_answer": {
+					"function": "generate_answer",
+					"params": [
+						{
+							"required": true,
+							"key": "prompt",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "temperature",
+							"type": "float",
+							"default_value": 0.7
+						},
+						{
+							"required": true,
+							"key": "max_tokens",
+							"type": "int",
+							"default_value": 512
+						},
+						{
+							"required": false,
+							"key": "messages",
+							"type": "list",
+							"default_value": []
+						}
+					],
+					"result": [
+						{
+							"key": "answer",
+							"type": "string"
+						},
+						{
+							"key": "answer_context",
+							"type": "json"
+						},
+						{
+							"key": "messages",
+							"type": "list"
+						}
+					]
+				}
+			}
+		},
+		{
+			"node_id": "{{OUTPUT_NODE}}",
+			"node_type": "module",
+			"role": "output",
+			"location": "inner",
+			"containable": true,
+			"api_keys": [
+				""
+			],
+			"node_info": {
+				"id": "Output",
+				"code": "RAG_OUTPUT",
+				"version": "1.0.0",
+				"title": "RAG Output",
+				"desc": "Rag Output Node"
+			},
+			"api_info": {
+				"base_url": ""
+			},
+			"module_info": {
+				"module_path": "app.simple_rag.output.rag_output",
+				"class_name": "RagOutput",
+				"sys_environments": {
+					"params": []
+				},
+				"asset_environments": {
+					"params": []
+				}
+			},
+			"services": {
+				"output": {
+					"function": "output",
+					"params": [
+						{
+							"required": true,
+							"key": "output_templates",
+							"type": "json"
+						},
+						{
+							"required": true,
+							"key": "output_context",
+							"type": "json"
+						}
+					],
+					"result": [
+						{
+							"required": true,
+							"key": "answer",
+							"type": "string"
+						}
+					]
+				}
+			}
+		}
+	],
+	"edges": [
+		{
+			"source": "{{INPUT_NODE}}.query_input",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"target": "{{PROMPT_NODE}}.generate_prompt",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [],
+			"result_info": []
+		},
+		{
+			"source": "{{PROMPT_NODE}}.generate_prompt",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"target": "{{GENERATE_NODE}}.generate_answer",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [],
+			"result_info": []
+		},
+		{
+			"source": "{{GENERATE_NODE}}.generate_answer",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"target": "{{OUTPUT_NODE}}.output",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [
+				{
+					"refer_type": "direct",
+					"key": "output_templates",
+					"values": []
+				},
+				{
+					"refer_type": "indirect",
+					"key": "output_context",
+					"values": [
+						{
+							"refer_type": "indirect",
+							"key": "answer",
+							"value": "{{GENERATE_NODE}}.generate_answer.answer"
+						}
+					]
+				}
+			],
+			"result_info": []
+		}
+	],
+	"resources": []
+}

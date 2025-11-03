@@ -157,8 +157,8 @@ class MetaLoadService:
     def set_base_wf_meta(self, wf_meta: Dict = None):
         try:
             if not wf_meta:
-                wf_meta = self._datastore.get_wf_meta_file_service()
-                # return
+                # wf_meta = self._datastore.get_wf_meta_file_service()
+                return
 
             self._logger.info("# [DAG Loader] Step 01. Extract Common Info")
             wf_comm_meta = self.extract_wf_common_info_service(wf_meta)
@@ -194,13 +194,13 @@ class MetaLoadService:
             wf_node_env_map_pool = self.extract_wf_node_env_service(wf_edges_meta)
             nodes_env_value_map = self.extract_node_environments_value_map_service(wf_nodes_meta, wf_node_env_map_pool, wf_env_pool)
             self._datastore.set_init_nodes_env_params_service(nodes_env_value_map)
-            # self._print_debug_data(nodes_env_value_map)
+            self._print_debug_data(nodes_env_value_map)
 
             self._logger.info("# [DAG Loader] Step 08. Extract asset values")
             node_asset_map_pool = self.extract_wf_node_asset_service(wf_edges_meta)
             nodes_asset_value_map = self.extract_node_asset_value_map_service(wf_nodes_meta, node_asset_map_pool, wf_env_pool)
             self._datastore.set_init_nodes_asset_params_service(nodes_asset_value_map)
-            # self._print_debug_data(nodes_asset_value_map)
+            self._print_debug_data(nodes_asset_value_map)
 
             self._logger.info("# [DAG Loader] Step 09. Extract node's customized result set")
             custom_result_meta = self.extract_custom_result_meta_service(wf_edges_meta)

@@ -48,6 +48,11 @@ def getRecipeDir(section='DAG'):
 
 def getRecipeFile(section='DAG'):
     conf = getConfig()
+    fileName = conf.get(section, 'prompt_dag_file')
+    return fileName
+
+def getPromptRecipeFile(section='DAG'):
+    conf = getConfig()
     fileName = conf.get(section, 'dag_file')
     return fileName
 
