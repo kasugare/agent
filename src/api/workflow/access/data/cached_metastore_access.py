@@ -5,6 +5,7 @@ from typing import Dict, List, Any
 from copy import deepcopy
 import threading
 
+
 class CachedMetastoreAccess:
     def __init__(self, logger):
         self._logger = logger

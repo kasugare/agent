@@ -5,7 +5,7 @@ from .prompt_template import PromptTemplateEngine
 
 
 class RagPrompt:
-    def __init__(self, logger, asset_info={}):
+    def __init__(self, logger, hdfs_addr, hdfs_id, asset_info={}):
         self._logger = logger
         self._set_asset(**asset_info)
 
