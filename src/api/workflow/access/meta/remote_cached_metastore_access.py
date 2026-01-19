@@ -10,9 +10,13 @@ from common.dependancy import get_redis_client
 
 
 class RemoteCachedMetastoreAccess(RedisAccess):
-    def __init__(self, logger):
+    def __init__(self, logger, wf_id, ses_id, req_id):
         super().__init__(logger)
         self._cache_key = None
+
+        self._wf_id = wf_id
+        self._ses_id = ses_id
+        self._req_id = req_id
 
     def set_cache_key_access(self, wf_key):
         self._cache_key = f'{wf_key}.metapool'
@@ -92,11 +96,10 @@ class RemoteCachedMetastoreAccess(RedisAccess):
     def set_edges_param_map_access(self, edges_param_map: dict) -> None:
         self.hset(key=self._cache_key, mapping={'edges_param_map': json.dumps(edges_param_map)})
 
-    def set_custom_result_meta_access(self, custom_result_meta: Dict) -> None:
-        self.hset(key=self._cache_key, mapping={'custom_result_meta': json.dumps(custom_result_meta)})
-
     def get_edges_param_map_access(self) -> List:
         return self.hget(key=self._cache_key, field='edges_param_map')
 
     def get_dag_access(self) -> List:
         return self.hget(key=self._cache_key, field='dag')
+
+

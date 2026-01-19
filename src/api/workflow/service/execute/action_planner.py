@@ -3,14 +3,14 @@
 
 from api.workflow.error_pool.error import InvalidInputException
 from api.workflow.error_pool.error import NotDefinedWorkflowMetaException
+from api.workflow.service.task.task_load_service import TaskLoadService
 
 
 class ActionPlanningService:
-    def __init__(self, logger, datastore, metastore, taskstore):
+    def __init__(self, logger, datastore):
         self._logger = logger
         self._datastore = datastore
-        self._metastore = metastore
-        self._taskstore = taskstore
+        self._taskstore = TaskLoadService(logger, datastore)
 
     def _gen_task_graph_for_from(self, base_graph, from_service_id, count=0):
         count += 1
@@ -106,16 +106,31 @@ class ActionPlanningService:
         act_forward_graph = self._cvt_service_range(from_service_id, to_service_id)
         return act_forward_graph
 
-    def gen_action_backward_graph_service(self, foreward_graph):
-        act_backward_graph = self._metastore.reverse_forward_graph_service(foreward_graph)
+    def gen_action_backward_graph_service(self, forward_graph):
+        # act_backward_graph = self._metastore.reverse_forward_graph_service(forward_graph)
+        act_backward_graph = dict()
+        for service_id, target_list in forward_graph.items():
+            for forward_service_id in target_list:
+                if forward_service_id in act_backward_graph.keys():
+                    act_backward_graph[forward_service_id].append(service_id)
+                else:
+                    act_backward_graph[forward_service_id] = [service_id]
         return act_backward_graph
 
     def gen_start_nodes_service(self, forward_graph):
-        act_start_nodes = self._metastore.find_start_nodes_service(forward_graph)
+        # act_start_nodes = self._metastore.find_start_nodes_service(forward_graph)
+        all_nodes = set(forward_graph.keys())
+        reachable_nodes = set()
+        for node in forward_graph:
+            reachable_nodes.update(forward_graph[node])
+        act_start_nodes = all_nodes - reachable_nodes
+        sorted(list(act_start_nodes))
         return act_start_nodes
 
     def gen_end_nodes_service(self, backward_graph):
-        act_end_nodes = self._metastore.find_end_nodes_service(backward_graph)
+        # act_end_nodes = self._metastore.find_end_nodes_service(backward_graph)
+        act_end_nodes = self.find_start_nodes_ctl(backward_graph)
+        sorted(list(act_end_nodes))
         return act_end_nodes
 
     def gen_action_edges_param_map(self, start_nodes, request_params):
@@ -154,7 +169,6 @@ class ActionPlanningService:
     def _vaild_params(self, act_start_nodes, params):
         action_meta_pack = self._datastore.get_meta_pack_service()
         service_pool = action_meta_pack.get('service_pool')
-        data_pool = self._datastore.get_service_data_pool_service()
         for act_start_node in act_start_nodes:
             service_node = service_pool.get(act_start_node)
             node_params = service_node.get('params')
@@ -166,7 +180,6 @@ class ActionPlanningService:
                     param_name = node_param.get('key')
                     if is_required:
                         raise InvalidInputException
-
 
     def gen_action_meta_pack(self, start_node, end_node, params):
         try:

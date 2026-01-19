@@ -7,17 +7,22 @@ import threading
 
 
 class CachedMetastoreAccess:
-    def __init__(self, logger):
+    def __init__(self, logger, wf_id, ses_id, req_id):
         self._logger = logger
         self._thread_lock = threading.Lock()
-
         self._dag_meta = {}
         self._edge_map = {}
 
+        self._project_id = None
+        self._workflow_id = None
+
         self._wf_meta = {}
         self._wf_comm_meta = {}
+        self._wf_env_pool = {}
         self._wf_nodes_meta = {}
         self._wf_node_service_pool = {}
+        self._wf_nodes_env_value_map_pool = {}
+        self._wf_nodes_asset_value_map_pool = {}
         self._wf_edges_meta = []
         self._wf_custom_result_meta = {}
         self._wf_forward_edge_graph = {}
@@ -45,6 +50,20 @@ class CachedMetastoreAccess:
         self._start_nodes.clear()
         self._end_nodes.clear()
         self._edges_param_map.clear()
+        self._wf_nodes_env_value_map_pool.clear()
+        self._wf_nodes_asset_value_map_pool.clear()
+
+    def set_project_id_access(self, project_id):
+        self._project_id = project_id
+
+    def get_project_id_access(self):
+        return self._project_id
+
+    def set_workflow_id_access(self, workflow_id):
+        self._workflow_id = workflow_id
+
+    def get_workflow_id_access(self):
+        return self._workflow_id
 
     def set_wf_meta_access(self, wf_meta: Dict) -> None:
         self._wf_meta = deepcopy(wf_meta)
@@ -135,3 +154,26 @@ class CachedMetastoreAccess:
     def get_end_nodes_meta_access(self) -> List:
         return deepcopy(self._end_nodes)
 
+    # New
+    def set_env_pool_access(self, wf_env_pool):
+        self._wf_env_pool = wf_env_pool
+
+    # New
+    def get_env_pool_access(self) -> Dict:
+        return deepcopy(self._wf_env_pool)
+
+    # NEW
+    def set_nodes_env_value_map_access(self, wf_nodes_env_value_map_pool) -> None:
+        self._wf_nodes_env_value_map_pool = wf_nodes_env_value_map_pool
+
+    # NEW
+    def get_nodes_env_value_map_access(self):
+        return deepcopy(self._wf_nodes_env_value_map_pool)
+
+    # NEW
+    def set_nodes_asset_value_map_access(self, wf_nodes_asset_value_map_pool) -> None:
+        self._wf_nodes_asset_value_map_pool = wf_nodes_asset_value_map_pool
+
+    # NEW
+    def get_nodes_asset_value_map_access(self):
+        return deepcopy(self._wf_nodes_asset_value_map_pool)

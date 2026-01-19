@@ -22,8 +22,8 @@ class ResCallDataClear(BaseModel):
 
 
 class ReqCallChainedModelService(BaseModel):
-    from_node: Optional[Annotated[str | None, Field(description='from')]] = None
-    to_node: Optional[Annotated[str | None, Field(description='to')]] = None
+    # from_node: Optional[Annotated[str | None, Field(description='from')]] = None
+    # to_node: Optional[Annotated[str | None, Field(description='to')]] = None
     parameter: Annotated[Dict[str, Any], Field(description='')]
 
 

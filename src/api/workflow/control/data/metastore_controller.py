@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 from api.workflow.control.meta.metastore_access_controller import MetastoreAccessController
 from api.workflow.access.meta.meta_file_access import MetaFileAccess
 from typing import Dict
@@ -7,11 +8,12 @@ import threading
 
 
 class MetastoreController:
-    def __init__(self, logger):
+    def __init__(self, logger, wf_id, ses_id, req_id):
         self._logger = logger
         self._thread_lock = threading.Lock()
+
         self._meta_file_access = MetaFileAccess(logger)
-        self._metastore_access_controller = MetastoreAccessController(logger)
+        self._metastore_access_controller = MetastoreAccessController(logger, wf_id, ses_id, req_id)
         self._metastore_access = self._metastore_access_controller.get_meta_access_instance()
 
     def set_cache_key_ctl(self, wf_key):
@@ -40,11 +42,22 @@ class MetastoreController:
         return wf_meta
 
     def set_comm_meta_ctl(self, wf_comm_meta):
+        project_id = wf_comm_meta.get('proj_id')
+        workflow_id = wf_comm_meta.get('wf_id')
+        self._metastore_access.set_project_id_access(project_id)
+        self._metastore_access.set_workflow_id_access(workflow_id)
         self._metastore_access.set_comm_meta_access(wf_comm_meta)
 
     def get_comm_meta_ctl(self):
         wf_comm_meta = self._metastore_access.get_comm_meta_access()
         return wf_comm_meta
+
+    def set_env_pool_ctl(self, wf_env_pool):
+        self._metastore_access.set_env_pool_access(wf_env_pool)
+
+    def get_env_pool_ctl(self):
+        wf_env_pool = self._metastore_access.get_env_pool_access()
+        return wf_env_pool
 
     def set_nodes_meta_ctl(self, wf_nodes_meta):
         self._metastore_access.set_nodes_meta_access(wf_nodes_meta)
@@ -66,6 +79,20 @@ class MetastoreController:
     def get_edges_meta_ctl(self):
         wf_edges_meta = self._metastore_access.get_edges_meta_access()
         return wf_edges_meta
+
+    def set_nodes_env_value_map_ctl(self, wf_nodes_env_map_pool):
+        self._metastore_access.set_nodes_env_value_map_access(wf_nodes_env_map_pool)
+
+    def get_nodes_env_value_map_ctl(self):
+        wf_nodes_env_map_pool = self._metastore_access.get_nodes_env_value_map_access()
+        return wf_nodes_env_map_pool
+
+    def set_nodes_asset_value_map_ctl(self, wf_nodes_asset_map_pool):
+        self._metastore_access.set_nodes_asset_value_map_access(wf_nodes_asset_map_pool)
+
+    def get_nodes_asset_value_map_ctl(self):
+        wf_nodes_asset_map_pool = self._metastore_access.get_nodes_asset_value_map_access()
+        return wf_nodes_asset_map_pool
 
     def get_edge_meta_by_edge_id_ctl(self, edge_id):
         wf_edges_meta = self.get_edges_meta_ctl()
@@ -119,6 +146,8 @@ class MetastoreController:
 
     def get_metas_ctl(self):
         meta_pack = {
+            "project_id": self._metastore_access.get_project_id_access(),
+            "workflow_id": self._metastore_access.get_workflow_id_access(),
             "start_nodes": self._metastore_access.get_start_nodes_meta_access(),
             "end_nodes": self._metastore_access.get_end_nodes_meta_access(),
             "nodes_info": self._metastore_access.get_nodes_meta_access(),
@@ -128,7 +157,10 @@ class MetastoreController:
             "forward_edge_graph": self._metastore_access.get_forward_edges_graph_meta_access(),
             "forward_graph": self._metastore_access.get_forward_graph_meta_access(),
             "backward_graph": self._metastore_access.get_backward_graph_meta_access(),
-            'edges_param_map': self._metastore_access.get_edges_param_map_access()
+            "edges_param_map": self._metastore_access.get_edges_param_map_access(),
+            "env_pool": self._metastore_access.get_env_pool_access(),
+            "nodes_env_value_map": self._metastore_access.get_nodes_env_value_map_access(),
+            "nodes_asset_value_map": self._metastore_access.get_nodes_asset_value_map_access(),
         }
         return meta_pack
 

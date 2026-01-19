@@ -11,7 +11,6 @@ class HeaderModel(BaseModel):
     session_id: str
 
 
-
 async def get_headers(
         request_id: Annotated[str | None, Header(..., alias="request-id", convert_underscores=False)] = None,
         session_id: Annotated[str | None, Header(..., alias="session-id", convert_underscores=False)] = None

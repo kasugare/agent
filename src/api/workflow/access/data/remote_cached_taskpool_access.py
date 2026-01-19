@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from redis import Redis
-from fastapi import Depends
-from common.dependancy import get_redis_client
 from api.workflow.common.redis.redis_access import RedisAccess
 
 

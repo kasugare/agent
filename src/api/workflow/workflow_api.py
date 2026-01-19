@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from api.workflow.service.meta.meta_load_service import MetaLoadService
+from common.conf_serving import getWorkflowId
+from api.workflow.data_pool.service_pool import ServicePool
+from api.workflow.data_pool.meta_service_pool import MetaServicePool
+from api.workflow.service.meta.auto_meta_loader import AutoMetaLoader
+from api.workflow.service.meta.wf_meta_parser import WorkflowMetaParser
 from api.workflow.service.meta.prompt_meta_generator import PromptMetaGenerator
-from api.workflow.service.data.data_store_service import DataStoreService
-from api.workflow.service.task.task_load_service import TaskLoadService
 from api.workflow.service.execute.workflow_executor import WorkflowExecutor
 from api.workflow.service.stream.web_stream_connection_manager import WSConnectionManager
 from api.workflow.service.stream.web_stream_handler import WebStreamHandler
@@ -46,11 +48,13 @@ class WorkflowEngine(BaseRouter):
     def __init__(self, logger, db_conn=None):
         super().__init__(logger, tags=['Workflow Engine'])
         self._job_Q = Queue()
-        self._datastore = DataStoreService(logger)
-        self._taskstore = TaskLoadService(logger, self._datastore)
-        self._metastore = MetaLoadService(logger, self._datastore)
-        self._workflow_executor = WorkflowExecutor(logger, self._datastore, self._metastore, self._taskstore, self._job_Q)
         self._ws_manager = WSConnectionManager(logger)
+        self._meta_service_pool = MetaServicePool(logger)
+        self._run_auto_meta_loader()
+
+    def _run_auto_meta_loader(self):
+        auto_meta_loader = AutoMetaLoader(self._logger, self._meta_service_pool)
+
 
     def setup_routes(self):
         @self.router.post(path='/workflow/meta', response_model=BaseResponse[schema.ResCreateWorkflow])
@@ -60,10 +64,26 @@ class WorkflowEngine(BaseRouter):
             self._logger.info("################################################################")
             request_id = headers.request_id
             wf_meta = request.meta
+            # self._metaloader.change_wf_meta(wf_meta, request_id)
             if not wf_meta:
                 self._logger.warn("InvalidInputException: invalid workflow meta")
                 raise InvalidInputException(err_detail="Invalid workflow meta")
-            self._metastore.change_wf_meta(wf_meta, request_id)
+            meta_loader = WorkflowMetaParser(self._logger)
+            meta_loader.set_meta(wf_meta, request_id)
+            meta_pack = meta_loader.get_meta_pack()
+            if meta_pack:
+                wf_id = meta_pack.get('workflow_id')
+                self._store_map[wf_id] = {
+                    "meta_pack": meta_pack,
+                    "session": {
+                        "{session_id}": {
+                            "{req_id}": {
+                                "io_pool": {},
+                                "task_pool": {}
+                            }
+                        }
+                    }
+                }
             return {}
 
         @self.router.post(path='/workflow/prompt', response_model=BaseResponse[dict[str, Any]])
@@ -73,51 +93,9 @@ class WorkflowEngine(BaseRouter):
             self._logger.info("################################################################")
             request_id = headers.request_id
             params = request.meta
-            """
-            params = {
-                "prompt_info": {
-                    "params_info": {
-                        "prompt_templates": [
-                            {
-                                "key": "system",
-                                "value": "당신은 전문 리서치 분석가입니다. 주어진 검색 결과를 기반으로 연구 보고서를 작성하세요. 검색 결과에 없는 내용은 절대 추측하지 말고 '문서에 언급되지 않았습니다'라고 명시하세요. 검색 결과에 있는 내용은 메타데이터를 이용해 출처를 명시하세요"
-                            },
-                            {
-                                "key": "user",
-                                "value": "다음 검색 결과를 바탕으로 {{query}} 에 대한 연구 보고서를 작성해줘. 검색결과 : {{context}}"
-                            }
-                        ],
-                        "prompt_context": [
-                            {
-                                "key": "query",
-                                "value": "query_value"
-                            },
-                            {
-                                "key": "context",
-                                "value": "context_value"
-                            }
-                        ]
-                    }
-                },
-                "model_info": {
-                    "asset_info": {
-                        "model_id": "MODID_FKDSAHI09321FSDAJ",
-                        "model_name": "/model-repo/gemma-3-4b-it",
-                        "base_url": "http://10.167.128.214:30804/v1",
-                        "llm_type": "openai",
-                        "api_key": "test_api"
-                    },
-                    "params_info": {
-                        "temperature": 0.5,
-                        "max_tokens": 512
-                    }
-                },
-                "query": "질의"
-            }
-            """
             prompt_meta_generator = PromptMetaGenerator(self._logger)
             wf_meta_template = prompt_meta_generator.gen_prompt_meta_data(params)
-            self._metastore.change_wf_meta(wf_meta_template, request_id)
+            self._metaloader.change_wf_meta(wf_meta_template, request_id)
             response = {}
             try:
                 result = self._workflow_executor.run_workflow(params)
@@ -151,8 +129,39 @@ class WorkflowEngine(BaseRouter):
             try:
                 # current_wf_meta = self._datastore.get_wf_meta_service()
                 # self._datastore.clear()
-                # self._metastore.change_wf_meta(current_wf_meta, "run")
+                # self._metaloader.change_wf_meta(current_wf_meta, "run")
+                req_id = headers.request_id
+                session_id = headers.session_id
                 result = self._workflow_executor.run_workflow(params, start_node, end_node)
+                response = {
+                    "result": result
+                }
+            except NotDefinedWorkflowMetaException as e:
+                raise NotDefinedMetaException(err_detail="Not defined workflow meta")
+            except AttributeError as e:
+                raise InvalidInputException(err_detail="Not defined node_id(s)")
+            except Exception as e:
+                self._logger.error(e)
+            return response
+
+        @self.router.post(path='/workflow/inference', response_model=BaseResponse[dict[str, Any]])
+        async def call_chained_model_service(headers: HeaderModel = Depends(get_headers), request: schema.ReqCallChainedModelService = ...):
+            # REQ: HEADER {request_id, session_id}, BODY: {from(opt), to(opt), question: "질의"}
+            self._logger.info("################################################################")
+            self._logger.info("#                        < INFERENCE >                         #")
+            self._logger.info("################################################################")
+
+            params = request.parameter
+            response = {}
+            try:
+                req_id = headers.request_id
+                session_id = headers.session_id
+                wf_id = getWorkflowId()
+                if not session_id:
+                    session_id = req_id
+
+                workflow_executor = WorkflowExecutor(self._logger, self._datastore, self._job_Q)
+                result = workflow_executor.run_workflow(params)
                 response = {
                     "result": result
                 }
@@ -169,7 +178,7 @@ class WorkflowEngine(BaseRouter):
             self._logger.info("################################################################")
             self._logger.info("#                         < Meta Pack >                        #")
             self._logger.info("################################################################")
-            meta_pack = self._datastore.get_meta_pack_service()
+            meta_pack = self._metaloader.get_meta_pack()
             for k, v in meta_pack.items():
                 self._logger.debug(f" - {k} : \t{v}")
             return meta_pack
@@ -220,6 +229,7 @@ class WorkflowEngine(BaseRouter):
             for task_id, task_obj in act_task_map.items():
                 self._logger.info(f" - {task_id}")
                 service_id = task_obj.get_service_id()
+
                 state = task_obj.get_state()
                 env = task_obj.get_env_params()
                 params = task_obj.get_params()
@@ -246,5 +256,5 @@ class WorkflowEngine(BaseRouter):
             connection_id = str(uuid.uuid4())
 
             await self._ws_manager.connect(websocket, connection_id)
-            stream_handler = WebStreamHandler(self._logger, self._ws_manager, self._datastore, self._metastore, self._taskstore)
+            stream_handler = WebStreamHandler(self._logger, self._ws_manager, self._datastore)
             await stream_handler.run_stream(connection_id)

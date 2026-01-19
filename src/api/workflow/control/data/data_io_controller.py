@@ -5,13 +5,14 @@ from api.workflow.access.data.cached_io_data_access import CachedIODataAccess
 from api.workflow.control.data.data_io_access_controller import DataIOAccessController
 from api.workflow.error_pool.error import NotExistedData
 
-class DataIoController:
-    _instance = None
 
-    def __new__(cls, *args, **kwargs):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
+class DataIoController:
+    # _instance = None
+    #
+    # def __new__(cls, *args, **kwargs):
+    #     if cls._instance is None:
+    #         cls._instance = super().__new__(cls)
+    #     return cls._instance
 
     def __init__(self, logger):
         self._logger = logger
@@ -123,7 +124,7 @@ class DataIoController:
         for io_key, io_value in data_pool.items():
             if io_key == value_id:
                 return io_value
-            elif io_key[0] in ["I","O"] and io_key[2:] == value_id:
+            elif io_key[0] in ["I", "O"] and io_key[2:] == value_id:
                 return io_value
         return None
 

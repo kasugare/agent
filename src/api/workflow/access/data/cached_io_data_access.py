@@ -8,10 +8,9 @@ import threading
 
 
 class CachedIODataAccess:
-    def __init__(self, logger):
+    def __init__(self, logger, cache_key=None):
         self._logger = logger
-        self._cache_key = None
-
+        self._cache_key = cache_key
         self._thread_lock = threading.Lock()
         self._data_pool = {}
 

@@ -119,6 +119,7 @@ class BaseHandler:
     def _set_db_conn(self):
         dbConn = None
         dbContext = getAiLandContext()
+        print(dbContext)
 
         try:
             dbConn = pymysql.connect(host=dbContext['host']

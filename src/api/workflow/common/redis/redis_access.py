@@ -7,10 +7,21 @@ import json
 
 
 class RedisAccess:
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
     def __init__(self, logger):
         self._logger = logger
         # self._redis_client = redis_client
-        self._redis_client = redis.Redis(host='127.0.0.1', port='16379', decode_responses=True)
+        self._redis_client = redis.Redis(host='127.0.0.1', port='16379', decode_responses=True, dn=0)
+
+    def __del__(self):
+        if self._redis_client:
+            self._redis_client.close()
 
     def hset(self, key: str, mapping: Dict) -> None:
         try:

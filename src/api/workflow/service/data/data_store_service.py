@@ -1,38 +1,38 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from api.workflow.error_pool.error import NotPreparedPrevJob
 from api.workflow.control.data.type_transfer import DataTypeTransfer
 from api.workflow.control.data.data_io_controller import DataIoController
-from api.workflow.control.data.metastore_controller import MetastoreController
 from api.workflow.control.data.task_pool_controller import TaskPoolController
 from typing import Dict, Any
+
 
 class DataStoreService:
     def __init__(self, logger):
         self._logger = logger
-        self._type_casting = DataTypeTransfer(logger)
         self._data_controller = DataIoController(logger)
-        self._metastore_controller = MetastoreController(logger)
         self._taskpool_controller = TaskPoolController(logger)
+
+    def set_init_values(self, meta_pack):
+        wf_edges_meta = meta_pack.get('edges_info')
+        self.set_init_service_params_service(wf_edges_meta)
+
+        wf_env_value_map = meta_pack.get('nodes_env_value_map')
+        self.set_init_nodes_env_params_service(wf_env_value_map)
+
+        wf_asset_value_map = meta_pack.get('nodes_env_value_map')
+        self.set_init_nodes_asset_params_service(wf_asset_value_map)
 
     def clear(self):
         self._data_controller.clear_ctl()
         self._taskpool_controller.clear_ctl()
-        self._metastore_controller.clear_ctl()
 
     def clear_data(self):
         self._data_controller.clear_ctl()
         self._taskpool_controller.clear_ctl()
 
-
     def set_cache_key_service(self, wf_key):
         self._data_controller.set_cache_key_ctl(wf_key)
-        self._metastore_controller.set_cache_key_ctl(wf_key)
-
-    def _extract_param_name(self, key_path):
-        param_name = key_path.split('.')[-1]
-        return param_name
 
     def set_init_nodes_env_params_service(self, nodes_env_value_map):
         self._data_controller.set_init_nodes_env_params_ctl(nodes_env_value_map)
@@ -80,101 +80,6 @@ class DataStoreService:
         data_pool = self.get_service_data_pool_service()
         service_node_info = data_pool.get(service_id)
         return service_node_info
-
-    def set_wf_meta_service(self, wf_meta):
-        self._metastore_controller.set_wf_meta_ctl(wf_meta)
-
-    def get_wf_meta_service(self):
-        wf_meta = self._metastore_controller.get_wf_meta_ctl()
-        return wf_meta
-
-    def set_comm_meta_service(self, wf_comm_meta):
-        project_id = wf_comm_meta.get('proj_id')
-        workflow_id = wf_comm_meta.get('wf_id')
-        wf_key = f"{project_id}-{workflow_id}"
-        self.set_cache_key_service(wf_key)
-        self._metastore_controller.set_comm_meta_ctl(wf_comm_meta)
-
-    def get_comm_meta_service(self):
-        wf_comm_meta = self._metastore_controller.get_comm_meta_ctl()
-        return wf_comm_meta
-
-    def set_nodes_meta_service(self, wf_nodes_meta):
-        self._metastore_controller.set_nodes_meta_ctl(wf_nodes_meta)
-
-    def set_node_service_pool_service(self, wf_service_pool):
-        self._metastore_controller.set_node_service_pool_ctl(wf_service_pool)
-
-    def get_node_service_pool_service(self):
-        service_pool = self._metastore_controller.get_node_service_pool_ctl()
-        return service_pool
-
-    def set_edges_meta_service(self, wf_edges_meta):
-        self._metastore_controller.set_edges_meta_ctl(wf_edges_meta)
-
-    def get_edges_meta_service(self):
-        wf_edges_meta = self._metastore_controller.get_edges_meta_ctl()
-        return wf_edges_meta
-
-    def get_edge_info_by_edge_id(self, edge_id):
-        wf_edge_meta = self._metastore_controller.get_edge_meta_by_edge_id_ctl(edge_id)
-        return wf_edge_meta
-
-    def set_custom_result_meta_service(self, custom_result_meta):
-        self._metastore_controller.set_custom_result_meta_ctl(custom_result_meta)
-
-    def get_custom_result_meta_service(self):
-        custom_result_meta = self._metastore_controller.get_custom_result_meta_ctl()
-        return custom_result_meta
-
-    def get_custom_result_meta_by_service_id_service(self, service_id):
-        custom_result_meta = self._metastore_controller.get_custom_result_meta_by_service_id_ctl(service_id)
-        return custom_result_meta
-
-    def set_forward_edge_graph_meta_service(self, wf_forward_edge_edge_graph):
-        self._metastore_controller.set_forward_edge_graph_meta_ctl(wf_forward_edge_edge_graph)
-
-    def set_forward_graph_meta_service(self, wf_forward_edge_graph):
-        self._metastore_controller.set_forward_graph_meta_ctl(wf_forward_edge_graph)
-
-    def get_forward_graph_meta_service(self):
-        return self._metastore_controller.get_forward_graph_meta_ctl()
-
-    def set_backward_graph_meta_service(self, wf_backward_edge_graph):
-        self._metastore_controller.set_backward_graph_meta_ctl(wf_backward_edge_graph)
-
-    def get_backward_graph_meta_service(self):
-        return self._metastore_controller.get_backward_graph_meta_ctl()
-
-    def set_resources_meta_service(self, wf_resources_meta):
-        self._metastore_controller.set_resources_meta_ctl(wf_resources_meta)
-
-    def set_start_nodes_meta_service(self, start_nodes):
-        self._metastore_controller.set_start_nodes_meta_ctl(start_nodes)
-
-    def get_start_nodes_meta_service(self):
-        self._metastore_controller.get_start_nodes_meta_ctl()
-
-    def set_end_nodes_meta_service(self, end_nodes):
-        self._metastore_controller.set_end_nodes_meta_ctl(end_nodes)
-
-    def set_edges_param_map_service(self, service_params_map):
-        self._metastore_controller.set_edges_param_map_ctl(service_params_map)
-
-    def get_edges_param_map_service(self):
-        edges_param_map = self._metastore_controller.get_edges_param_map_ctl()
-        return edges_param_map
-
-    def get_meta_pack_service(self) -> Dict:
-        meta_pack = self._metastore_controller.get_metas_ctl()
-        return meta_pack
-
-    def set_wf_meta_file_service(self, wf_meta: Dict, dirpath: str = None, filename: str = None) -> None:
-        self._metastore_controller.save_wf_meta_on_file(wf_meta, dirpath, filename)
-
-    def get_wf_meta_file_service(self, dirpath: str = None, filename: str = None) -> Dict:
-        wf_meta = self._metastore_controller.load_wf_meta_on_file()
-        return wf_meta
 
     def set_task_map_service(self, task_map):
         self._taskpool_controller.set_task_map_control(task_map)
