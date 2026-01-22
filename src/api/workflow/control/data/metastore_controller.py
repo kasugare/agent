@@ -8,16 +8,16 @@ import threading
 
 
 class MetastoreController:
-    def __init__(self, logger, wf_id, ses_id, req_id):
+    def __init__(self, logger, wf_id):
         self._logger = logger
         self._thread_lock = threading.Lock()
 
         self._meta_file_access = MetaFileAccess(logger)
-        self._metastore_access_controller = MetastoreAccessController(logger, wf_id, ses_id, req_id)
+        self._metastore_access_controller = MetastoreAccessController(logger, wf_id)
         self._metastore_access = self._metastore_access_controller.get_meta_access_instance()
 
-    def set_cache_key_ctl(self, wf_key):
-        self._metastore_access.set_cache_key_access(wf_key)
+    def set_cache_key_ctl(self, wf_id):
+        self._metastore_access.set_cache_key_access(wf_id)
 
     def clear_ctl(self):
         self._metastore_access.clear_access()

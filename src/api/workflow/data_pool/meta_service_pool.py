@@ -28,5 +28,12 @@ class MetaServicePool(ServicePool):
         metastore_service = self.get_service_instance(workflow_id)
         return metastore_service
 
+    def get_keys(self):
+        service_keys = self.get_service_keys()
+        return service_keys
+
+    def get_service_map(self):
+        return self.get_service_pool()
+
     def del_metastore(self, workflow_id):
         self.del_service_instance(workflow_id)

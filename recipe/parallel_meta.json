@@ -4,7 +4,7 @@
 	"metadata": {
 		"project_id": "PARALLELWF_01",
 		"workflow_id": "PARALLELWF_WF_001",
-		"version": "1.0",
+		"version": "1.1",
 		"type": "RAG"
 	},
 	"environments": [

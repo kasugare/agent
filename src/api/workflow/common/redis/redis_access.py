@@ -16,8 +16,7 @@ class RedisAccess:
 
     def __init__(self, logger):
         self._logger = logger
-        # self._redis_client = redis_client
-        self._redis_client = redis.Redis(host='127.0.0.1', port='16379', decode_responses=True, dn=0)
+        self._redis_client = redis.Redis(host='127.0.0.1', port=6379, decode_responses=True, db=0)
 
     def __del__(self):
         if self._redis_client:
@@ -25,8 +24,15 @@ class RedisAccess:
 
     def hset(self, key: str, mapping: Dict) -> None:
         try:
+            ttl_seconds = 0
             serializable_mapping = {k: str(v) for k, v in mapping.items()}
             self._redis_client.hset(name=key, mapping=serializable_mapping)
+            if ttl_seconds > 0:
+                self._redis_client.expire(key, ttl_seconds)
+            # pipe = self._redis_client.pipeline()
+            # pipe.hset(name=key, mapping=serializable_mapping)
+            # pipe.expire(key, ttl_seconds)
+            # pipe.execute()
         except Exception as e:
             self._logger.error(f"Redis HSET failed: {e}")
 
@@ -35,7 +41,13 @@ class RedisAccess:
             data = self._redis_client.hget(key, field)
             if data is None:
                 return []
-            return json.loads(data)
+            result = None
+            try:
+                result = json.loads(data)
+            except Exception as e:
+                if isinstance(data, str) and len(data) > 0:
+                    result = data
+            return result
         except Exception as e:
             self._logger.error(f"Redis HGET failed: {e}")
 

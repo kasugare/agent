@@ -213,7 +213,9 @@ class WorkflowExecutionOrchestrator:
                 result_name = schema['key']
                 result_map[result_name] = result
 
-        custom_result_meta = self._datastore.get_custom_result_meta_by_service_id_service(service_id)
+        custom_result_info = self._meta_pack.get('custom_result_meta', {})
+        custom_result_meta = custom_result_info.get(service_id)
+        # custom_result_meta = self._metastore.get_custom_result_meta_by_service_id_service(service_id)
         if custom_result_meta:
             for result_meta in custom_result_meta:
                 refer_type = result_meta.get('refer_type')
@@ -277,7 +279,7 @@ class WorkflowExecutionOrchestrator:
         status_message = SYS_NODE_STATUS(request_id, node_id, service_name, status, int(time.time()),
                             params=task_params, results=task_results, envs=task_envs, error=task_error)
         self._stream_Q.put_nowait(status_message)
-        time.sleep(0.1)
+        time.sleep(0.01)
 
     def _timeout(self, timeout):
         time.sleep(timeout)
@@ -331,7 +333,6 @@ class WorkflowExecutionOrchestrator:
                     if runnable:
                         env_params = self._get_envs(service_id)
                         task.set_env_params(env_params)
-
                         asset_params = self._get_assets(service_id)
                         task.set_asset_params(asset_params)
                         task_role = task.get_role()

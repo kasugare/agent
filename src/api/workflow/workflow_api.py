@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from common.conf_serving import getWorkflowId
-from api.workflow.data_pool.service_pool import ServicePool
 from api.workflow.data_pool.meta_service_pool import MetaServicePool
+from api.workflow.data_pool.data_service_pool import DataServicePool
 from api.workflow.service.meta.auto_meta_loader import AutoMetaLoader
 from api.workflow.service.meta.wf_meta_parser import WorkflowMetaParser
 from api.workflow.service.meta.prompt_meta_generator import PromptMetaGenerator
@@ -21,6 +21,7 @@ from abc import abstractmethod
 from typing import Any
 import api.workflow.protocol.workflow_schema as schema
 import uuid
+import time
 
 
 class BaseRouter:
@@ -50,11 +51,9 @@ class WorkflowEngine(BaseRouter):
         self._job_Q = Queue()
         self._ws_manager = WSConnectionManager(logger)
         self._meta_service_pool = MetaServicePool(logger)
-        self._run_auto_meta_loader()
-
-    def _run_auto_meta_loader(self):
+        self._data_service_pool = DataServicePool(logger)
         auto_meta_loader = AutoMetaLoader(self._logger, self._meta_service_pool)
-
+        auto_meta_loader.init_workflow_meta()
 
     def setup_routes(self):
         @self.router.post(path='/workflow/meta', response_model=BaseResponse[schema.ResCreateWorkflow])
@@ -63,27 +62,25 @@ class WorkflowEngine(BaseRouter):
             self._logger.info("#                         < Set Meta >                         #")
             self._logger.info("################################################################")
             request_id = headers.request_id
-            wf_meta = request.meta
-            # self._metaloader.change_wf_meta(wf_meta, request_id)
-            if not wf_meta:
+            new_wf_meta = request.meta
+
+            if not request_id:
+                request_id = format(int(time.time() * 100000), "X")
+
+            if not new_wf_meta:
                 self._logger.warn("InvalidInputException: invalid workflow meta")
                 raise InvalidInputException(err_detail="Invalid workflow meta")
-            meta_loader = WorkflowMetaParser(self._logger)
-            meta_loader.set_meta(wf_meta, request_id)
-            meta_pack = meta_loader.get_meta_pack()
-            if meta_pack:
-                wf_id = meta_pack.get('workflow_id')
-                self._store_map[wf_id] = {
-                    "meta_pack": meta_pack,
-                    "session": {
-                        "{session_id}": {
-                            "{req_id}": {
-                                "io_pool": {},
-                                "task_pool": {}
-                            }
-                        }
-                    }
-                }
+
+            meta_paraser = WorkflowMetaParser(self._logger)
+            new_meta_pack = meta_paraser.parse_wf_meta(new_wf_meta)
+            wf_id = new_meta_pack.get('workflow_id')
+
+            metastore = self._meta_service_pool.get_metastore(wf_id)
+            if metastore:
+                metastore.update_wf_meta(new_meta_pack, request_id)
+            else:
+                _, metastore = self._meta_service_pool.create_pool(wf_id)
+                metastore.set_wf_meta(new_meta_pack, request_id)
             return {}
 
         @self.router.post(path='/workflow/prompt', response_model=BaseResponse[dict[str, Any]])
@@ -95,10 +92,21 @@ class WorkflowEngine(BaseRouter):
             params = request.meta
             prompt_meta_generator = PromptMetaGenerator(self._logger)
             wf_meta_template = prompt_meta_generator.gen_prompt_meta_data(params)
-            self._metaloader.change_wf_meta(wf_meta_template, request_id)
+            meta_paraser = WorkflowMetaParser(self._logger)
+            new_meta_pack = meta_paraser.parse_wf_meta(wf_meta_template)
+            wf_id = new_meta_pack.get('workflow_id')
+
+            metastore = self._meta_service_pool.get_metastore(wf_id)
+            if metastore:
+                metastore.update_wf_meta(new_meta_pack, request_id)
+            else:
+                _, metastore = self._meta_service_pool.create_pool(wf_id)
+                metastore.set_wf_meta(new_meta_pack, request_id)
+
             response = {}
             try:
-                result = self._workflow_executor.run_workflow(params)
+                workflow_executor = WorkflowExecutor(self._logger, self._datastore, self._job_Q)
+                result = workflow_executor.run_workflow(params)
                 response = {
                     "result": result
                 }
@@ -125,14 +133,16 @@ class WorkflowEngine(BaseRouter):
             self._logger.info("#                            < RUN >                           #")
             self._logger.info("################################################################")
             start_node, end_node, params = request.from_node, request.to_node, request.parameter
+            wf_id = request.wf_id
             response = {}
             try:
-                # current_wf_meta = self._datastore.get_wf_meta_service()
-                # self._datastore.clear()
-                # self._metaloader.change_wf_meta(current_wf_meta, "run")
                 req_id = headers.request_id
                 session_id = headers.session_id
-                result = self._workflow_executor.run_workflow(params, start_node, end_node)
+
+                metastore = self._meta_service_pool.get_metastore(wf_id)
+                datastore = self._data_service_pool.create_pool(wf_id, session_id, req_id)
+                workflow_executor = WorkflowExecutor(self._logger, metastore, datastore, self._job_Q)
+                result = workflow_executor.run_workflow(params, start_node, end_node)
                 response = {
                     "result": result
                 }
@@ -154,13 +164,16 @@ class WorkflowEngine(BaseRouter):
             params = request.parameter
             response = {}
             try:
-                req_id = headers.request_id
+                # req_id = headers.request_id
+                req_id = str(uuid.uuid4())
                 session_id = headers.session_id
                 wf_id = getWorkflowId()
                 if not session_id:
                     session_id = req_id
 
-                workflow_executor = WorkflowExecutor(self._logger, self._datastore, self._job_Q)
+                metastore = self._meta_service_pool.get_metastore(wf_id)
+                _, datastore = self._data_service_pool.create_pool(wf_id, session_id, req_id)
+                workflow_executor = WorkflowExecutor(self._logger, metastore, datastore, self._job_Q)
                 result = workflow_executor.run_workflow(params)
                 response = {
                     "result": result
@@ -174,13 +187,16 @@ class WorkflowEngine(BaseRouter):
             return response
 
         @self.router.get(path='/workflow/metapack')
-        async def call_meta_pack():
+        async def call_meta_pack(wf_id=None):
             self._logger.info("################################################################")
             self._logger.info("#                         < Meta Pack >                        #")
             self._logger.info("################################################################")
-            meta_pack = self._metaloader.get_meta_pack()
-            for k, v in meta_pack.items():
-                self._logger.debug(f" - {k} : \t{v}")
+            meta_pool = self._meta_service_pool.get_service_pool()
+            for wf_id, metastore in meta_pool.items():
+                self._logger.debug(f" <{wf_id}>")
+                meta_pack = metastore.get_meta_pack_service()
+                for k, v in meta_pack.items():
+                    self._logger.debug(f" - {k} : \t{v}")
             return meta_pack
 
         # @self.router.get(path='/workflow/datapool', response_model=BaseResponse[schema.ResCallDataPool])
@@ -190,13 +206,17 @@ class WorkflowEngine(BaseRouter):
             self._logger.info("################################################################")
             self._logger.info("#                         < Data Pool >                        #")
             self._logger.info("################################################################")
-            data_pool = self._datastore.get_service_data_pool_service()
-            for k, v in data_pool.items():
-                splited_key = k.split(".")
-                in_type = splited_key[0]
-                service_id = (".").join(splited_key[1:])
-                self._logger.debug(f"[{in_type}] {service_id} : {v}")
-            return data_pool
+
+            data_service_pool = self._data_service_pool.get_service_map()
+            for wf_id, datastore in data_service_pool.items():
+                self._logger.debug(f" <{wf_id}>")
+                data_pool = datastore.get_service_data_pool_service()
+                for k, v in data_pool.items():
+                    splited_key = k.split(".")
+                    in_type = splited_key[0]
+                    service_id = (".").join(splited_key[1:])
+                    self._logger.debug(f"\t[{in_type}] {service_id} : {v}")
+            # return data_pool
 
         @self.router.get(path='/workflow/act_dag')
         async def call_active_dag():

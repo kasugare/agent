@@ -3,8 +3,6 @@
 
 from common.conf_system import getRecipeDir, getRecipeFile, isMetaAutoLoad
 from api.workflow.service.meta.wf_meta_parser import WorkflowMetaParser
-from api.workflow.service.data.meta_store_service import MetaStoreService
-from api.workflow.control.meta.meta_parse_controller import MetaParseController
 from api.workflow.access.meta.meta_file_access import MetaFileAccess
 from typing import Dict, List, Any
 from watchfiles import awatch
@@ -19,7 +17,7 @@ class AutoMetaLoader:
     def __init__(self, logger, meta_service_pool):
         self._logger = logger
         self._meta_service_pool = meta_service_pool
-        self._sync_dag_meta()
+        # self.init_workflow_meta()
         self._auto_loader()
 
     def _auto_loader(self, dirpath: str = None, filename: str = None) -> None:
@@ -44,31 +42,43 @@ class AutoMetaLoader:
         wf_filepath = os.path.join(dirpath, filename)
         try:
             async for changes in awatch(wf_filepath):
-                await self._sync_dag_meta()
+                await self._sync_workflow_meta()
         except Exception as e:
             self._logger.error(traceback.format_exc())
             self._logger.warn(f"Not ready {wf_filepath} file")
 
-    async def _sync_dag_meta(self):
-        wf_meta = MetaFileAccess(self._logger).load_wf_meta_on_file()
-        print(wf_meta)
-        if not wf_meta:
+    async def _sync_workflow_meta(self):
+        filed_wf_meta = MetaFileAccess(self._logger).load_wf_meta_on_file()
+        if not filed_wf_meta:
             return
 
         meta_parser = WorkflowMetaParser(self._logger)
-        wf_id = meta_parser.extract_wf_id(wf_meta)
-        print(wf_meta)
+        filed_meta_pack = meta_parser.parse_wf_meta(filed_wf_meta)
+        if not filed_meta_pack:
+            self._logger.error("Not existed meta")
+            return
 
+        wf_id = filed_meta_pack.get('workflow_id')
         metastore = self._meta_service_pool.get_metastore(wf_id)
-        if metastore:
-            updated_wf_meta = wf_meta
-            current_wf_meta = metastore.get_wf_meta_service()
-            if current_wf_meta != updated_wf_meta:
-                self._logger.debug("# SYNC UPDATE")
-                meta_parser.parse_wf_meta(wf_meta)
-                self._logger.debug(updated_wf_meta)
-        else:
-            meta_parser.parse_wf_meta(wf_meta, metastore)
-            metastore_instance = meta_parser.get_metastore()
-            self._meta_service_pool.set_metastore(wf_id, metastore_instance)
 
+        if metastore:
+            current_wf_meta = metastore.get_wf_meta_service()
+            if current_wf_meta != filed_wf_meta:
+                self._logger.debug("# SYNC UPDATE")
+                metastore.set_meta_pack_service(filed_meta_pack)
+                self._logger.debug(filed_wf_meta)
+            else:
+                return
+        else:
+            _, metastore = self._meta_service_pool.create_pool(wf_id)
+            metastore.set_meta_pack_service(filed_meta_pack)
+
+    def init_workflow_meta(self):
+        wf_meta = MetaFileAccess(self._logger).load_wf_meta_on_file()
+        if not wf_meta:
+            return
+        meta_parser = WorkflowMetaParser(self._logger)
+        meta_pack = meta_parser.parse_wf_meta(wf_meta)
+        wf_id = meta_pack.get("workflow_id")
+        _, metastore = self._meta_service_pool.create_pool(wf_id)
+        metastore.set_meta_pack_service(meta_pack)

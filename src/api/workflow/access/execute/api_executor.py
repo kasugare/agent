@@ -15,16 +15,20 @@ class ApiExecutor:
         self._header = header
         self._body = body
         self._env_params = {}
-        self._params = None
-
-    def set_env(self, env_params):
-        self._env_params = env_params
+        self._asset_params = {}
+        self._params = {}
 
     def set_url(self, url):
         self._url = url
 
     def get_url(self):
         return self._url
+
+    def set_env(self, env_params):
+        self._env_params = env_params
+
+    def set_asset(self, asset_params):
+        self._asset_params = asset_params
 
     def set_params(self, params):
         self._params = params
@@ -62,7 +66,7 @@ class ApiExecutor:
                     raise Exception
                 return result
 
-    def run(self, params):
+    def run(self, **params):
         self._logger.info(f"[Executor] Call API: {params}")
         self.set_params(params)
         result = asyncio.run(self._call_api())

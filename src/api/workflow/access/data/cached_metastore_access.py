@@ -7,7 +7,7 @@ import threading
 
 
 class CachedMetastoreAccess:
-    def __init__(self, logger, wf_id, ses_id, req_id):
+    def __init__(self, logger, wf_id):
         self._logger = logger
         self._thread_lock = threading.Lock()
         self._dag_meta = {}

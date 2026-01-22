@@ -7,10 +7,11 @@ from api.workflow.service.task.task_load_service import TaskLoadService
 
 
 class ActionPlanningService:
-    def __init__(self, logger, datastore):
+    def __init__(self, logger, meta_pack, datastore):
         self._logger = logger
+        self._meta_pack = meta_pack
         self._datastore = datastore
-        self._taskstore = TaskLoadService(logger, datastore)
+        self._taskstore = TaskLoadService(logger, meta_pack)
 
     def _gen_task_graph_for_from(self, base_graph, from_service_id, count=0):
         count += 1
@@ -89,8 +90,8 @@ class ActionPlanningService:
         return task_graph
 
     def _cvt_service_range(self, from_service_id=None, to_service_id=None):
-        forward_graph = self._datastore.get_forward_graph_meta_service()
-        backward_graph = self._datastore.get_backward_graph_meta_service()
+        forward_graph = self._meta_pack.get('forward_graph')
+        backward_graph = self._meta_pack.get('backward_graph')
 
         if not from_service_id and not to_service_id:
             service_graph = forward_graph
@@ -107,7 +108,6 @@ class ActionPlanningService:
         return act_forward_graph
 
     def gen_action_backward_graph_service(self, forward_graph):
-        # act_backward_graph = self._metastore.reverse_forward_graph_service(forward_graph)
         act_backward_graph = dict()
         for service_id, target_list in forward_graph.items():
             for forward_service_id in target_list:
@@ -118,7 +118,6 @@ class ActionPlanningService:
         return act_backward_graph
 
     def gen_start_nodes_service(self, forward_graph):
-        # act_start_nodes = self._metastore.find_start_nodes_service(forward_graph)
         all_nodes = set(forward_graph.keys())
         reachable_nodes = set()
         for node in forward_graph:
@@ -128,13 +127,12 @@ class ActionPlanningService:
         return act_start_nodes
 
     def gen_end_nodes_service(self, backward_graph):
-        # act_end_nodes = self._metastore.find_end_nodes_service(backward_graph)
-        act_end_nodes = self.find_start_nodes_ctl(backward_graph)
+        act_end_nodes = self.gen_start_nodes_service(backward_graph)
         sorted(list(act_end_nodes))
         return act_end_nodes
 
     def gen_action_edges_param_map(self, start_nodes, request_params):
-        act_edges_param_map = self._datastore.get_edges_param_map_service()
+        act_edges_param_map = self._meta_pack.get('edges_param_map')
         if not request_params:
             return act_edges_param_map
 
@@ -167,7 +165,7 @@ class ActionPlanningService:
             raise NotDefinedWorkflowMetaException
 
     def _vaild_params(self, act_start_nodes, params):
-        action_meta_pack = self._datastore.get_meta_pack_service()
+        action_meta_pack = self._meta_pack
         service_pool = action_meta_pack.get('service_pool')
         for act_start_node in act_start_nodes:
             service_node = service_pool.get(act_start_node)
@@ -183,7 +181,7 @@ class ActionPlanningService:
 
     def gen_action_meta_pack(self, start_node, end_node, params):
         try:
-            action_meta_pack = self._datastore.get_meta_pack_service()
+            action_meta_pack = self._meta_pack
             self._vaild_meta(action_meta_pack)
 
             self._logger.info(f" # Step 1. Forward Graph")
@@ -226,6 +224,7 @@ class ActionPlanningService:
             self._logger.warn(e)
             raise AttributeError
         except AttributeError as e:
+            self._logger.error(e)
             raise AttributeError
         except Exception as e:
             self._logger.error(e)

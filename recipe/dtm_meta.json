@@ -1,0 +1,975 @@
+{
+	"name": "API Workflow for DTM 3",
+	"description": "API based workflow with parallel processing support",
+	"metadata": {
+		"version": "1.0",
+		"project_id": "DTM3",
+		"workflow_id": "DTM3_WF_001",
+		"type": "DTM3"
+	},
+	"environments": [
+		{
+			"env_code": "APIKEY",
+			"env_name": "api key",
+			"env_params": [
+				{
+					"key": "api-key",
+					"value": "12345678890"
+				}
+			]
+		}
+	],
+	"nodes": [
+		{
+			"node_id": "START_NODE",
+			"node_type": "module",
+			"role": "start",
+			"location": "inner",
+			"containable": true,
+			"api_keys": [],
+			"node_info": {
+				"id": "START_NODE",
+				"code": "Input",
+				"version": "1.0.0",
+				"title": "input",
+				"desc": "Input Node"
+			},
+			"api_info": {
+				"base_url": ""
+			},
+			"module_info": {
+				"module_path": "app.dtm.input",
+				"class_name": "Input",
+				"sys_environments": {
+					"params": []
+				},
+				"asset_environments": {
+					"params": []
+				}
+			},
+			"services": {
+				"query_input": {
+					"function": "query_input",
+					"params": [
+						{
+							"required": true,
+							"key": "query",
+							"type": "string"
+						}
+					],
+					"result": [
+						{
+							"key": "query",
+							"type": "string"
+						}
+					]
+				}
+			}
+		},
+		{
+			"node_id": "NODE_A",
+			"node_type": "rest-api",
+			"role": "processing",
+			"location": "outter",
+			"containable": false,
+			"api_keys": [],
+			"node_info": {
+				"id": "NODE_A",
+				"code": "STEP1",
+				"version": "1.0.0",
+				"title": "input",
+				"desc": "DTM3"
+			},
+			"api_info": {
+				"base_url": "http://127.0.0.1:10001",
+				"type": "http",
+				"method": "POST",
+				"route": "/process/node_a",
+				"header": {},
+				"body": {}
+			},
+			"module_info": {
+				"module_path": "",
+				"class_name": "",
+				"sys_environments": {
+				    "params": []
+				},
+				"asset_environments": {
+				    "params": []
+				}
+			},
+			"services": {
+				"process": {
+					"function": "/process/node_a",
+					"params": [
+						{
+							"required": true,
+							"key": "tar_path",
+							"type": "string"
+						}
+					],
+					"result": [
+						{
+							"key": "tif_path",
+							"type": "str"
+						},
+						{
+							"key": "txt_path",
+							"type": "str"
+						},
+						{
+							"key": "timestamp",
+							"type": "str"
+						}
+					]
+				}
+			}
+		},
+		{
+			"node_id": "NODE_B",
+			"node_type": "rest-api",
+			"role": "processing",
+			"location": "outter",
+			"containable": false,
+			"api_keys": [],
+			"node_info": {
+				"id": "NODE_B",
+				"code": "STEP2",
+				"version": "1.0.0",
+				"title": "input",
+				"desc": "DTM3"
+			},
+			"api_info": {
+				"base_url": "http://127.0.0.1:10002",
+				"type": "http",
+				"method": "POST",
+				"route": "/process/node_b",
+				"header": {},
+				"body": {}
+			},
+			"module_info": {
+				"module_path": "",
+				"class_name": "",
+				"sys_environments": {
+				    "params": []
+				},
+				"asset_environments": {
+				    "params": []
+				}
+			},
+			"services": {
+				"process": {
+					"function": "/process/node_b",
+					"params": [
+						{
+							"required": true,
+							"key": "tif_path",
+							"type": "string"
+						}
+					],
+					"result": [
+						{
+							"key": "img_path",
+							"type": "str"
+						},
+						{
+							"key": "doccls_json_path",
+							"type": "str"
+						},
+						{
+							"key": "lc_img_list",
+							"type": "list"
+						},
+						{
+							"key": "timestamp",
+							"type": "str"
+						}
+					]
+				}
+			}
+		},
+		{
+			"node_id": "NODE_C",
+			"node_type": "rest-api",
+			"role": "processing",
+			"location": "outter",
+			"containable": false,
+			"api_keys": [],
+			"node_info": {
+				"id": "NODE_C",
+				"code": "STEP3",
+				"version": "1.0.0",
+				"title": "input",
+				"desc": "DTM3"
+			},
+			"api_info": {
+				"base_url": "http://127.0.0.1:10003",
+				"type": "http",
+				"method": "POST",
+				"route": "/process/node_c",
+				"header": {},
+				"body": {}
+			},
+			"module_info": {
+				"module_path": "",
+				"class_name": "",
+				"sys_environments": {
+				    "params": []
+				},
+				"asset_environments": {
+				    "params": []
+				}
+			},
+			"services": {
+				"process": {
+					"function": "/process/node_c",
+					"params": [
+						{
+							"required": true,
+							"key": "img_path",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "doccls_json_path",
+							"type": "json"
+						}
+					],
+					"result": [
+						{
+							"key": "extr_json_path",
+							"type": "str"
+						},
+						{
+							"key": "timestamp",
+							"type": "str"
+						}
+					]
+				}
+			}
+		},
+		{
+			"node_id": "NODE_D",
+			"node_type": "rest-api",
+			"role": "processing",
+			"location": "outter",
+			"containable": false,
+			"api_keys": [],
+			"node_info": {
+				"id": "NODE_D",
+				"code": "STEP1",
+				"version": "1.0.0",
+				"title": "input",
+				"desc": "DTM3"
+			},
+			"api_info": {
+				"base_url": "http://127.0.0.1:10004",
+				"type": "http",
+				"method": "POST",
+				"route": "/process/node_d",
+				"header": {},
+				"body": {}
+			},
+			"module_info": {
+				"module_path": "",
+				"class_name": "",
+				"sys_environments": {
+				    "params": []
+				},
+				"asset_environments": {
+				    "params": []
+				}
+			},
+			"services": {
+				"process": {
+					"function": "/process/node_d",
+					"params": [
+						{
+							"required": true,
+							"key": "img_path",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "doccls_json_path",
+							"type": "json"
+						},
+						{
+							"required": true,
+							"key": "extr_json_path",
+							"type": "string"
+						}
+					],
+					"result": [
+						{
+							"key": "save_FEtype_path",
+							"type": "str"
+						},
+						{
+							"key": "timestamp",
+							"type": "str"
+						}
+					]
+				}
+			}
+		},
+		{
+			"node_id": "NODE_E",
+			"node_type": "rest-api",
+			"role": "processing",
+			"location": "outter",
+			"containable": false,
+			"api_keys": [],
+			"node_info": {
+				"id": "NODE_E",
+				"code": "STEP1",
+				"version": "1.0.0",
+				"title": "input",
+				"desc": "DTM3"
+			},
+			"api_info": {
+				"base_url": "http://127.0.0.1:10005",
+				"type": "http",
+				"method": "POST",
+				"route": "/process/node_e",
+				"header": {},
+				"body": {}
+			},
+			"module_info": {
+				"module_path": "",
+				"class_name": "",
+				"sys_environments": {
+				    "params": []
+				},
+				"asset_environments": {
+				    "params": []
+				}
+			},
+			"services": {
+				"process": {
+					"function": "/process/node_e",
+					"params": [
+						{
+							"required": true,
+							"key": "img_path",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "lc_img_list",
+							"type": "json"
+						}
+					],
+					"result": [
+						{
+							"key": "ocr_json_path_list",
+							"type": "list"
+						},
+						{
+							"key": "timestamp",
+							"type": "str"
+						}
+					]
+				}
+			}
+		},
+		{
+			"node_id": "NODE_F",
+			"node_type": "rest-api",
+			"role": "processing",
+			"location": "outter",
+			"containable": false,
+			"api_keys": [],
+			"node_info": {
+				"id": "NODE_F",
+				"code": "STEP1",
+				"version": "1.0.0",
+				"title": "input",
+				"desc": "DTM3"
+			},
+			"api_info": {
+				"base_url": "http://127.0.0.1:10006",
+				"type": "http",
+				"method": "POST",
+				"route": "/process/node_f",
+				"header": {},
+				"body": {}
+			},
+			"module_info": {
+				"module_path": "",
+				"class_name": "",
+				"sys_environments": {
+				    "params": []
+				},
+				"asset_environments": {
+				    "params": []
+				}
+			},
+			"services": {
+				"process": {
+					"function": "/process/node_f",
+					"params": [
+						{
+							"required": true,
+							"key": "lc_img_list",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "ocr_json_path_list",
+							"type": "json"
+						}
+					],
+					"result": [
+						{
+							"key": "lc_number",
+							"type": "str"
+						},
+						{
+							"key": "result_path",
+							"type": "str"
+						},
+						{
+							"key": "timestamp",
+							"type": "str"
+						}
+					]
+				}
+			}
+		},
+		{
+			"node_id": "NODE_G",
+			"node_type": "rest-api",
+			"role": "processing",
+			"location": "outter",
+			"containable": false,
+			"api_keys": [],
+			"node_info": {
+				"id": "NODE_G",
+				"code": "STEP1",
+				"version": "1.0.0",
+				"title": "input",
+				"desc": "DTM3"
+			},
+			"api_info": {
+				"base_url": "http://127.0.0.1:10007",
+				"type": "http",
+				"method": "POST",
+				"route": "/process/node_g",
+				"header": {},
+				"body": {}
+			},
+			"module_info": {
+				"module_path": "",
+				"class_name": "",
+				"sys_environments": {
+				    "params": []
+				},
+				"asset_environments": {
+				    "params": []
+				}
+			},
+			"services": {
+				"process": {
+					"function": "/process/node_g",
+					"params": [
+						{
+							"required": true,
+							"key": "text_path",
+							"type": "string"
+						}
+					],
+					"result": [
+						{
+							"key": "lc_number",
+							"type": "str"
+						},
+						{
+							"key": "result_path",
+							"type": "str"
+						},
+						{
+							"key": "timestamp",
+							"type": "str"
+						}
+					]
+				}
+			}
+		},
+		{
+			"node_id": "NODE_H",
+			"node_type": "rest-api",
+			"role": "processing",
+			"location": "outter",
+			"containable": false,
+			"api_keys": [],
+			"node_info": {
+				"id": "NODE_H",
+				"code": "STEP1",
+				"version": "1.0.0",
+				"title": "input",
+				"desc": "DTM3"
+			},
+			"api_info": {
+				"base_url": "http://127.0.0.1:10008",
+				"type": "http",
+				"method": "POST",
+				"route": "/process/node_h",
+				"header": {},
+				"body": {}
+			},
+			"module_info": {
+				"module_path": "",
+				"class_name": "",
+				"sys_environments": {
+				    "params": []
+				},
+				"asset_environments": {
+				    "params": []
+				}
+			},
+			"services": {
+				"process": {
+					"function": "/process/node_h",
+					"params": [
+						{
+							"required": true,
+							"key": "nlp_img_lc_path",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "nlp_text_lc_path",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "aiv_img_path",
+							"type": "string"
+						}
+					],
+					"result": [
+						{
+							"key": "result_path",
+							"type": "str"
+						},
+						{
+							"key": "timestamp",
+							"type": "str"
+						}
+					]
+				}
+			}
+		},
+		{
+			"node_id": "END_NODE",
+			"node_type": "module",
+			"role": "output",
+			"location": "inner",
+			"containable": true,
+			"api_keys": [
+				""
+			],
+			"node_info": {
+				"id": "END_NODE",
+				"code": "DTM_OUTPUT",
+				"version": "1.0.0",
+				"title": "Output",
+				"desc": "Output Node"
+			},
+			"api_info": {
+				"base_url": ""
+			},
+			"module_info": {
+				"module_path": "app.dtm.output",
+				"class_name": "Output",
+				"sys_environments": {
+					"params": []
+				},
+				"asset_environments": {
+					"params": []
+				}
+			},
+			"services": {
+				"output": {
+					"function": "output",
+					"params": [
+						{
+							"required": true,
+							"key": "result",
+							"type": "str"
+						}
+					],
+					"result": [
+						{
+							"required": true,
+							"key": "result",
+							"type": "string"
+						}
+					]
+				}
+			}
+		}
+	],
+	"edges": [
+		{
+			"source": "START_NODE.query_input",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"target": "NODE_A.process",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"env_info": [],
+			"asset_info": [],
+			"header_info": [],
+			"body_info": [],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "tar_path",
+					"value": "START_NODE.query_input.query"
+				}
+			],
+			"result_info": []
+		},
+		{
+			"source": "NODE_A.process",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"target": "NODE_B.process",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "tif_path",
+					"value": "NODE_A.process.tif_path"
+				}
+			],
+			"result_info": []
+		},
+		{
+			"source": "NODE_B.process",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"target": "NODE_C.process",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "img_path",
+					"value": "NODE_B.process.img_path"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "doccls_json_path",
+					"value": "NODE_B.process.doccls_json_path"
+				}
+			],
+			"result_info": []
+		},
+		{
+			"source": "NODE_C.process",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"target": "NODE_D.process",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "img_path",
+					"value": "NODE_C.process.img_path"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "doccls_json_path",
+					"value": "NODE_C.process.doccls_json_path"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "extr_json_path",
+					"value": "NODE_C.process.extr_json_path"
+				}
+			],
+			"result_info": []
+		},
+		{
+			"source": "NODE_D.process",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"target": "NODE_H.process",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "nlp_img_lc_path",
+					"value": "NODE_F.process.result_path"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "nlp_text_lc_path",
+					"value": "NODE_G.process.result_path"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "aiv_img_path",
+					"value": "NODE_D.process.save_FEtype_path"
+				}
+			],
+			"result_info": []
+		},
+		{
+			"source": "NODE_B.process",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"target": "NODE_F.process",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "lc_img_list",
+					"value": "NODE_B.process.lc_img_list"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "ocr_json_path_list",
+					"value": "NODE_E.process.ocr_json_path_list"
+				}
+			],
+			"result_info": []
+		},
+		{
+			"source": "NODE_F.process",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"target": "NODE_H.process",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "nlp_img_lc_path",
+					"value": "NODE_F.process.result_path"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "nlp_text_lc_path",
+					"value": "NODE_G.process.result_path"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "aiv_img_path",
+					"value": "NODE_D.process.save_FEtype_path"
+				}
+			],
+			"result_info": []
+		},
+		{
+			"source": "NODE_B.process",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"target": "NODE_E.process",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "img_path",
+					"value": "NODE_B.process.img_path"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "lc_img_list",
+					"value": "NODE_B.process.lc_img_list"
+				}
+			],
+			"result_info": []
+		},
+		{
+			"source": "NODE_E.process",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"target": "NODE_F.process",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "lc_img_list",
+					"value": "NODE_B.process.lc_img_list"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "ocr_json_path_list",
+					"value": "NODE_E.process.ocr_json_path_list"
+				}
+			],
+			"result_info": []
+		},
+		{
+			"source": "NODE_F.process",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"target": "NODE_H.process",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "nlp_img_lc_path",
+					"value": "NODE_F.process.result_path"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "nlp_text_lc_path",
+					"value": "NODE_G.process.result_path"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "aiv_img_path",
+					"value": "NODE_D.process.save_FEtype_path"
+				}
+			],
+			"result_info": []
+		},
+		{
+			"source": "NODE_A.process",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"target": "NODE_G.process",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "text_path",
+					"value": "NODE_A.process.text_path"
+				}
+			],
+			"result_info": []
+		},
+		{
+			"source": "NODE_G.process",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"target": "NODE_H.process",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "nlp_img_lc_path",
+					"value": "NODE_F.process.result_path"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "nlp_text_lc_path",
+					"value": "NODE_G.process.result_path"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "aiv_img_path",
+					"value": "NODE_D.process.save_FEtype_path"
+				}
+			],
+			"result_info": []
+		},
+		{
+			"source": "NODE_H.process",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"target": "END_NODE.output",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": {}
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "result",
+					"value": "NODE_H.process.result_path"
+				}
+			],
+			"result_info": []
+		}
+	],
+	"resources": []
+}

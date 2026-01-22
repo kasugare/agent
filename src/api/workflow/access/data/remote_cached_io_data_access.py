@@ -11,13 +11,15 @@ class RemoteCachedIODataAccess(RedisAccess):
         self._cache_key = cache_key
 
     def set_cache_key_access(self, wf_key):
-        self._cache_key = f"{wf_key}.IO"
+        self._cache_key = f"{wf_key}.io"
 
     def get_data(self, field):
+        self._logger.debug(f"{self._cache_key}: {field}")
         return self.hget(key=self._cache_key, field=field)
 
     def get_all(self):
-        self.hgetall(key=self._cache_key)
+        result = self.hgetall(key=self._cache_key)
+        return result
 
     def set_data(self, field, data):
         self.hset(key=self._cache_key, mapping={field: data})

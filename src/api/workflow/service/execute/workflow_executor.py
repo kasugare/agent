@@ -7,12 +7,18 @@ from api.workflow.error_pool.error import InvalidInputException, NotDefinedWorkf
 
 
 class WorkflowExecutor:
-    def __init__(self, logger, datastore, job_Q, stream_Q=None):
+    def __init__(self, logger, metastore, datastore, job_Q, stream_Q=None):
         self._logger = logger
         self._datastore = datastore
         self._job_Q = job_Q
         self._stream_Q = stream_Q
-        self._act_planner = ActionPlanningService(logger, self._datastore)
+
+        meta_pack = metastore.get_meta_pack_service()
+        datastore.set_init_service_params_service(meta_pack.get('edges_info'))
+        datastore.set_init_nodes_env_params_service(meta_pack.get('nodes_env_value_map'))
+        datastore.set_init_nodes_asset_params_service(meta_pack.get('nodes_asset_value_map'))
+
+        self._act_planner = ActionPlanningService(logger, meta_pack, datastore)
         self._act_meta = {}
 
     def get_act_meta(self):

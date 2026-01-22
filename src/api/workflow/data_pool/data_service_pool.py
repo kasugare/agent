@@ -30,5 +30,8 @@ class DataServicePool(ServicePool):
         data_store = self.get_service_instance(store_key)
         return data_store
 
+    def get_service_map(self):
+        return self.get_service_pool()
+
     def del_datastore(self, store_key):
         self.del_service_instance(store_key)

@@ -5,9 +5,9 @@ from api.workflow.control.task.task_load_controller import TaskLoadController
 
 
 class TaskLoadService:
-    def __init__(self, logger, datastore):
+    def __init__(self, logger, metastore):
         self._logger = logger
-        self._task_controller = TaskLoadController(logger, datastore)
+        self._task_controller = TaskLoadController(logger, metastore)
 
     def gen_init_tasks_service(self):
         task_map = self._task_controller.make_task_map()

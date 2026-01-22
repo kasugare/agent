@@ -32,7 +32,7 @@ class ServicePool:
     def get_service_pool(self):
         return self._service_pool
 
-    def service_keys(self):
+    def get_service_keys(self):
         store_keys = list(self._service_pool.keys())
         return store_keys
 

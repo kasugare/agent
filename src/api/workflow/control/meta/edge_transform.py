@@ -10,6 +10,7 @@ class EdgeTransformer:
 
     def _get_data_type(self, param_key: str, service_info: Dict, find_type: str) -> Any:
         if find_type == 'key':
+            print(service_info)
             mapper_info = service_info['params']
         elif find_type == 'value':
             mapper_info = service_info['result']

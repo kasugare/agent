@@ -33,6 +33,7 @@ class TaskContext:
         self._init_timeout(timeout_conf)
 
     def _init_context(self, service_info):
+        print(service_info)
         self._task_type = service_info.get('type')
         self._role = service_info.get('role')
         self._node_type = str(service_info.get('node_type')).lower()
@@ -45,6 +46,7 @@ class TaskContext:
                 self._set_end_executor()
             else:
                 self._conn_info = self._extract_api_info(service_info)
+                self._logger.critical(self._conn_info)
                 self._set_api_executor(**self._conn_info)
         elif self._node_type == 'engine':
             if self._task_type.lower() == 'start_node':
@@ -68,10 +70,11 @@ class TaskContext:
 
     def _extract_api_info(self, service_info):
         api_info = service_info.get('api_info')
-        url = f"{api_info.get('base_url')}{service_info.get('function')}"
+        route_path = service_info.get('function')
+        url = f"{api_info.get('base_url')}{route_path}"
         conn_info = {
             'url': url,
-            'method': service_info.get('method'),
+            'method': api_info.get('method'),
             'header': service_info.get('header'),
             'body': service_info.get('body'),
             'api_keys': service_info.get('api_keys')

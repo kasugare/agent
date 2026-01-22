@@ -33,6 +33,11 @@ class MetaParseController:
         }
         return wf_comm_meta
 
+    def extract_wf_id_by_wf_meta(self, wf_meta: dict) -> str:
+        wf_metadata = wf_meta.get('metadata')
+        wf_id = wf_metadata.get('workflow_id')
+        return wf_id
+
     def extract_wf_common_env_ctl(self, wf_meta: dict) -> dict:
         wf_common_envs_map = wf_meta.get('environments')
         env_pool = {}
@@ -92,7 +97,7 @@ class MetaParseController:
                 service_info['node_id'] = node_id   # <--
                 service_pool[node_service_id] = service_info
                 for node_key in add_node_keys:
-                    service_pool[node_service_id][node_key] = node_info[node_key]
+                    service_pool[node_service_id][node_key] = node_info.get(node_key, {})
         return service_pool
 
     def extract_wf_to_edges_ctl(self, wf_meta: dict, wf_service_pool: dict) -> dict:

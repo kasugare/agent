@@ -8,10 +8,11 @@ from typing import Dict, Any
 
 
 class DataStoreService:
-    def __init__(self, logger):
+    def __init__(self, logger, cache_key):
         self._logger = logger
         self._data_controller = DataIoController(logger)
         self._taskpool_controller = TaskPoolController(logger)
+        self._data_controller.set_cache_key_ctl(cache_key)
 
     def set_init_values(self, meta_pack):
         wf_edges_meta = meta_pack.get('edges_info')
@@ -58,11 +59,11 @@ class DataStoreService:
         params = self._data_controller.get_start_service_params_ctl(service_id)
         return params
 
-    def get_service_params_service(self, service_id: str) -> dict:
-        """ service_id = {node_id}.{service_name}"""
-        wf_edges_meta = self.get_edges_meta_service()
-        params = self._data_controller.get_service_params_ctl(service_id, wf_edges_meta)
-        return params
+    # def get_service_params_service(self, service_id: str) -> dict:
+    #     """ service_id = {node_id}.{service_name}"""
+    #     wf_edges_meta = self.get_edges_meta_service()
+    #     params = self._data_controller.get_service_params_ctl(service_id, wf_edges_meta)
+    #     return params
 
     def get_service_data_pool_service(self) -> Dict:
         data_pool = self._data_controller.get_data_pool_ctl()

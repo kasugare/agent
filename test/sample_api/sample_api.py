@@ -12,7 +12,7 @@ import random
 # 데이터 모델 정의
 class WorkflowStartRequest(BaseModel):
     node_id: str
-    input_data: Dict[str, Any]
+    input_data: str
     request_id: Optional[str] = None
 
 class WorkflowRequest(BaseModel):
@@ -39,8 +39,8 @@ class WorkflowMergeResponse(BaseModel):
 
 # Node A (Start Node) - API Gateway
 app_node_a = FastAPI(title="Node A - API Gateway")
-@app_node_a.post("/workflow/start")#, response_model=WorkflowResponse)
-async def start_workflow(request: WorkflowStartRequest):
+@app_node_a.post("/process/node_a")#, response_model=WorkflowResponse)
+async def process_node_a(request: WorkflowStartRequest):
     print("#" * 100)
     print(f"# Node A - {request.input_data}")
     request_id = request.request_id or str(uuid.uuid4())
@@ -58,7 +58,7 @@ async def start_workflow(request: WorkflowStartRequest):
 
 # Node B - Business Logic 1
 app_node_b = FastAPI(title="Node B - Business Logic 1")
-@app_node_b.post("/process", response_model=WorkflowResponse)
+@app_node_b.post("/process/node_b", response_model=WorkflowResponse)
 async def process_node_b(request: WorkflowRequest):
     print(f"# Node B - {request.input_data}")
     # 비즈니스 로직 시뮬레이션을 위한 지연
@@ -78,7 +78,7 @@ async def process_node_b(request: WorkflowRequest):
 
 # Node C - Business Logic 2
 app_node_c = FastAPI(title="Node C - Business Logic 2")
-@app_node_c.post("/process", response_model=WorkflowResponse)
+@app_node_c.post("/process/node_c", response_model=WorkflowResponse)
 async def process_node_c(request: WorkflowRequest):
     print(f"# Node C - {request.input_data}")
     await asyncio.sleep(random.randrange(1, 5)*0.1)
@@ -97,7 +97,7 @@ async def process_node_c(request: WorkflowRequest):
 
 # Node D - Business Logic 3
 app_node_d = FastAPI(title="Node D - Business Logic 3")
-@app_node_d.post("/process", response_model=WorkflowResponse)
+@app_node_d.post("/process/node_d", response_model=WorkflowResponse)
 async def process_node_d(request: WorkflowRequest):
     print(f"# Node D - {request.input_data}")
     await asyncio.sleep(random.randrange(1, 5)*0.1)
@@ -116,7 +116,7 @@ async def process_node_d(request: WorkflowRequest):
 
 # Node E - Business Logic 3
 app_node_e = FastAPI(title="Node E - Business Logic 4")
-@app_node_e.post("/process", response_model=WorkflowResponse)
+@app_node_e.post("/process/node_e", response_model=WorkflowResponse)
 async def process_node_d(request: WorkflowRequest):
     print(f"# Node E - {request.input_data}")
     await asyncio.sleep(random.randrange(1, 5)*0.1)
@@ -135,7 +135,7 @@ async def process_node_d(request: WorkflowRequest):
 
 # Node F - Business Logic 3
 app_node_f = FastAPI(title="Node F - Business Logic 5")
-@app_node_f.post("/process", response_model=WorkflowResponse)
+@app_node_f.post("/process/node_f", response_model=WorkflowResponse)
 async def process_node_d(request: WorkflowRequest):
     print(f"# Node F - {request.input_data}")
     await asyncio.sleep(random.randrange(1, 5)*100)
@@ -153,7 +153,7 @@ async def process_node_d(request: WorkflowRequest):
 
 # Node G - Business Logic 3
 app_node_g = FastAPI(title="Node G - Business Logic 6")
-@app_node_g.post("/process", response_model=WorkflowResponse)
+@app_node_g.post("/process/node_g", response_model=WorkflowResponse)
 async def process_node_d(request: WorkflowRequest):
     print(f"# Node G - {request.input_data}")
     await asyncio.sleep(random.randrange(1, 5)*0.1)
@@ -172,7 +172,7 @@ async def process_node_d(request: WorkflowRequest):
 
 # Node H - Business Logic 3
 app_node_h = FastAPI(title="Node H - Business Logic 7")
-@app_node_h.post("/process", response_model=WorkflowResponse)
+@app_node_h.post("/process/node_h", response_model=WorkflowResponse)
 async def process_node_d(request: WorkflowRequest):
     print(f"# Node H - {request.input_data}")
     await asyncio.sleep(random.randrange(1, 5)*0.1)
