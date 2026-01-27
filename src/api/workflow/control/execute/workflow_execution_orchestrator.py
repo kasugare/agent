@@ -31,6 +31,77 @@ class WorkflowExecutionOrchestrator:
         prev_service_ids = prev_edges_graph.get(service_id)
         return prev_service_ids
 
+    def _set_action_skip_nodes(self, service_id, skip_target_service_ids, depth=0):
+        def check_prev_task_state(service_id):
+            task_state = self._get_task_state(service_id)
+            if task_state in [TaskState.COMPLETED, TaskState.SKIPPED, TaskState.BLOCKED]:
+                return True
+            else:
+                return False
+        space = "    " * depth
+        self._logger.debug(f"{space} # Service_id: {service_id},  skip_target_service_ids: {skip_target_service_ids}")
+        self._logger.debug(f"{space}   L skip target service ids: {skip_target_service_ids}")
+
+        for skip_target_service_id in skip_target_service_ids:
+            prev_edges_graph = self._meta_pack['act_backward_graph']
+            prev_service_ids = prev_edges_graph.get(skip_target_service_id)
+            if all(check_prev_task_state(prev_service_id) for prev_service_id in prev_service_ids):
+                self._set_task_state(skip_target_service_id, TaskState.SKIPPED)
+                self._logger.error(f"{space}   @ skip service ids: {skip_target_service_id}")
+
+            next_skip_service_ids = self._get_next_service_ids(skip_target_service_id)
+            next_depth = depth + 1
+            self._set_action_skip_nodes(skip_target_service_id, next_skip_service_ids, next_depth)
+
+    def _get_required_params(self, service_id):
+        service_pool = self._meta_pack['service_pool']
+        service_info = service_pool.get(service_id, {})
+        service_params = service_info.get('params', [])
+        required_params = [service_param for service_param in service_params if service_param.get('required', False)]
+        return required_params
+
+    def _set_blocked_nodes(self, service_id, depth=0):
+        def check_blocked_task_state(edge_param_map):
+            key_required = edge_param_map.get('key_required', False)
+            refer_type = edge_param_map.get('refer_type')
+
+            if key_required and refer_type == 'indirect':
+                value_id = edge_param_map.get('value')
+                splited_value_id = value_id.split(".")
+                ref_service_id = ".".join(splited_value_id[:-1])
+                ref_value = self._datastore.get_output_value(value_id)
+                ref_task_state = self._get_task_state(ref_service_id)
+                self._logger.debug(f"{space}    - {ref_service_id} : {ref_task_state}")
+                self._logger.debug(f"{space}    - {value_id}: {ref_value}")
+                if ref_task_state in [TaskState.STOPPED, TaskState.SKIPPED, TaskState.BLOCKED] and ref_value is None:
+                    return True
+            return False
+
+        space = "    " * depth
+        self._logger.warn(f"{space} # Service_id: {service_id}, state: {self._get_task_state(service_id)}")
+
+        edges_param_map = self._meta_pack['act_edges_param_map']
+        if self._get_task_state(service_id) == TaskState.PENDING:
+            edge_ids = self._get_edge_ids_by_service_id(service_id)
+            for edge_id in edge_ids:
+                edge_param_map_list = edges_param_map.get(edge_id)
+                self._logger.debug(f"{space}   L edge_id:  {edge_id}")
+                for edge_param_map in edge_param_map_list:
+                    self._logger.debug(f"{space}     - edge_map: {edge_param_map}")
+                if any(check_blocked_task_state(edge_param_map) for edge_param_map in edge_param_map_list):
+                    self._set_task_state(service_id, TaskState.BLOCKED)
+                    self._logger.error(f"{space}   @ blocked service ids: {service_id}")
+                    break
+        # else:
+        #     # Check Next services
+        next_service_ids = self._get_next_service_ids(service_id)
+        self._logger.debug(f"{space}   L check next service ids: {next_service_ids}")
+        for next_service_id in next_service_ids:
+            next_depth = depth + 1
+            self._set_blocked_nodes(next_service_id, next_depth)
+
+
+
     def _map_template(self, service_id, text_value):
         if not isinstance(text_value, str):
             return text_value
@@ -40,8 +111,8 @@ class WorkflowExecutionOrchestrator:
         value_map = {}
         for ref_key in ref_keys:
             try:
-                value_id = f"I.{service_id}.{ref_key}"
-                ref_value = self._datastore.get_param_value_service(value_id)
+                value_id = f"{service_id}.{ref_key}"
+                ref_value = self._datastore.get_input_value(value_id)
                 value_map[ref_key] = ref_value
             except:
                 pass
@@ -97,28 +168,31 @@ class WorkflowExecutionOrchestrator:
             asset_params_map = {asset_param_map.get('key'): f"A.{node_id}.{asset_param_map.get('key')}"
                              for asset_param_map in asset_params_info if asset_param_map.get('key')}
             for asset_name, asset_value_id in asset_params_map.items():
-                env_value = self._datastore.get_param_value_service(asset_value_id)
-                asset_params_map[asset_name] = self._map_template(service_id, env_value)
+                asset_value = self._datastore.get_param_value_service(asset_value_id)
+                asset_params_map[asset_name] = self._map_template(service_id, asset_value)
             return asset_params_map
         except Exception as e:
             return {}
 
     def _extract_forced_param_value(self, service_id, param_name):
-        value_id = f"O.{service_id}.{param_name}"
-        extract_param_value = self._datastore.get_param_value_service(value_id)
+        value_id = f"{service_id}.{param_name}"
+        extract_param_value = self._datastore.get_output_value(value_id)
         return extract_param_value
 
     def _extract_param_value(self, service_id, param_map_list) -> dict:
         params = {}
+        if not isinstance(param_map_list, list):
+            return params
+
         for param_map in param_map_list:
             param_name = param_map.get('key')
             if 'value' in param_map.keys():
                 if param_map.get('refer_type') == 'direct':
-                    value_id = f"I.{service_id}.{param_name}"
+                    value_id = f"{service_id}.{param_name}"
+                    extract_params_value = self._datastore.get_input_value(value_id)
                 else:
                     addr_value = param_map.get('value')
-                    value_id = f"O.{addr_value}"
-                extract_params_value = self._datastore.get_param_value_service(value_id)
+                    extract_params_value = self._datastore.get_output_value(addr_value)
                 params[param_name] = extract_params_value
             elif 'values' in param_map.keys():
                 value_param_map_list = param_map.get('values')
@@ -127,27 +201,34 @@ class WorkflowExecutionOrchestrator:
                 params.update({param_name:sub_params})
         return params
 
+    def _get_edge_ids_by_service_id(self, service_id):
+        backward_graph = self._meta_pack['backward_graph']
+        prev_service_ids = backward_graph.get(service_id)
+        edge_params_ids = []
+        if not prev_service_ids:
+            edge_params_id = f"None-{service_id}"
+            edge_params_ids.append(edge_params_id)
+        else:
+            for prev_service_id in prev_service_ids:
+                edge_params_id = f"{prev_service_id}-{service_id}"
+                edge_params_ids.append(edge_params_id)
+        return edge_params_ids
+
     def _get_params(self, service_id):
-        def get_edge_params(edge_param_id, edges_param_map):
-            param_map_list = edges_param_map.get(edge_param_id)
+        def get_edge_params(edge_id, edges_param_map):
+            param_map_list = edges_param_map.get(edge_id, [])
             params = {}
             if not param_map_list:
                 return params
             params = self._extract_param_value(service_id, param_map_list)
             return params
 
-        backward_graph = self._meta_pack['backward_graph']
-        prev_service_ids = backward_graph.get(service_id)
-        edges_param_map = self._meta_pack['act_edges_param_map']
         param_map = {}
-        if not prev_service_ids:
-            edge_params_id = f"None-{service_id}"
-            param_map = get_edge_params(edge_params_id, edges_param_map)
-            prev_service_ids = []
-
-        for prev_service_id in prev_service_ids:
-            edge_params_id = f"{prev_service_id}-{service_id}"
-            param_map = get_edge_params(edge_params_id, edges_param_map)
+        edges_param_map = self._meta_pack['act_edges_param_map']
+        edge_ids = self._get_edge_ids_by_service_id(service_id)
+        for edge_id in edge_ids:
+            param_map = get_edge_params(edge_id, edges_param_map)
+        print(param_map)
         return param_map
 
     def _get_aggr_params(self, service_id):
@@ -215,7 +296,6 @@ class WorkflowExecutionOrchestrator:
 
         custom_result_info = self._meta_pack.get('custom_result_meta', {})
         custom_result_meta = custom_result_info.get(service_id)
-        # custom_result_meta = self._metastore.get_custom_result_meta_by_service_id_service(service_id)
         if custom_result_meta:
             for result_meta in custom_result_meta:
                 refer_type = result_meta.get('refer_type')
@@ -238,6 +318,10 @@ class WorkflowExecutionOrchestrator:
         task_state = task.get_state()
         return task_state
 
+    def _set_task_state(self, service_id, state):
+        task = self._get_task(service_id)
+        task.set_state(state)
+
     def _check_prev_task_compledted(self, service_id):
         backward_graph = self._meta_pack['backward_graph']
         prev_service_list = backward_graph.get(service_id)
@@ -247,14 +331,14 @@ class WorkflowExecutionOrchestrator:
             for prev_service_id in prev_service_list:
                 prev_task_state = self._get_task_state(prev_service_id)
                 self._logger.debug(f" - Prev_task: {prev_service_id} - {prev_task_state}")
-                if prev_task_state != TaskState.COMPLETED:
+                if prev_task_state not in [TaskState.COMPLETED, TaskState.SKIPPED]:
                     return False
         return True
 
     def _check_all_completed(self, task_map):
         be_completed = True
         for k, task in task_map.items():
-            if task.get_state() != TaskState.COMPLETED:
+            if task.get_state() not in [TaskState.COMPLETED, TaskState.STOPPED, TaskState.FAILED, TaskState.SKIPPED, TaskState.BLOCKED]:
                 be_completed = False
                 break
         return be_completed
@@ -290,6 +374,7 @@ class WorkflowExecutionOrchestrator:
         start_ts = time.time()
         while True:
             try:
+                # break
                 self._logger.info("<<< WAIT Q >>>")
                 service_id = self._job_Q.get()
                 if service_id == "SIGTERM":
@@ -336,17 +421,43 @@ class WorkflowExecutionOrchestrator:
                         asset_params = self._get_assets(service_id)
                         task.set_asset_params(asset_params)
                         task_role = task.get_role()
+                        func_params = {}
 
                         self._logger.debug(f" - ROLE: {service_id} - {task_role}")
                         if task_role == 'generation':
                             func_params = self._get_params(service_id)
                             param_value = self._extract_forced_param_value(service_id, "messages")
                             func_params['messages'] = param_value
+                            task.set_params(func_params)
                         elif task_role == 'aggregation':
                             func_params = self._get_aggr_params(service_id)
+                            task.set_params(func_params)
+                        elif task_role == 'condition':
+                            edges_info = self._meta_pack.get('edges_info', {})
+                            edge_ids = self._get_edge_ids_by_service_id(service_id)
+                            if edge_ids:
+                                edge_id = edge_ids[0]
+                            else:
+                                continue
+                            edge_meta = edges_info.get(edge_id)
+                            target_handler = edge_meta.get('target_handler', {})
+                            handler_type = target_handler.get('type')
+                            if handler_type == 'conditional':
+                                condition_map = target_handler.get("conditions", {})
+                                condition_branches = condition_map.get('branches', [])
+                                for condition_branch in condition_branches:
+                                    branch_rules = condition_branch.get('rules', [])
+                                    for rule_map in branch_rules:
+                                        param_id = rule_map.get('variable')
+                                        rule_map['variable'] = self._datastore.get_output_value(param_id)
+                                        if rule_map.get("refer_type") == 'indirect':
+                                            value_id = rule_map.get('value')
+                                            if not value_id:
+                                                continue
+                                            rule_map['value'] = self._datastore.get_output_value(value_id)
+                                task.set_handler(target_handler)
                         else:
                             func_params = self._get_params(service_id)
-
                         task.set_params(func_params)
                         task.set_state(TaskState.RUNNING)
                         self._datastore.set_service_params_service(service_id, func_params)
@@ -354,7 +465,6 @@ class WorkflowExecutionOrchestrator:
                 elif task_state in [TaskState.RUNNING, TaskState.RETRYING]:
                     executor = Thread(target=self._execute_task, args=(task,), daemon=True)
                     executor.start()
-                    # self._execute_task(task)
 
                 elif task_state in [TaskState.COMPLETED]:
                     self._logger.debug(f" - info 4. [COMPLETED] done task execution : {service_id}")
@@ -362,9 +472,28 @@ class WorkflowExecutionOrchestrator:
                     customed_task_result = self._result_mapper(service_id, task_result)
                     task = task_map.get(service_id)
                     task.set_result(customed_task_result)
-
                     self._datastore.set_service_result_service(service_id, customed_task_result)
-                    next_service_ids = self._get_next_service_ids(service_id)
+
+                    task_role = task.get_role()
+                    if task_role == 'condition':
+                        self._logger.critical(f"   L RESULT: {customed_task_result}")
+                        actions = customed_task_result.get('actions', [])
+                        execution_service_ids = []
+                        for action_map in actions:
+                            if action_map.get('action') == 'execution':
+                                execution_service_ids.append(action_map.get('value'))
+
+                        edges_graph = self._meta_pack['act_forward_graph']
+                        next_service_ids = edges_graph.get(service_id)
+                        skip_target_service_ids = list(set(next_service_ids).difference(set(execution_service_ids)))
+                        print("")
+                        print("*" * 150)
+                        self._set_action_skip_nodes(service_id, skip_target_service_ids)
+                        print("*" * 150)
+                        self._set_blocked_nodes(service_id)
+                    else:
+                        next_service_ids = self._get_next_service_ids(service_id)
+
                     for next_service_id in next_service_ids:
                         self._job_Q.put_nowait(next_service_id)
 
@@ -395,7 +524,7 @@ class WorkflowExecutionOrchestrator:
 
                 elif task_state in [TaskState.SKIPPED]:
                     self._logger.info(f" - Step 9. [SKIPPED  ] skipped task: {service_id}")
-                    break
+                    # break
 
                 elif task_state in [TaskState.BLOCKED]:
                     self._logger.info(f" - Step 10. [BLOCKED  ] blocked task: {service_id}")

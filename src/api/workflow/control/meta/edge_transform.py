@@ -10,7 +10,6 @@ class EdgeTransformer:
 
     def _get_data_type(self, param_key: str, service_info: Dict, find_type: str) -> Any:
         if find_type == 'key':
-            print(service_info)
             mapper_info = service_info['params']
         elif find_type == 'value':
             mapper_info = service_info['result']
@@ -72,7 +71,8 @@ class EdgeTransformer:
             edges_map[edge_id] = edge_info
             edges_map[edge_id]['source_info'] = src_service_info
             edges_map[edge_id]['target_info'] = tar_service_info
-            params_info = edge_info.get('param_info')
+            params_info = edge_info.get('param_info', {})
+
             self._add_data_type_on_params_info(params_info, tar_service_info)
         return edges_map
 

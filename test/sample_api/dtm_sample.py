@@ -186,9 +186,9 @@ async def process_node(request: NodeG_Model):
 
 # Node H - Business Logic 3
 class NodeH_Model(BaseModel):
-    nlp_img_lc_path: str
-    nlp_text_lc_path: str
-    aiv_img_path: str
+    nlp_img_lc_path: Optional[str] = None
+    nlp_text_lc_path: Optional[str] = None
+    aiv_img_path: Optional[str] = None
 
 app_node_h = FastAPI(title="Node H - Business Logic 7")
 @app_node_h.post("/process/node_h")#, response_model=WorkflowResponse)

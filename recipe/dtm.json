@@ -126,13 +126,13 @@
 			}
 		},
 		{
-		    "node_id": "Conditional_Node_A",
-		    "node_type": "conditional",
-		    "role": "conditional",
+		    "node_id": "Conditional_Node",
+		    "node_type": "module",
+		    "role": "condition",
 		    "location": "inner",
 		    "containable": false,
 		    "node_info": {
-		        "id": "CONDITION_A",
+		        "id": "Conditional_Node",
 		        "code": "COND1",
 		        "version": "1.0.0",
 		        "title": "Condition Node",
@@ -158,14 +158,14 @@
 		                {
 		                    "required": true,
 		                    "key": "branches",
-		                    "type": "array"
+		                    "type": "list"
 		                }
 		            ],
 		            "result": [
-		                {
-		                    "key": "next_target",
-		                    "type": "string"
-		                }
+			            {
+							"key": "actions",
+							"type": "list"
+						}
 		            ]
 		        }
 		    }
@@ -578,19 +578,22 @@
 					"function": "/process/node_h",
 					"params": [
 						{
-							"required": true,
+							"required": false,
 							"key": "nlp_img_lc_path",
-							"type": "string"
+							"type": "string",
+							"default": "None"
 						},
 						{
-							"required": true,
+							"required": false,
 							"key": "nlp_text_lc_path",
-							"type": "string"
+							"type": "string",
+							"default": "None"
 						},
 						{
-							"required": true,
+							"required": false,
 							"key": "aiv_img_path",
-							"type": "string"
+							"type": "string",
+							"default": "None"
 						}
 					],
 					"result": [
@@ -660,13 +663,11 @@
 		{
 			"source": "START_NODE.query_input",
 			"source_handler": {
-				"type": "sequence",
-				"conditions": {}
+				"type": "sequence"
 			},
 			"target": "NODE_A.process",
 			"target_handler": {
-				"type": "sequence",
-				"conditions": {}
+				"type": "sequence"
 			},
 			"env_info": [],
 			"asset_info": [],
@@ -682,15 +683,113 @@
 			"result_info": []
 		},
 		{
-			"source": "NODE_A.process",
+	        "source": "NODE_A.process",
 			"source_handler": {
-				"type": "sequence",
-				"conditions": {}
+				"type": "sequence"
+			},
+	        "target": "Conditional_Node.evaluate",
+	        "target_handler": {
+	            "type": "conditional",
+	            "conditions": {
+	                "branches": [
+	                    {
+	                        "type": "if",
+		                    "logic": "AND",
+		                    "rules": [
+			                    {
+				                    "refer_type": "indirect",
+		                            "variable": "NODE_A.process.tif_path",
+		                            "operator": "exist"
+		                        },
+			                    {
+				                    "refer_type": "indirect",
+		                            "variable": "NODE_A.process.txt_path",
+		                            "operator": "exist"
+		                        }
+		                    ],
+	                        "actions": [
+	                            {
+	                                "action": "execution",
+	                                "value": "NODE_G.process"
+	                            },
+		                        {
+	                                "action": "execution",
+	                                "value": "NODE_G.process"
+	                            }
+	                        ]
+	                    },
+	                    {
+	                        "type": "elif",
+		                    "logic": "AND",
+		                    "rules": [
+			                    {
+				                    "refer_type": "indirect",
+		                            "variable": "NODE_A.process.tif_path",
+		                            "operator": "exist",
+				                    "value": "NODE_A.process.tif_path"
+		                        },
+			                    {
+				                    "refer_type": "indirect",
+		                            "variable": "NODE_A.process.txt_path",
+		                            "operator": "not_exist",
+				                    "value": "NODE_A.process.txt_path"
+		                        }
+		                    ],
+	                        "actions": [
+	                            {
+	                                "action": "execution",
+	                                "value": "NODE_B.process"
+	                            }
+	                        ]
+	                    },
+	                    {
+	                        "type": "elif",
+		                    "logic": "AND",
+		                    "rules": [
+			                    {
+				                    "refer_type": "indirect",
+		                            "key": "NODE_A.process.tif_path",
+		                            "operator": "not_exist",
+				                    "value": "NODE_A.process.txt_path"
+		                        },
+			                    {
+				                    "refer_type": "indirect",
+		                            "key": "NODE_A.process.txt_path",
+		                            "operator": "exist",
+				                    "value": "NODE_A.process.txt_path"
+		                        }
+		                    ],
+	                        "actions": [
+	                            {
+	                                "action": "execution",
+	                                "value": "Node_G.process"
+	                            }
+	                        ]
+	                    },
+		                {
+	                        "type": "else",
+	                        "actions": [
+		                        {
+	                                "action": "stop"
+	                            }
+	                        ]
+	                    }
+	                ]
+	            }
+	        },
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [],
+			"result_info": []
+	    },
+		{
+			"source": "Conditional_Node.evaluate",
+			"source_handler": {
+				"type": "sequence"
 			},
 			"target": "NODE_B.process",
 			"target_handler": {
-				"type": "sequence",
-				"conditions": {}
+				"type": "sequence"
 			},
 			"env_info": [],
 			"asset_info": [],
@@ -706,13 +805,11 @@
 		{
 			"source": "NODE_B.process",
 			"source_handler": {
-				"type": "sequence",
-				"conditions": {}
+				"type": "sequence"
 			},
 			"target": "NODE_C.process",
 			"target_handler": {
-				"type": "sequence",
-				"conditions": {}
+				"type": "sequence"
 			},
 			"env_info": [],
 			"asset_info": [],
@@ -733,13 +830,11 @@
 		{
 			"source": "NODE_C.process",
 			"source_handler": {
-				"type": "sequence",
-				"conditions": {}
+				"type": "sequence"
 			},
 			"target": "NODE_D.process",
 			"target_handler": {
-				"type": "sequence",
-				"conditions": {}
+				"type": "sequence"
 			},
 			"env_info": [],
 			"asset_info": [],
@@ -765,13 +860,11 @@
 		{
 			"source": "NODE_D.process",
 			"source_handler": {
-				"type": "sequence",
-				"conditions": {}
+				"type": "sequence"
 			},
 			"target": "NODE_H.process",
 			"target_handler": {
-				"type": "sequence",
-				"conditions": {}
+				"type": "sequence"
 			},
 			"env_info": [],
 			"asset_info": [],
@@ -797,13 +890,11 @@
 		{
 			"source": "NODE_B.process",
 			"source_handler": {
-				"type": "sequence",
-				"conditions": {}
+				"type": "sequence"
 			},
 			"target": "NODE_F.process",
 			"target_handler": {
-				"type": "sequence",
-				"conditions": {}
+				"type": "sequence"
 			},
 			"env_info": [],
 			"asset_info": [],
@@ -824,13 +915,11 @@
 		{
 			"source": "NODE_F.process",
 			"source_handler": {
-				"type": "sequence",
-				"conditions": {}
+				"type": "sequence"
 			},
 			"target": "NODE_H.process",
 			"target_handler": {
-				"type": "sequence",
-				"conditions": {}
+				"type": "sequence"
 			},
 			"env_info": [],
 			"asset_info": [],
@@ -856,13 +945,11 @@
 		{
 			"source": "NODE_B.process",
 			"source_handler": {
-				"type": "sequence",
-				"conditions": {}
+				"type": "sequence"
 			},
 			"target": "NODE_E.process",
 			"target_handler": {
-				"type": "sequence",
-				"conditions": {}
+				"type": "sequence"
 			},
 			"env_info": [],
 			"asset_info": [],
@@ -883,13 +970,11 @@
 		{
 			"source": "NODE_E.process",
 			"source_handler": {
-				"type": "sequence",
-				"conditions": {}
+				"type": "sequence"
 			},
 			"target": "NODE_F.process",
 			"target_handler": {
-				"type": "sequence",
-				"conditions": {}
+				"type": "sequence"
 			},
 			"env_info": [],
 			"asset_info": [],
@@ -910,13 +995,11 @@
 		{
 			"source": "NODE_F.process",
 			"source_handler": {
-				"type": "sequence",
-				"conditions": {}
+				"type": "sequence"
 			},
 			"target": "NODE_H.process",
 			"target_handler": {
-				"type": "sequence",
-				"conditions": {}
+				"type": "sequence"
 			},
 			"env_info": [],
 			"asset_info": [],
@@ -940,15 +1023,13 @@
 			"result_info": []
 		},
 		{
-			"source": "NODE_A.process",
+			"source": "Conditional_Node.evaluate",
 			"source_handler": {
-				"type": "sequence",
-				"conditions": {}
+				"type": "sequence"
 			},
 			"target": "NODE_G.process",
 			"target_handler": {
-				"type": "sequence",
-				"conditions": {}
+				"type": "sequence"
 			},
 			"env_info": [],
 			"asset_info": [],
@@ -964,13 +1045,11 @@
 		{
 			"source": "NODE_G.process",
 			"source_handler": {
-				"type": "sequence",
-				"conditions": {}
+				"type": "sequence"
 			},
 			"target": "NODE_H.process",
 			"target_handler": {
-				"type": "sequence",
-				"conditions": {}
+				"type": "sequence"
 			},
 			"env_info": [],
 			"asset_info": [],
@@ -996,13 +1075,11 @@
 		{
 			"source": "NODE_H.process",
 			"source_handler": {
-				"type": "sequence",
-				"conditions": {}
+				"type": "sequence"
 			},
 			"target": "END_NODE.output",
 			"target_handler": {
-				"type": "sequence",
-				"conditions": {}
+				"type": "sequence"
 			},
 			"env_info": [],
 			"asset_info": [],

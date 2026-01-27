@@ -28,7 +28,7 @@ class WorkflowMetaParser(WorkflowMetaHandler):
 
             self._logger.info("# [DAG Loader] Step 03. Extract Nodes")
             wf_nodes_meta = self.extract_wf_to_nodes_service(wf_meta)
-            # self._print_debug_data(wf_nodes_meta)
+            self._print_debug_data(wf_nodes_meta)
 
             self._logger.info("# [DAG Loader] Step 04. Extract common environment params")
             wf_env_pool = self.extract_wf_common_env_service(wf_meta)
@@ -36,11 +36,11 @@ class WorkflowMetaParser(WorkflowMetaHandler):
 
             self._logger.info("# [DAG Loader] Step 05. Extract Service Pool")
             wf_service_pool = self.cvt_wf_to_service_pool_service(wf_nodes_meta)
-            # self._print_debug_data(wf_service_pool)
+            self._print_debug_data(wf_service_pool)
 
             self._logger.info("# [DAG Loader] Step 06. Extract Edges")
             wf_edges_meta = self.extract_wf_to_edges_service(wf_meta, wf_service_pool) # Meta & DataIO
-            # self._print_debug_data(wf_edges_meta)
+            self._print_debug_data(wf_edges_meta)
 
             self._logger.info("# [DAG Loader] Step 07. Extract environment values") # DataIO
             wf_node_env_map_pool = self.extract_wf_node_env_service(wf_edges_meta)

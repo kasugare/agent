@@ -88,13 +88,12 @@ class MetaParseController:
 
     def cvt_wf_to_service_pool_ctl(self, nodes_meta: dict) -> dict:
         service_pool = {}
-        add_node_keys = ['node_type', 'role', 'location', 'api_keys',
-                         'containable', 'api_info', 'module_info']
+        add_node_keys = ['node_type', 'role', 'location', 'api_keys', 'containable', 'api_info', 'module_info']
         for node_id, node_info in nodes_meta.items():
             services = node_info.get('services')
             for service_name, service_info in services.items():
                 node_service_id = f"{node_id}.{service_name}"
-                service_info['node_id'] = node_id   # <--
+                service_info['node_id'] = node_id
                 service_pool[node_service_id] = service_info
                 for node_key in add_node_keys:
                     service_pool[node_service_id][node_key] = node_info.get(node_key, {})

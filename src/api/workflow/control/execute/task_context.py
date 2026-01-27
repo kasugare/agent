@@ -4,6 +4,7 @@
 from api.workflow.access.execute.api_executor import ApiExecutor
 from api.workflow.access.execute.start_executor import StartExecutor
 from api.workflow.access.execute.end_executor import EndExecutor
+from api.workflow.access.execute.conditional_executor import ConditionalExecutor
 from api.workflow.access.execute.module_executor import ModuleExecutor
 from api.workflow.error_pool.error import ExceedExecutionRetryError
 import math
@@ -28,12 +29,12 @@ class TaskContext:
         self._result = None
         self._error = None
         self._state = None
+        self._target_handler = {}
 
         self._init_context(service_info)
         self._init_timeout(timeout_conf)
 
     def _init_context(self, service_info):
-        print(service_info)
         self._task_type = service_info.get('type')
         self._role = service_info.get('role')
         self._node_type = str(service_info.get('node_type')).lower()
@@ -46,7 +47,6 @@ class TaskContext:
                 self._set_end_executor()
             else:
                 self._conn_info = self._extract_api_info(service_info)
-                self._logger.critical(self._conn_info)
                 self._set_api_executor(**self._conn_info)
         elif self._node_type == 'engine':
             if self._task_type.lower() == 'start_node':
@@ -57,6 +57,8 @@ class TaskContext:
             if self._role == 'generation':
                 self._conn_info = self._extract_module_info(service_info)
                 self._set_class_executor(**self._conn_info)
+            elif self._role == 'condition':
+                self._set_conditional_executor()
             else:
                 self._conn_info = self._extract_module_info(service_info)
                 self._set_class_executor(**self._conn_info)
@@ -102,6 +104,9 @@ class TaskContext:
 
     def _set_end_executor(self):
         self._executor = EndExecutor(self._logger)
+
+    def _set_conditional_executor(self):
+        self._executor = ConditionalExecutor(self._logger)
 
     def get_service_id(self):
         return self._service_id
@@ -163,6 +168,14 @@ class TaskContext:
 
     def get_state(self):
         return self._state
+
+    def set_handler(self, handler):
+        self._target_handler = handler
+        executor = self.get_executor()
+        executor.set_target_handler(handler)
+
+    def get_handler(self):
+        return self._target_handler
 
     def _init_timeout(self, timeout_config):
         self._max_retries = timeout_config.get('max_retries', 3)

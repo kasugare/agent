@@ -73,6 +73,22 @@ class DataStoreService:
         param_value = self._data_controller.get_param_value_control(value_id)
         return param_value
 
+    def get_env_value(self, value_id):
+        env_value_id = f"E.{value_id}"
+        return self.get_param_value_service(env_value_id)
+
+    def get_asset_value(self, value_id):
+        asset_value_id = f"A.{value_id}"
+        return self.get_param_value_service(asset_value_id)
+
+    def get_input_value(self, value_id):
+        input_value_id = f"I.{value_id}"
+        return self.get_param_value_service(input_value_id)
+
+    def get_output_value(self, value_id):
+        output_value_id = f"O.{value_id}"
+        return self.get_param_value_service(output_value_id)
+
     def find_io_value_service(self, value_id):
         io_value = self._data_controller.find_io_value_control(value_id)
         return io_value

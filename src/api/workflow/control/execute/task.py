@@ -69,8 +69,6 @@ class Task(TaskContext):
                 self.set_state(TaskState.FAILED)
                 self.set_error(e)
         except Exception as e:
-            import traceback
-            print(traceback.print_exc())
             self._logger.error(e)
             self.set_state(TaskState.FAILED)
             self.set_error(e)

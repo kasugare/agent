@@ -40,7 +40,7 @@ class RedisAccess:
         try:
             data = self._redis_client.hget(key, field)
             if data is None:
-                return []
+                return None
             result = None
             try:
                 result = json.loads(data)
@@ -55,7 +55,7 @@ class RedisAccess:
         try:
             data = self._redis_client.hgetall(key)
             if data is None:
-                return []
+                return None
             return data or {}
         except Exception as e:
             self._logger.error(f"Redis HGETALL failed: {e}")

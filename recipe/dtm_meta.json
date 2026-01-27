@@ -59,7 +59,7 @@
 					],
 					"result": [
 						{
-							"key": "query",
+							"key": "tar_path",
 							"type": "string"
 						}
 					]
@@ -124,6 +124,52 @@
 					]
 				}
 			}
+		},
+		{
+		    "node_id": "Conditional_Node",
+		    "node_type": "conditional",
+		    "role": "conditional",
+		    "location": "inner",
+		    "containable": false,
+		    "node_info": {
+		        "id": "Conditional_Node",
+		        "code": "COND1",
+		        "version": "1.0.0",
+		        "title": "Condition Node",
+		        "desc": "조건 분기 및 변수 조작 노드"
+		    },
+		    "condition_config": {
+		        "operators": {
+			        "comparison": [">", "<", ">=", "<=", "==", "!="],
+			        "existence": ["exist", "not_exist"],
+			        "logical": ["AND", "OR", "NOT"]
+			    },
+			    "action_types": {
+			        "variable": ["set_variable", "increment", "decrement", "copy_variable", "delete_variable"],
+			        "calculation": ["calculate"],
+			        "collection": ["append", "merge"],
+				    "execution": ["execute"]
+			    },
+			    "branch_types": ["if", "elif", "else"]
+		    },
+		    "services": {
+		        "evaluate": {
+		            "function": "evaluate_condition",
+		            "params": [
+		                {
+		                    "required": true,
+		                    "key": "branches",
+		                    "type": "list"
+		                }
+		            ],
+		            "result": [
+		                {
+		                    "key": "next_target",
+		                    "type": "string"
+		                }
+		            ]
+		        }
+		    }
 		},
 		{
 			"node_id": "NODE_B",
@@ -292,7 +338,7 @@
 						{
 							"required": true,
 							"key": "doccls_json_path",
-							"type": "json"
+							"type": "string"
 						},
 						{
 							"required": true,
@@ -631,7 +677,7 @@
 				{
 					"refer_type": "indirect",
 					"key": "tar_path",
-					"value": "START_NODE.query_input.query"
+					"value": "START_NODE.query_input.tar_path"
 				}
 			],
 			"result_info": []
@@ -702,12 +748,12 @@
 				{
 					"refer_type": "indirect",
 					"key": "img_path",
-					"value": "NODE_C.process.img_path"
+					"value": "NODE_B.process.img_path"
 				},
 				{
 					"refer_type": "indirect",
 					"key": "doccls_json_path",
-					"value": "NODE_C.process.doccls_json_path"
+					"value": "NODE_B.process.doccls_json_path"
 				},
 				{
 					"refer_type": "indirect",
@@ -911,7 +957,7 @@
 				{
 					"refer_type": "indirect",
 					"key": "text_path",
-					"value": "NODE_A.process.text_path"
+					"value": "NODE_A.process.txt_path"
 				}
 			],
 			"result_info": []
