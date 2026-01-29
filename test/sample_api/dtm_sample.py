@@ -43,8 +43,10 @@ class WorkflowMergeResponse(BaseModel):
 # Node A (Start Node) - API Gateway
 class NodeA_Model(BaseModel):
     tar_path: str
+
 @app_node_a.post("/process/node_a")#, response_model=WorkflowResponse)
 async def process_node(request: NodeA_Model):
+    print(request)
     print("#" * 100)
     print(f"< Node A >")
     print(f"  L PARAMS: {request.tar_path}")
@@ -53,7 +55,6 @@ async def process_node(request: NodeA_Model):
         "txt_path": "/data/2026_01_16/033500010101722969020240422093257001_1/in_tar_file/03B100094800000000020251201091648714.txt",
         "timestamp": datetime.now().isoformat()
     }
-
     return response
 
 

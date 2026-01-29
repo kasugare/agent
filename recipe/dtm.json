@@ -81,12 +81,9 @@
 				"desc": "DTM3"
 			},
 			"api_info": {
+				"connection": "direct",
 				"base_url": "http://127.0.0.1:10001",
-				"type": "http",
-				"method": "POST",
-				"route": "/process/node_a",
-				"header": {},
-				"body": {}
+				"type": "http"
 			},
 			"module_info": {
 				"module_path": "",
@@ -101,6 +98,7 @@
 			"services": {
 				"process": {
 					"function": "/process/node_a",
+					"method": "post",
 					"params": [
 						{
 							"required": true,
@@ -671,8 +669,6 @@
 			},
 			"env_info": [],
 			"asset_info": [],
-			"header_info": [],
-			"body_info": [],
 			"param_info": [
 				{
 					"refer_type": "indirect",
@@ -708,9 +704,9 @@
 		                        }
 		                    ],
 	                        "actions": [
-	                            {
+		                        {
 	                                "action": "execution",
-	                                "value": "NODE_G.process"
+	                                "value": "NODE_B.process"
 	                            },
 		                        {
 	                                "action": "execution",
@@ -725,14 +721,12 @@
 			                    {
 				                    "refer_type": "indirect",
 		                            "variable": "NODE_A.process.tif_path",
-		                            "operator": "exist",
-				                    "value": "NODE_A.process.tif_path"
+		                            "operator": "exist"
 		                        },
 			                    {
 				                    "refer_type": "indirect",
 		                            "variable": "NODE_A.process.txt_path",
-		                            "operator": "not_exist",
-				                    "value": "NODE_A.process.txt_path"
+		                            "operator": "not_exist"
 		                        }
 		                    ],
 	                        "actions": [
@@ -748,21 +742,19 @@
 		                    "rules": [
 			                    {
 				                    "refer_type": "indirect",
-		                            "key": "NODE_A.process.tif_path",
-		                            "operator": "not_exist",
-				                    "value": "NODE_A.process.txt_path"
+		                            "variable": "NODE_A.process.tif_path",
+		                            "operator": "not_exist"
 		                        },
 			                    {
 				                    "refer_type": "indirect",
-		                            "key": "NODE_A.process.txt_path",
-		                            "operator": "exist",
-				                    "value": "NODE_A.process.txt_path"
+		                            "variable": "NODE_A.process.txt_path",
+		                            "operator": "exist"
 		                        }
 		                    ],
 	                        "actions": [
 	                            {
 	                                "action": "execution",
-	                                "value": "Node_G.process"
+	                                "value": "NODE_G.process"
 	                            }
 	                        ]
 	                    },

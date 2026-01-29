@@ -227,9 +227,7 @@
 			"role": "generation",
 			"location": "inner",
 			"containable": true,
-			"api_keys": [
-				""
-			],
+			"api_keys": [],
 			"node_info": {
 				"id": "Generation",
 				"code": "RAG_GEN",

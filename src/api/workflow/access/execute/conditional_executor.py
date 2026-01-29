@@ -67,7 +67,6 @@ class ConditionalExecutor:
     def _evaluate_condition(self, rules: List, logic) -> bool:
         if logic == "AND":
             result = all(self._evaluate_single_rule(rule) for rule in rules)
-
         elif logic == "OR":
             result = any(self._evaluate_single_rule(rule) for rule in rules)
         else:
@@ -84,11 +83,19 @@ class ConditionalExecutor:
         operator = rule.get("operator")
         value = rule.get("value")
 
-        # check exsit
+        # check exist
         if operator == "exist":
-            return var_value is not None
+            if var_value is None or not var_value:
+                result = False
+            else:
+                result = True
+            return result
         elif operator == "not_exist":
-            return var_value is None
+            if var_value is None or not var_value:
+                result = True
+            else:
+                result = False
+            return result
 
         # calculat conditions
         if operator == ">":

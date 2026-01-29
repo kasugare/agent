@@ -5,6 +5,7 @@ from typing import Dict, List, Any
 import traceback
 import asyncio
 import aiohttp
+import json
 
 
 class ApiExecutor:
@@ -55,13 +56,16 @@ class ApiExecutor:
             async with session.post(self.get_url(), json=self.get_params()) as response:
                 try:
                     if response.status >= 400:
-                        error_text = await response.text()
-                        self._logger.error(error_text)
+                        # error_text = await response.text()
+                        # self._logger.error(error_text)
+                        error_json = await response.json()
+                        self._logger.error(f"Error details (JSON): {json.dumps(error_json, indent=2)}")
                         raise Exception(f"API call failed with status {response}")
                     result = {"status": "success", "result": await response.json()}
                     self._logger.debug(f" - task completed successfully: {result}")
                 except Exception as e:
                     self._logger.error(f"Workflow execution error_pool: {str(e)}\n{traceback.format_exc()}")
+                    self._logger.error(f"Error details (JSON): {json.dumps(error_json, indent=2)}")
                     result = {"status": "error_pool", "error_pool": str(e)}
                     raise Exception
                 return result

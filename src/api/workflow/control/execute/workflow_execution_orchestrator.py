@@ -228,7 +228,6 @@ class WorkflowExecutionOrchestrator:
         edge_ids = self._get_edge_ids_by_service_id(service_id)
         for edge_id in edge_ids:
             param_map = get_edge_params(edge_id, edges_param_map)
-        print(param_map)
         return param_map
 
     def _get_aggr_params(self, service_id):
@@ -486,10 +485,7 @@ class WorkflowExecutionOrchestrator:
                         edges_graph = self._meta_pack['act_forward_graph']
                         next_service_ids = edges_graph.get(service_id)
                         skip_target_service_ids = list(set(next_service_ids).difference(set(execution_service_ids)))
-                        print("")
-                        print("*" * 150)
                         self._set_action_skip_nodes(service_id, skip_target_service_ids)
-                        print("*" * 150)
                         self._set_blocked_nodes(service_id)
                     else:
                         next_service_ids = self._get_next_service_ids(service_id)
