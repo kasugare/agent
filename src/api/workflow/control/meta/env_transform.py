@@ -33,14 +33,9 @@ class EnvironmentsTransformer:
     def cvt_node_env_value_map_ctl(self, wf_nodes_meta, wf_node_env_map_pool, wf_env_pool) -> dict:
         nodes_env_value_map = {}
         for node_id, node_meta in wf_nodes_meta.items():
-            module_info = node_meta.get('module_info')
-            if not module_info:
-                continue
-
-            module_env_info = module_info.get('sys_environments')
+            module_env_info = node_meta.get('environments')
             if not module_env_info:
                 continue
-
             node_env_params = module_env_info.get('params')
             if not node_env_params:
                 continue

@@ -40,7 +40,7 @@ class TaskContext:
         self._node_type = str(service_info.get('node_type')).lower()
         self._location = service_info.get('location')
 
-        if self._node_type == 'rest-api':
+        if self._node_type in ['rest-api', 'external']:
             if self._role == 'start':
                 self._set_start_executor()
             elif self._role == 'end':
@@ -54,7 +54,13 @@ class TaskContext:
             else:
                 self._conn_info = self._extract_module_info(service_info)
         elif self._node_type == 'module':
-            if self._role == 'generation':
+            if self._role == 'start':
+                self._conn_info = self._extract_module_info(service_info)
+                self._set_class_executor(**self._conn_info)
+            elif self._role == 'end':
+                self._conn_info = self._extract_module_info(service_info)
+                self._set_class_executor(**self._conn_info)
+            elif self._role == 'generation':
                 self._conn_info = self._extract_module_info(service_info)
                 self._set_class_executor(**self._conn_info)
             elif self._role == 'condition':

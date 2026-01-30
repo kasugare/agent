@@ -68,7 +68,7 @@
 		},
 		{
 			"node_id": "NODE_A",
-			"node_type": "rest-api",
+			"node_type": "external",
 			"role": "processing",
 			"location": "outter",
 			"containable": false,
@@ -170,7 +170,7 @@
 		},
 		{
 			"node_id": "NODE_B",
-			"node_type": "rest-api",
+			"node_type": "external",
 			"role": "processing",
 			"location": "outter",
 			"containable": false,
@@ -233,7 +233,7 @@
 		},
 		{
 			"node_id": "NODE_C",
-			"node_type": "rest-api",
+			"node_type": "external",
 			"role": "processing",
 			"location": "outter",
 			"containable": false,
@@ -293,7 +293,7 @@
 		},
 		{
 			"node_id": "NODE_D",
-			"node_type": "rest-api",
+			"node_type": "external",
 			"role": "processing",
 			"location": "outter",
 			"containable": false,
@@ -358,7 +358,7 @@
 		},
 		{
 			"node_id": "NODE_E",
-			"node_type": "rest-api",
+			"node_type": "external",
 			"role": "processing",
 			"location": "outter",
 			"containable": false,
@@ -418,7 +418,7 @@
 		},
 		{
 			"node_id": "NODE_F",
-			"node_type": "rest-api",
+			"node_type": "external",
 			"role": "processing",
 			"location": "outter",
 			"containable": false,
@@ -482,7 +482,7 @@
 		},
 		{
 			"node_id": "NODE_G",
-			"node_type": "rest-api",
+			"node_type": "external",
 			"role": "processing",
 			"location": "outter",
 			"containable": false,
@@ -541,7 +541,7 @@
 		},
 		{
 			"node_id": "NODE_H",
-			"node_type": "rest-api",
+			"node_type": "external",
 			"role": "processing",
 			"location": "outter",
 			"containable": false,

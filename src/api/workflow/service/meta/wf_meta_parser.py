@@ -18,67 +18,81 @@ class WorkflowMetaParser(WorkflowMetaHandler):
             if not wf_meta:
                 return
 
+            self._logger.info("# [DAG Loader] Step 00. Check meta validation")
+            self.check_meta_validation(wf_meta)
+
             self._logger.info("# [DAG Loader] Step 01. Extract Common Info")
-            wf_comm_meta = self.extract_wf_common_info_service(wf_meta)
+            wf_comm_meta = self.extract_wf_common_info(wf_meta)
             self._print_debug_data(wf_comm_meta)
 
             self._logger.info("# [DAG Loader] Step 02. Extract Resource Meta")
-            wf_resources_meta = self.get_wf_to_resources_service(wf_meta)
+            wf_resources_meta = self.get_wf_to_resources(wf_meta)
             # self._print_debug_data(wf_resources_meta)
 
             self._logger.info("# [DAG Loader] Step 03. Extract Nodes")
-            wf_nodes_meta = self.extract_wf_to_nodes_service(wf_meta)
+            wf_nodes_meta = self.extract_wf_to_nodes(wf_meta)
             self._print_debug_data(wf_nodes_meta)
 
-            self._logger.info("# [DAG Loader] Step 04. Extract common environment params")
-            wf_env_pool = self.extract_wf_common_env_service(wf_meta)
-            # self._print_debug_data(wf_env_pool)
-
-            self._logger.info("# [DAG Loader] Step 05. Extract Service Pool")
-            wf_service_pool = self.cvt_wf_to_service_pool_service(wf_nodes_meta)
+            self._logger.info("# [DAG Loader] Step 04. Extract Service Pool")
+            wf_service_pool = self.cvt_wf_to_service_pool(wf_nodes_meta)
             self._print_debug_data(wf_service_pool)
 
-            self._logger.info("# [DAG Loader] Step 06. Extract Edges")
-            wf_edges_meta = self.extract_wf_to_edges_service(wf_meta, wf_service_pool) # Meta & DataIO
+            self._logger.info("# [DAG Loader] Step 05. Extract Edges")
+            wf_edges_meta = self.extract_wf_to_edges(wf_meta, wf_service_pool) # Meta & DataIO
             self._print_debug_data(wf_edges_meta)
 
-            self._logger.info("# [DAG Loader] Step 07. Extract environment values") # DataIO
-            wf_node_env_map_pool = self.extract_wf_node_env_service(wf_edges_meta)
-            nodes_env_value_map = self.extract_node_environments_value_map_service(wf_nodes_meta, wf_node_env_map_pool, wf_env_pool)
+            self._logger.info("# [DAG Loader] Step 06. Extract common environment params")
+            wf_env_pool = self.extract_wf_common_env(wf_meta)
+            self._print_debug_data(wf_env_pool)
+
+            self._logger.info("# [DAG Loader] Step 07. Extract environment values")
+            wf_node_env_map_pool = self.extract_wf_node_env(wf_edges_meta)
+            nodes_env_value_map = self.extract_node_environments_value_map(wf_nodes_meta, wf_node_env_map_pool, wf_env_pool)
+            print(nodes_env_value_map)
             self._print_debug_data(nodes_env_value_map)
 
-            self._logger.info("# [DAG Loader] Step 08. Extract asset values") # DataIO
-            node_asset_map_pool = self.extract_wf_node_asset_service(wf_edges_meta)
-            nodes_asset_value_map = self.extract_node_asset_value_map_service(wf_nodes_meta, node_asset_map_pool, wf_env_pool)  # DataIO
+            self._logger.info("# [DAG Loader] Step 08. Extract asset environment params")
+            wf_asset_pool = self.extract_wf_asset_env(wf_nodes_meta, wf_edges_meta)
+            self._print_debug_data(wf_asset_pool)
+
+            self._logger.info("# [DAG Loader] Step 09. Extract asset values")
+            node_asset_map_pool = self.extract_wf_node_asset(wf_edges_meta)
+            print("<node_asset_map_pool>")
+            self._print_debug_data(node_asset_map_pool)
+
+            nodes_asset_value_map = self.extract_node_asset_value_map(wf_nodes_meta, node_asset_map_pool, wf_asset_pool)  # DataIO
+            print("<nodes_asset_value_map>")
             self._print_debug_data(nodes_asset_value_map)
 
-            self._logger.info("# [DAG Loader] Step 09. Extract node's customized result set")
-            custom_result_meta = self.extract_custom_result_meta_service(wf_edges_meta)
+            self._logger.info("# [DAG Loader] Step 10. Extract node's customized result set")
+            custom_result_meta = self.extract_custom_result_meta(wf_edges_meta)
             self._print_debug_data(custom_result_meta)
 
-            self._logger.info("# [DAG Loader] Step 10. Extract Forward-Edge graph")
-            wf_forward_edge_graph = self.extract_forward_edge_graph_service(wf_edges_meta)
+            self._logger.info("# [DAG Loader] Step 11. Extract Forward-Edge graph")
+            wf_forward_edge_graph = self.extract_forward_edge_graph(wf_edges_meta)
             self._print_debug_data(wf_forward_edge_graph)
 
-            self._logger.info("# [DAG Loader] Step 11. Extract Forward-graph")
-            wf_forward_graph = self.extract_forward_graph_service(wf_edges_meta)
+            self._logger.info("# [DAG Loader] Step 12. Extract Forward-graph")
+            wf_forward_graph = self.extract_forward_graph(wf_edges_meta)
             self._print_debug_data(wf_forward_graph)
 
-            self._logger.info("# [DAG Loader] Step 12. Extract backward-graph")
-            wf_backward_graph = self.extract_backward_graph_service(wf_edges_meta)
+            self._logger.info("# [DAG Loader] Step 13. Extract backward-graph")
+            wf_backward_graph = self.extract_backward_graph(wf_edges_meta)
             self._print_debug_data(wf_backward_graph)
 
-            self._logger.info("# [DAG Loader] Step 13. Extract Start Node from forward_graph")
-            start_nodes = self.find_start_nodes_service(wf_forward_graph)
+            self._logger.info("# [DAG Loader] Step 14. Extract Start Node from forward_graph")
+            start_nodes = self.find_start_nodes(wf_forward_graph)
             self._print_debug_data(start_nodes)
 
-            self._logger.info("# [DAG Loader] Step 14. Extract End Node from backward_graph")
-            end_nodes = self.find_end_nodes_service(wf_backward_graph)
+            self._logger.info("# [DAG Loader] Step 15. Extract End Node from backward_graph")
+            end_nodes = self.find_end_nodes(wf_backward_graph)
             self._print_debug_data(end_nodes)
 
-            self._logger.info("# [DAG Loader] Step 15. Extract service params-map")
-            edges_param_map = self.extract_params_map_service(start_nodes, wf_service_pool, wf_edges_meta)
+            self._logger.info("# [DAG Loader] Step 16. Extract service params-map")
+            edges_param_map = self.extract_params_map(start_nodes, wf_service_pool, wf_edges_meta)
             self._print_debug_data(edges_param_map)
+
+            self.extract_target_handler_reference(wf_nodes_meta, wf_edges_meta)
 
             meta_pack = {
                 "wf_meta": wf_meta,

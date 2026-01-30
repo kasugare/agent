@@ -4,6 +4,7 @@
 from api.workflow.control.meta.edge_transform import EdgeTransformer
 from api.workflow.control.meta.env_transform import EnvironmentsTransformer
 from api.workflow.control.meta.assets_transform import AssetsTransformer
+from api.workflow.control.meta.target_handler_transform import TargetHandlerTransformer
 
 
 class MetaParseController:
@@ -12,6 +13,10 @@ class MetaParseController:
         self._edge_transformer = EdgeTransformer(logger)
         self._env_transformer = EnvironmentsTransformer(logger)
         self._asset_transformer = AssetsTransformer(logger)
+        self._target_transformer = TargetHandlerTransformer(logger)
+
+    def check_meta_validation(self, wf_meta):
+        pass
 
     def _extract_node_id(self, edge_info):
         service_id = edge_info.get('target')
@@ -48,6 +53,10 @@ class MetaParseController:
                 env_id = f"{env_code}.{env_param_map.get('key')}"
                 env_pool[env_id] = env_param_map.get('value')
         return env_pool
+
+    def extract_wf_asset_env_ctl(self, wf_nodes_meta: dict, wf_edges_meta: dict) -> dict:
+        asset_pool = self._asset_transformer.gen_asset_env_pool(wf_nodes_meta, wf_edges_meta)
+        return asset_pool
 
     def extract_wf_node_env_map_ctl(self, wf_edges_meta: dict) -> dict:
         node_env_map_pool = {}
@@ -88,15 +97,16 @@ class MetaParseController:
 
     def cvt_wf_to_service_pool_ctl(self, nodes_meta: dict) -> dict:
         service_pool = {}
-        add_node_keys = ['node_type', 'role', 'location', 'api_keys', 'containable', 'api_info', 'module_info']
+        add_node_keys = ['node_type', 'role', 'location', 'containable', 'required_nodes', 'api_info', 'module_info', 'environments', 'asset_environments']
         for node_id, node_info in nodes_meta.items():
             services = node_info.get('services')
-            for service_name, service_info in services.items():
-                node_service_id = f"{node_id}.{service_name}"
+            for service_info in services:
+                service_name = service_info.get('service_name', None)
+                service_id = f"{node_id}.{service_name}"
                 service_info['node_id'] = node_id
-                service_pool[node_service_id] = service_info
+                service_pool[service_id] = service_info
                 for node_key in add_node_keys:
-                    service_pool[node_service_id][node_key] = node_info.get(node_key, {})
+                    service_pool[service_id][node_key] = node_info.get(node_key, {})
         return service_pool
 
     def extract_wf_to_edges_ctl(self, wf_meta: dict, wf_service_pool: dict) -> dict:
@@ -106,6 +116,8 @@ class MetaParseController:
     def extract_forward_edge_graph_ctl(self, edges_meta: dict) -> dict:
         forward_edge_graph = dict()
         for edge_id, edge_info in edges_meta.items():
+            if edge_info.get('edge_type') in ['reference']:
+                continue
             curr_node = edge_info.get('source')
             next_node = edge_info.get('target')
             param_map_list = edge_info.get('param_info')
@@ -120,6 +132,8 @@ class MetaParseController:
     def extract_forward_graph_ctl(self, edges_meta: dict) -> dict:
         forward_graph = dict()
         for edge_id, edge_info in edges_meta.items():
+            if edge_info.get('edge_type') in ['reference']:
+                continue
             curr_node = edge_info.get('source')
             next_node = edge_info.get('target')
             if not forward_graph.get(next_node):
@@ -133,6 +147,8 @@ class MetaParseController:
     def extract_backward_graph_ctl(self, edges_meta: dict) -> dict:
         backward_edge_graph = dict()
         for edge_id, edge_info in edges_meta.items():
+            if edge_info.get('edge_type') in ['reference']:
+                continue
             curr_node = edge_info.get('target')
             prev_node = edge_info.get('source')
             if curr_node in backward_edge_graph.keys():
@@ -209,3 +225,6 @@ class MetaParseController:
     def extract_params_map_ctl(self, start_nodes, wf_service_pool, wf_edges_meta) -> dict:
         edge_params_map = self._edge_transformer.cvt_params_map_ctl(start_nodes, wf_service_pool, wf_edges_meta)
         return edge_params_map
+
+    def extract_target_handler_reference_ctl(self, wf_nodes_meta, wf_edges_meta):
+        self._target_transformer.extract_references(wf_nodes_meta, wf_edges_meta)

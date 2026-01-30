@@ -28,6 +28,24 @@ class AssetKeyError(Exception):
         return self._errorMessage
 
 
+class MismatchedRequirementsError(Exception):
+    def __init__(self):
+        super().__init__("Fail to meet the conditions/requirements")
+        self._errorMessage = "Asset information is inconsistent"
+
+    def __str__(self):
+        return self._errorMessage
+
+
+class NotExistRequiredNodesError(Exception):
+    def __init__(self):
+        super().__init__("not exist required node error")
+        self._errorMessage = "not exist required node error"
+
+    def __str__(self):
+        return self._errorMessage
+
+
 class EnvironmentKeyError(Exception):
     def __init__(self):
         super().__init__("Environment's keys mismatch detected between dictionaries")

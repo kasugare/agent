@@ -100,8 +100,6 @@ class WorkflowExecutionOrchestrator:
             next_depth = depth + 1
             self._set_blocked_nodes(next_service_id, next_depth)
 
-
-
     def _map_template(self, service_id, text_value):
         if not isinstance(text_value, str):
             return text_value
@@ -126,15 +124,11 @@ class WorkflowExecutionOrchestrator:
         try:
             service_pool = self._meta_pack['service_pool']
             service_info = service_pool.get(service_id)
-            module_info = service_info.get('module_info')
-            if not module_info:
+            env_map = service_info.get('environments')
+            if not env_map:
                 return {}
 
-            sys_env_map = module_info.get('sys_environments')
-            if not sys_env_map:
-                return {}
-
-            env_params_info = sys_env_map.get('params')
+            env_params_info = env_map.get('params')
             if not env_params_info:
                 return {}
 
@@ -152,11 +146,7 @@ class WorkflowExecutionOrchestrator:
         try:
             service_pool = self._meta_pack['service_pool']
             service_info = service_pool.get(service_id)
-            module_info = service_info.get('module_info')
-            if not module_info:
-                return {}
-
-            asset_env_map = module_info.get('asset_environments')
+            asset_env_map = service_info.get('asset_environments')
             if not asset_env_map:
                 return {}
 

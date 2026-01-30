@@ -1,0 +1,481 @@
+{
+	"name": "API Workflow for DTM 3",
+	"description": "API based workflow with parallel processing support",
+	"metadata": {
+		"version": "1.0",
+		"project_id": "DTM3",
+		"workflow_id": "HIDDEN_NODE_01",
+		"type": "DTM3"
+	},
+	"environments": [
+		{
+			"env_code": "doccls_env",
+			"env_name": "DOCCLS ENV",
+			"env_params": [
+				{
+					"key": "DOCCLS_MODEL_STATE_NAME",
+					"value": "/share/tom/env/DOC_EXT/code_module/fe251q_master/api_module/MODEL/ex0034_ft/2026_01_14/base_lora_merged"
+				},
+				{
+					"key": "DOCCLS_PROMPT_PATH",
+					"value": "/database/FE_BANK251Q/platform_model/ailand/inference/DATA/prompt/doccls_prompt.json"
+				},
+				{
+					"key": "TAG_PATH",
+					"value": "/database/FE_BANK251Q/platform_model/vLLM_model/inference/DATA/tag/"
+				},
+				{
+					"key": "POOL_PATH",
+					"value": "/database/FE_BANK251Q/platform_model/output_sample/260115_run_data/"
+				}
+			]
+		},
+		{
+			"env_code": "extr_env",
+			"env_name": "EXTR_MODEL ENV",
+			"env_params": [
+				{
+					"key": "EXTR_MODEL_STATE_NAME",
+					"value": "/share/tom/env/DOC_EXT/code_module/fe251q_master/api_module/MODEL/ex0034_ft/2026_01_14/base_lora_merged"
+				},
+				{
+					"key": "EXTR_PROMPT_PATH",
+					"value": "/database/FE_BANK251Q/platform_model/ailand/inference/DATA/prompt/prompt_infer.json"
+				},
+				{
+					"key": "TAG_PATH",
+					"value": "/database/FE_BANK251Q/platform_model/vLLM_model/inference/DATA/tag/"
+				},
+				{
+					"key": "POOL_PATH",
+					"value": "/database/FE_BANK251Q/platform_model/output_sample/260115_run_data/"
+				}
+			]
+		}
+	],
+	"nodes": [
+		{
+			"node_id": "START_NODE",
+			"node_type": "module",
+			"role": "start",
+			"location": "inner",
+			"containable": true,
+			"node_info": {
+				"id": "START_NODE",
+				"code": "Input",
+				"version": "1.0.0",
+				"title": "input",
+				"desc": "Input Node"
+			},
+			"required_nodes": [],
+			"api_info": {
+				"base_url": "",
+				"api_key": ""
+			},
+			"module_info": {
+				"module_path": "app.dtm.input",
+				"class_name": "Input"
+			},
+			"services": [
+				{
+					"service_name": "process",
+					"function": "query_input",
+					"api_method": "",
+					"params": [
+						{
+							"required": true,
+							"key": "query",
+							"type": "string"
+						}
+					],
+					"result": [
+						{
+							"key": "tar_path",
+							"type": "string"
+						}
+					]
+				}
+			]
+		},
+		{
+			"node_id": "NODE_A",
+			"node_type": "external",
+			"role": "processing",
+			"location": "outter",
+			"containable": false,
+			"node_info": {
+				"id": "NODE_A",
+				"code": "STEP1",
+				"version": "1.0.0",
+				"title": "input",
+				"desc": "DTM3"
+			},
+			"required_nodes": [
+				{
+					"node_type": "external_model",
+					"refer_key": "llm_model_conn_env",
+					"req_value": "base_url"
+				},
+				{
+					"node_type": "external_model",
+					"refer_key": "ocr_model_conn_env",
+					"req_value": "base_url"
+				}
+			],
+			"api_info": {
+				"connection": "direct",
+				"base_url": "http://127.0.0.1:10001"
+			},
+			"module_info": {
+				"module_path": "",
+				"class_name": ""
+			},
+			"environments": {
+			    "params": [
+				    {
+					    "required": true,
+					    "key": "tag_path",
+					    "type": "string"
+				    },
+				    {
+					    "required": true,
+					    "key": "pool_path",
+					    "type": "string"
+				    }
+			    ]
+			},
+			"asset_environments": {
+				"params": [
+				    {
+					    "required": true,
+					    "refer_key": "llm_model_conn_env",
+					    "req_value": "base_url",
+					    "key": "llm_url",
+					    "type": "string"
+				    },
+					{
+						"required": true,
+					    "key": "llm_model_name",
+					    "type": "string",
+						"default": "TEST_LLM"
+					},
+				    {
+					    "required": true,
+					    "refer_key": "ocr_model_conn_env",
+					    "req_value": "base_url",
+					    "key": "ocr_url",
+					    "type": "string"
+				    },
+					{
+						"required": true,
+					    "key": "ocr_model_name",
+					    "type": "string",
+						"default": "TEST_OCR"
+					}
+				]
+			},
+			"services": [
+				{
+					"service_name": "process",
+					"function": "/process/node_a",
+					"api_method": "post",
+					"params": [
+						{
+							"required": true,
+							"key": "tar_path",
+							"type": "string"
+						}
+					],
+					"result": [
+						{
+							"key": "tif_path",
+							"type": "string"
+						},
+						{
+							"key": "txt_path",
+							"type": "string"
+						},
+						{
+							"key": "timestamp",
+							"type": "string"
+						}
+					]
+				}
+			]
+		},
+		{
+			"node_id": "LLM_Model",
+			"node_type": "external",
+			"role": "processing",
+			"location": "outter",
+			"containable": false,
+			"required_nodes": [],
+			"node_info": {
+				"id": "LLM_MODEL_test-1",
+				"code": "llm-model",
+				"version": "1.0.0",
+				"title": "hidden model 1",
+				"desc": "DTM3"
+			},
+			"api_info": {
+				"connection": "direct",
+				"base_url": "http://127.0.0.1:10008"
+			},
+			"module_info": {
+				"module_path": "",
+				"class_name": ""
+			},
+			"services": [
+				{
+					"service_name": "process",
+					"function": "/process/node_h",
+					"api_method": "post",
+					"params": [
+						{
+							"required": false,
+							"key": "nlp_img_lc_path",
+							"type": "string",
+							"default": "None"
+						},
+						{
+							"required": false,
+							"key": "nlp_text_lc_path",
+							"type": "string",
+							"default": "None"
+						},
+						{
+							"required": false,
+							"key": "aiv_img_path",
+							"type": "string",
+							"default": "None"
+						}
+					],
+					"result": [
+						{
+							"key": "result_path",
+							"type": "str"
+						},
+						{
+							"key": "timestamp",
+							"type": "str"
+						}
+					]
+				}
+			]
+		},
+		{
+			"node_id": "OCR_Model",
+			"node_type": "external",
+			"role": "processing",
+			"location": "outter",
+			"containable": false,
+			"required_nodes": [],
+			"node_info": {
+				"id": "OCR_MODEL-test-1",
+				"code": "ocr-model",
+				"version": "1.0.0",
+				"title": "hidden model 2",
+				"desc": "DTM3"
+			},
+			"api_info": {
+				"connection": "direct",
+				"base_url": "http://127.0.0.1:10008"
+			},
+			"module_info": {
+				"module_path": "",
+				"class_name": ""
+			},
+			"services": [
+				{
+					"service_name": "process",
+					"function": "/process/node_h",
+					"api_method": "post",
+					"params": [
+						{
+							"required": false,
+							"key": "nlp_img_lc_path",
+							"type": "string",
+							"default": "None"
+						},
+						{
+							"required": false,
+							"key": "nlp_text_lc_path",
+							"type": "string",
+							"default": "None"
+						},
+						{
+							"required": false,
+							"key": "aiv_img_path",
+							"type": "string",
+							"default": "None"
+						}
+					],
+					"result": [
+						{
+							"key": "result_path",
+							"type": "str"
+						},
+						{
+							"key": "timestamp",
+							"type": "str"
+						}
+					]
+				}
+			]
+		},
+		{
+			"node_id": "END_NODE",
+			"node_type": "module",
+			"role": "output",
+			"location": "inner",
+			"containable": true,
+			"required_nodes": [],
+			"node_info": {
+				"id": "END_NODE",
+				"code": "DTM_OUTPUT",
+				"version": "1.0.0",
+				"title": "Output",
+				"desc": "Output Node"
+			},
+			"api_info": {
+				"connection": "",
+				"base_url": ""
+			},
+			"module_info": {
+				"module_path": "app.dtm.output",
+				"class_name": "Output"
+			},
+			"services": [
+				{
+					"service_name": "process",
+					"function": "output",
+					"api_method": "",
+					"params": [
+						{
+							"required": true,
+							"key": "result",
+							"type": "string"
+						}
+					],
+					"result": [
+						{
+							"required": true,
+							"key": "result",
+							"type": "string"
+						}
+					]
+				}
+			]
+		}
+	],
+	"edges": [
+		{
+			"edge_type": "sequence",
+			"source": "START_NODE.process",
+			"source_handler": {},
+			"target": "NODE_A.process",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [
+					{
+						"refer_key": "llm_model_conn_env",
+						"node_id": "LLM_Model"
+					},
+					{
+						"refer_key": "ocr_model_conn_env",
+						"node_id": "OCR_Model"
+					}
+				],
+				"environments": []
+			},
+			"env_info": [
+				{
+					"refer_type": "indirect",
+					"key": "tag_path",
+					"value": "doccls_env.TAG_PATH"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "pool_path",
+					"value": "doccls_env.POOL_PATH"
+				}
+			],
+			"asset_info": [
+				{
+					"refer_type": "indirect",
+					"key": "llm_url",
+					"value": "llm_model_conn_env.base_url"
+				},
+				{
+					"refer_type": "direct",
+					"key": "llm_model_name",
+					"value": "LLM MODEL NAME"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "ocr_url",
+					"value": "ocr_model_conn_env.base_url"
+				},
+				{
+					"refer_type": "direct",
+					"key": "ocr_model_name",
+					"value": "OCR Model"
+				}
+			],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "tar_path",
+					"value": "START_NODE.process.tar_path"
+				}
+			],
+			"result_info": []
+		},
+		{
+			"edge_type": "sequence",
+			"source": "NODE_A.process",
+			"source_handler": {},
+			"target": "END_NODE.process",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": []
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "result",
+					"value": "NODE_A.process.tif_path"
+				}
+			],
+			"result_info": []
+		},
+		{
+			"edge_type": "reference",
+			"source": "NODE_A.process",
+			"source_handler": {},
+			"target": "OCR_Model.process",
+			"target_handler": {},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [],
+			"result_info": []
+		},
+		{
+			"edge_type": "reference",
+			"source": "NODE_A.process",
+			"source_handler": {},
+			"target": "LLM_Model.process",
+			"target_handler": {},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [],
+			"result_info": []
+		}
+	],
+	"resources": []
+}

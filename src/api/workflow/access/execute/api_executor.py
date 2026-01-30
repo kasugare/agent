@@ -53,6 +53,7 @@ class ApiExecutor:
 
     async def _call_api(self) -> Dict:
         async with aiohttp.ClientSession() as session:
+
             async with session.post(self.get_url(), json=self.get_params()) as response:
                 try:
                     if response.status >= 400:
