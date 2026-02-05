@@ -61,6 +61,7 @@
 			"location": "inner",
 			"containable": true,
 			"node_info": {
+				"type": "MODULE",
 				"id": "START_NODE",
 				"code": "Input",
 				"version": "1.0.0",
@@ -80,7 +81,7 @@
 				{
 					"service_name": "process",
 					"function": "query_input",
-					"api_method": "",
+					"api_method": "post",
 					"params": [
 						{
 							"required": true,
@@ -104,20 +105,21 @@
 			"location": "outter",
 			"containable": false,
 			"node_info": {
-				"id": "NODE_A",
+				"type": "CODE",
+				"ref_id": "CDDEFS-FDSA-32AdFDS213SD",
+				"ref_version": "1.0.0",
 				"code": "STEP1",
-				"version": "1.0.0",
 				"title": "input",
 				"desc": "DTM3"
 			},
 			"required_nodes": [
 				{
-					"node_type": "external_model",
+					"node_type": "MODEL",
 					"refer_key": "llm_model_conn_env",
 					"req_value": "base_url"
 				},
 				{
-					"node_type": "external_model",
+					"node_type": "MODEL",
 					"refer_key": "ocr_model_conn_env",
 					"req_value": "base_url"
 				}
@@ -211,8 +213,8 @@
 			"containable": false,
 			"required_nodes": [],
 			"node_info": {
+				"type": "MODEL",
 				"id": "LLM_MODEL_test-1",
-				"code": "llm-model",
 				"version": "1.0.0",
 				"title": "hidden model 1",
 				"desc": "DTM3"
@@ -271,6 +273,7 @@
 			"containable": false,
 			"required_nodes": [],
 			"node_info": {
+				"type": "MODEL",
 				"id": "OCR_MODEL-test-1",
 				"code": "ocr-model",
 				"version": "1.0.0",
@@ -331,6 +334,7 @@
 			"containable": true,
 			"required_nodes": [],
 			"node_info": {
+				"type": "MODULE",
 				"id": "END_NODE",
 				"code": "DTM_OUTPUT",
 				"version": "1.0.0",
@@ -387,7 +391,8 @@
 						"node_id": "OCR_Model"
 					}
 				],
-				"environments": []
+				"environments": [],
+				"formatter": []
 			},
 			"env_info": [
 				{
@@ -441,7 +446,8 @@
 				"type": "sequence",
 				"conditions": [],
 				"references": [],
-				"environments": []
+				"environments": [],
+				"formatter": []
 			},
 			"env_info": [],
 			"asset_info": [],
@@ -477,5 +483,86 @@
 			"result_info": []
 		}
 	],
-	"resources": []
+	"resources": [
+        {
+            "node_id": "RAG_PROM_913D15_node",
+            "resource": {
+                "cpu_requests": "200m",
+                "cpu_limits": "1",
+                "mem_requests": "500Mi",
+                "mem_limits": "1Gi"
+            },
+            "replicas": "1",
+            "profile": {
+                "serv_type": "code",
+                "ref_id": "코드ID",
+                "ref_ver": "코드버전",
+                "serv_engine_type": "wfnode"
+            }
+        },
+        {
+            "node_id": "RAG_GEN_97E683_node",
+            "resource": {
+                "cpu_requests": "4",
+                "cpu_limits": "8",
+                "mem_requests": "16Gi",
+                "mem_limits": "32Gi",
+                "gpu_limits": "1"
+            },
+            "profile": {
+                "serv_type": "model",
+                "ref_id": "모델ID",
+                "ref_ver": "모델버전ID",
+                "serv_engine_type": "vllm-v0.8.4-cuda124",
+                "gpu_type": "A100"
+            },
+            "replicas": "1",
+            "parameter": {
+                "args": [
+                    {
+                        "key": "--max-model-len",
+                        "val": "10240"
+                    },
+                    {
+                        "key": "--enable-reasonin",
+                        "val": null
+                    }
+                ],
+                "envs": [
+                    {
+                        "key": "VLLM_USE_FLASH_ATTN",
+                        "val": "0"
+                    }
+                ]
+            }
+        },
+        {
+            "node_id": "RAG_RETR_CB7865_node",
+            "resource": {
+                "cpu_requests": "200m",
+                "cpu_limits": "1",
+                "mem_requests": "500Mi",
+                "mem_limits": "1Gi"
+            },
+            "replicas": "1",
+            "profile": {
+                "serv_type": "workflow",
+                "serv_engine_type": "wfnode"
+            }
+        },
+        {
+            "node_id": "WF_ENG_node",
+            "resource": {
+                "cpu_requests": "200m",
+                "cpu_limits": "1",
+                "mem_requests": "500Mi",
+                "mem_limits": "1Gi"
+            },
+            "replicas": "1",
+            "profile": {
+                "serv_type": "workflow",
+                "serv_engine_type": "wfeng"
+            }
+        }
+    ]
 }

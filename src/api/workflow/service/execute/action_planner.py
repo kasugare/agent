@@ -111,6 +111,9 @@ class ActionPlanningService:
         act_backward_graph = dict()
         for service_id, target_list in forward_graph.items():
             for forward_service_id in target_list:
+                if service_id == 'ENTRY':
+                    act_backward_graph[forward_service_id] = []
+                    continue
                 if forward_service_id in act_backward_graph.keys():
                     act_backward_graph[forward_service_id].append(service_id)
                 else:
@@ -118,12 +121,15 @@ class ActionPlanningService:
         return act_backward_graph
 
     def gen_start_nodes_service(self, forward_graph):
-        all_nodes = set(forward_graph.keys())
-        reachable_nodes = set()
-        for node in forward_graph:
-            reachable_nodes.update(forward_graph[node])
-        act_start_nodes = all_nodes - reachable_nodes
-        sorted(list(act_start_nodes))
+        if "ENTRY" in forward_graph.keys():
+            act_start_nodes = forward_graph.get('ENTRY')
+        else:
+            all_nodes = set(forward_graph.keys())
+            reachable_nodes = set()
+            for node_id in forward_graph:
+                reachable_nodes.update(forward_graph[node_id])
+            act_start_nodes = all_nodes - reachable_nodes
+            sorted(list(act_start_nodes))
         return act_start_nodes
 
     def gen_end_nodes_service(self, backward_graph):
@@ -152,6 +158,8 @@ class ActionPlanningService:
         if not forward_graph:
             return []
         act_service_ids = list(forward_graph.keys())
+        if "ENTRY" in act_service_ids:
+            act_service_ids.remove('ENTRY')
         act_service_ids.extend(list(backward_graph.keys()))
         act_service_ids = list(set(act_service_ids))
         return act_service_ids
@@ -207,7 +215,9 @@ class ActionPlanningService:
 
             self._logger.info(f" # Step 6. Generate Active Tasks")
             action_service_ids = self.gen_action_service_ids(act_forward_graph, act_backward_graph)
+            print(action_service_ids)
             act_task_map = self.gen_action_tasks(action_service_ids)
+            print(act_task_map)
             self._datastore.set_task_map_service(act_task_map)
 
             action_meta_pack['act_forward_graph'] = act_forward_graph
@@ -216,6 +226,7 @@ class ActionPlanningService:
             action_meta_pack['act_end_nodes'] = act_end_nodes
             action_meta_pack['act_edges_param_map'] = act_edges_param_map
             action_meta_pack['act_task_map'] = act_task_map
+            self._print_map(action_meta_pack)
             return action_meta_pack
         except NotDefinedWorkflowMetaException as e:
             self._logger.error(e)

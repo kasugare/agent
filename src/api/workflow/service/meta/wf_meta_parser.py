@@ -48,7 +48,6 @@ class WorkflowMetaParser(WorkflowMetaHandler):
             self._logger.info("# [DAG Loader] Step 07. Extract environment values")
             wf_node_env_map_pool = self.extract_wf_node_env(wf_edges_meta)
             nodes_env_value_map = self.extract_node_environments_value_map(wf_nodes_meta, wf_node_env_map_pool, wf_env_pool)
-            print(nodes_env_value_map)
             self._print_debug_data(nodes_env_value_map)
 
             self._logger.info("# [DAG Loader] Step 08. Extract asset environment params")
@@ -57,7 +56,6 @@ class WorkflowMetaParser(WorkflowMetaHandler):
 
             self._logger.info("# [DAG Loader] Step 09. Extract asset values")
             node_asset_map_pool = self.extract_wf_node_asset(wf_edges_meta)
-            print("<node_asset_map_pool>")
             self._print_debug_data(node_asset_map_pool)
 
             nodes_asset_value_map = self.extract_node_asset_value_map(wf_nodes_meta, node_asset_map_pool, wf_asset_pool)  # DataIO

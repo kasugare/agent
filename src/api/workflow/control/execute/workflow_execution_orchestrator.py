@@ -196,7 +196,7 @@ class WorkflowExecutionOrchestrator:
         prev_service_ids = backward_graph.get(service_id)
         edge_params_ids = []
         if not prev_service_ids:
-            edge_params_id = f"None-{service_id}"
+            edge_params_id = f"START-{service_id}"
             edge_params_ids.append(edge_params_id)
         else:
             for prev_service_id in prev_service_ids:
@@ -313,7 +313,7 @@ class WorkflowExecutionOrchestrator:
 
     def _check_prev_task_compledted(self, service_id):
         backward_graph = self._meta_pack['backward_graph']
-        prev_service_list = backward_graph.get(service_id)
+        prev_service_list = backward_graph.get(service_id, [])
         if not prev_service_list:
             return True
         else:
@@ -363,12 +363,13 @@ class WorkflowExecutionOrchestrator:
         start_ts = time.time()
         while True:
             try:
-                # break
                 self._logger.info("<<< WAIT Q >>>")
                 service_id = self._job_Q.get()
                 if service_id == "SIGTERM":
                     self._logger.error("Exit process")
                     break
+                if service_id == 'None':
+                    continue
 
                 time.sleep(0.1)
                 task = task_map.get(service_id)

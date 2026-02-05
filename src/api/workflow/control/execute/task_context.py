@@ -82,10 +82,7 @@ class TaskContext:
         url = f"{api_info.get('base_url')}{route_path}"
         conn_info = {
             'url': url,
-            'method': api_info.get('method'),
-            'header': service_info.get('header'),
-            'body': service_info.get('body'),
-            'api_keys': service_info.get('api_keys')
+            'method': service_info.get('api_method')
         }
         return conn_info
 
@@ -99,8 +96,8 @@ class TaskContext:
         }
         return conn_info
 
-    def _set_api_executor(self, url=None, method=None, header={}, body={}, api_keys=[]):
-        self._executor = ApiExecutor(self._logger, url, method, header, body)
+    def _set_api_executor(self, url=None, method=None, header={}):
+        self._executor = ApiExecutor(self._logger, url, method, header)
 
     def _set_class_executor(self, module_path, class_name, function, api_keys=[]):
         self._executor = ModuleExecutor(self._logger, module_path, class_name, function)

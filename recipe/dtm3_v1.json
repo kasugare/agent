@@ -1,0 +1,1160 @@
+{
+	"name": "API Workflow for DTM 3",
+	"description": "API based workflow with parallel processing support",
+	"metadata": {
+		"version": "1.0",
+		"project_id": "DTM3",
+		"workflow_id": "DTM3_WF_002",
+		"type": "DTM3"
+	},
+	"environments": [
+		{
+			"env_code": "APIKEY",
+			"env_name": "api key",
+			"env_params": [
+				{
+					"key": "api-key",
+					"value": "12345678890"
+				}
+			]
+		}
+	],
+	"nodes": [
+		{
+			"node_id": "START_NODE",
+			"node_type": "module",
+			"role": "start",
+			"location": "inner",
+			"containable": true,
+			"api_keys": [],
+			"node_info": {
+				"type": "MODULE",
+				"ref_id": "START_NODE",
+				"ref_version": "1.0.0",
+				"code": "Input",
+				"title": "1. 파일 위치 입력",
+				"desc": ""
+			},
+			"required_nodes": [],
+			"api_info": {
+				"base_url": ""
+			},
+			"module_info": {
+				"module_path": "app.dtm.input",
+				"class_name": "Input",
+				"sys_environments": {
+					"params": []
+				},
+				"asset_environments": {
+					"params": []
+				}
+			},
+			"services": [
+				{
+					"service_name": "query_input",
+					"api_method": "",
+					"function": "query_input",
+					"params": [
+						{
+							"required": true,
+							"key": "query",
+							"type": "string"
+						}
+					],
+					"result": [
+						{
+							"key": "tar_path",
+							"type": "string"
+						}
+					]
+				}
+			]
+		},
+		{
+			"node_id": "NODE_A",
+			"node_type": "external",
+			"role": "processing",
+			"location": "outter",
+			"containable": false,
+			"api_keys": [],
+			"node_info": {
+				"type": "CODE",
+				"ref_id": "NODE_A",
+				"ref_version": "1.0.0",
+				"code": "STEP1",
+				"title": "2. 압축 해제",
+				"desc": "DTM3"
+			},
+			"required_nodes": [],
+			"api_info": {
+				"base_url": "http://127.0.0.1:10001"
+			},
+			"module_info": {
+				"module_path": "",
+				"class_name": "",
+				"sys_environments": {
+				    "params": []
+				},
+				"asset_environments": {
+				    "params": []
+				}
+			},
+			"services": [
+				{
+					"service_name": "process",
+					"api_method": "post",
+					"function": "/process/node_a",
+					"params": [
+						{
+							"required": true,
+							"key": "tar_path",
+							"type": "string"
+						}
+					],
+					"result": [
+						{
+							"key": "tif_path",
+							"type": "str"
+						},
+						{
+							"key": "txt_path",
+							"type": "str"
+						}
+					]
+				}
+			]
+		},
+		{
+		    "node_id": "Conditional_Node",
+		    "node_type": "module",
+		    "role": "condition",
+		    "location": "inner",
+		    "containable": false,
+		    "node_info": {
+			    "type": "MODULE",
+		        "ref_id": "Conditional_Node",
+		        "ref_version": "1.0.0",
+			    "code": "COND1",
+			    "title": "3. 해제된 압축파일의 종류 확인 후 분기 처리",
+		        "desc": "조건 분기 및 변수 조작 노드"
+		    },
+		    "condition_config": {
+		        "operators": {
+			        "comparison": [">", "<", ">=", "<=", "==", "!="],
+			        "existence": ["exist", "not_exist"],
+			        "logical": ["AND", "OR", "NOT"]
+			    },
+			    "action_types": {
+			        "variable": ["set_variable", "increment", "decrement", "copy_variable", "delete_variable"],
+			        "calculation": ["calculate"],
+			        "collection": ["append", "merge"],
+				    "execution": ["execute"]
+			    },
+			    "branch_types": ["if", "elif", "else"]
+		    },
+		    "services": [
+			    {
+				    "service_name": "evaluate",
+					"api_method": "",
+		            "function": "evaluate_condition",
+		            "params": [
+		                {
+		                    "required": true,
+		                    "key": "branches",
+		                    "type": "list"
+		                }
+		            ],
+		            "result": [
+		                {
+		                    "key": "actions",
+		                    "type": "string"
+		                }
+		            ]
+		        }
+		    ]
+		},
+		{
+			"node_id": "NODE_B",
+			"node_type": "external",
+			"role": "processing",
+			"location": "outter",
+			"containable": false,
+			"required_nodes": [],
+			"api_keys": [],
+			"node_info": {
+				"type": "CODE",
+				"ref_id": "NODE_B",
+				"ref_version": "1.0.0",
+				"code": "STEP2",
+				"title": "4. 이미지 데이터에 대한 문서 분류 수행 --> vLLM 문서 모델 연계",
+				"desc": "DTM3"
+			},
+			"api_info": {
+				"base_url": "http://127.0.0.1:10002"
+			},
+			"module_info": {
+				"module_path": "",
+				"class_name": "",
+				"sys_environments": {
+				    "params": []
+				},
+				"asset_environments": {
+				    "params": []
+				}
+			},
+			"services": [
+				{
+					"service_name": "process",
+					"api_method": "post",
+					"function": "/process/node_b",
+					"params": [
+						{
+							"required": true,
+							"key": "tif_path",
+							"type": "string"
+						}
+					],
+					"result": [
+						{
+							"key": "img_path",
+							"type": "str"
+						},
+						{
+							"key": "doccls_json_path",
+							"type": "str"
+						},
+						{
+							"key": "lc_img_list",
+							"type": "list"
+						}
+					]
+				}
+			]
+		},
+		{
+			"node_id": "NODE_C",
+			"node_type": "external",
+			"role": "processing",
+			"location": "outter",
+			"containable": false,
+			"api_keys": [],
+			"node_info": {
+				"type": "CODE",
+				"ref_id": "NODE_C",
+				"ref_version": "1.0.0",
+				"code": "STEP3",
+				"title": "5. OCR 수행 --> OCR 모델 연계",
+				"desc": "DTM3"
+			},
+			"required_nodes": [],
+			"api_info": {
+				"base_url": "http://127.0.0.1:10003"
+			},
+			"module_info": {
+				"module_path": "",
+				"class_name": "",
+				"sys_environments": {
+				    "params": []
+				},
+				"asset_environments": {
+				    "params": []
+				}
+			},
+			"services": [
+				{
+					"service_name": "process",
+					"api_method": "post",
+					"function": "/process/node_c",
+					"params": [
+						{
+							"required": true,
+							"key": "img_path",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "doccls_json_path",
+							"type": "json"
+						}
+					],
+					"result": [
+						{
+							"key": "extr_json_path",
+							"type": "str"
+						}
+					]
+				}
+			]
+		},
+		{
+			"node_id": "NODE_D",
+			"node_type": "external",
+			"role": "processing",
+			"location": "outter",
+			"containable": false,
+			"api_keys": [],
+			"node_info": {
+				"type": "CODE",
+				"ref_id": "NODE_D",
+				"ref_version": "1.0.0",
+				"code": "STEP1",
+				"title": "input",
+				"desc": "DTM3"
+			},
+			"required_nodes": [],
+			"api_info": {
+				"base_url": "http://127.0.0.1:10004"
+			},
+			"module_info": {
+				"module_path": "",
+				"class_name": "",
+				"sys_environments": {
+				    "params": []
+				},
+				"asset_environments": {
+				    "params": []
+				}
+			},
+			"services": [
+				{
+					"service_name": "process",
+					"api_method": "post",
+					"function": "/process/node_d",
+					"params": [
+						{
+							"required": true,
+							"key": "img_path",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "doccls_json_path",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "extr_json_path",
+							"type": "string"
+						}
+					],
+					"result": [
+						{
+							"key": "save_FEtype_path",
+							"type": "str"
+						}
+					]
+				}
+			]
+		},
+		{
+			"node_id": "NODE_E",
+			"node_type": "external",
+			"role": "processing",
+			"location": "outter",
+			"containable": false,
+			"api_keys": [],
+			"node_info": {
+				"type": "CODE",
+				"ref_id": "NODE_E",
+				"ref_version": "1.0.0",
+				"code": "STEP1",
+				"title": "input",
+				"desc": "DTM3"
+			},
+			"required_nodes": [],
+			"api_info": {
+				"base_url": "http://127.0.0.1:10005"
+			},
+			"module_info": {
+				"module_path": "",
+				"class_name": "",
+				"sys_environments": {
+				    "params": []
+				},
+				"asset_environments": {
+				    "params": []
+				}
+			},
+			"services": [
+				{
+					"service_name": "process",
+					"api_method": "post",
+					"function": "/process/node_e",
+					"params": [
+						{
+							"required": true,
+							"key": "img_path",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "lc_img_list",
+							"type": "json"
+						}
+					],
+					"result": [
+						{
+							"key": "ocr_json_path_list",
+							"type": "list"
+						}
+					]
+				}
+			]
+		},
+		{
+			"node_id": "NODE_F",
+			"node_type": "external",
+			"role": "processing",
+			"location": "outter",
+			"containable": false,
+			"api_keys": [],
+			"node_info": {
+				"type": "CODE",
+				"ref_id": "NODE_F",
+				"ref_version": "1.0.0",
+				"code": "STEP1",
+				"title": "input",
+				"desc": "DTM3"
+			},
+			"required_nodes": [],
+			"api_info": {
+				"base_url": "http://127.0.0.1:10006"
+			},
+			"module_info": {
+				"module_path": "",
+				"class_name": "",
+				"sys_environments": {
+				    "params": []
+				},
+				"asset_environments": {
+				    "params": []
+				}
+			},
+			"services": [
+				{
+					"service_name": "process",
+					"api_method": "post",
+					"function": "/process/node_f",
+					"params": [
+						{
+							"required": true,
+							"key": "lc_img_list",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "ocr_json_path_list",
+							"type": "json"
+						}
+					],
+					"result": [
+						{
+							"key": "lc_number",
+							"type": "str"
+						},
+						{
+							"key": "result_path",
+							"type": "str"
+						}
+					]
+				}
+			]
+		},
+		{
+			"node_id": "NODE_G",
+			"node_type": "external",
+			"role": "processing",
+			"location": "outter",
+			"containable": false,
+			"api_keys": [],
+			"node_info": {
+				"ref_id": "NODE_G",
+				"ref_version": "1.0.0",
+				"code": "STEP1",
+				"title": "input",
+				"desc": "DTM3"
+			},
+			"required_nodes": [],
+			"api_info": {
+				"base_url": "http://127.0.0.1:10007"
+			},
+			"module_info": {
+				"module_path": "",
+				"class_name": "",
+				"sys_environments": {
+				    "params": []
+				},
+				"asset_environments": {
+				    "params": []
+				}
+			},
+			"services": [
+				{
+					"service_name": "process",
+					"api_method": "post",
+					"function": "/process/node_g",
+					"params": [
+						{
+							"required": true,
+							"key": "text_path",
+							"type": "string"
+						}
+					],
+					"result": [
+						{
+							"key": "lc_number",
+							"type": "str"
+						},
+						{
+							"key": "result_path",
+							"type": "str"
+						}
+					]
+				}
+			]
+		},
+		{
+			"node_id": "NODE_H",
+			"node_type": "external",
+			"role": "processing",
+			"location": "outter",
+			"containable": false,
+			"api_keys": [],
+			"node_info": {
+				"ref_id": "NODE_H",
+				"ref_version": "1.0.0",
+				"code": "STEP1",
+				"title": "input",
+				"desc": "DTM3"
+			},
+			"required_nodes": [],
+			"api_info": {
+				"base_url": "http://127.0.0.1:10008"
+			},
+			"module_info": {
+				"module_path": "",
+				"class_name": "",
+				"sys_environments": {
+				    "params": []
+				},
+				"asset_environments": {
+				    "params": []
+				}
+			},
+			"services": [
+				{
+					"service_name": "process",
+					"api_method": "post",
+					"function": "/process/node_h",
+					"params": [
+						{
+							"required": true,
+							"key": "nlp_img_lc_path",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "nlp_text_lc_path",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "aiv_img_path",
+							"type": "string"
+						}
+					],
+					"result": [
+						{
+							"key": "result_path",
+							"type": "str"
+						}
+					]
+				}
+			]
+		},
+		{
+			"node_id": "END_NODE",
+			"node_type": "module",
+			"role": "output",
+			"location": "inner",
+			"containable": true,
+			"api_keys": [
+				""
+			],
+			"node_info": {
+				"ref_id": "END_NODE",
+				"ref_version": "1.0.0",
+				"code": "DTM_OUTPUT",
+				"title": "Output",
+				"desc": "Output Node"
+			},
+			"required_nodes": [],
+			"api_info": {
+				"base_url": ""
+			},
+			"module_info": {
+				"module_path": "app.dtm.output",
+				"class_name": "Output",
+				"sys_environments": {
+					"params": []
+				},
+				"asset_environments": {
+					"params": []
+				}
+			},
+			"services": [
+				{
+					"service_name": "output",
+					"api_method": "",
+					"function": "output",
+					"params": [
+						{
+							"required": true,
+							"key": "result",
+							"type": "str"
+						}
+					],
+					"result": [
+						{
+							"required": true,
+							"key": "result",
+							"type": "string"
+						}
+					]
+				}
+			]
+		}
+	],
+	"edges": [
+		{
+			"source": "START_NODE.query_input",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"target": "NODE_A.process",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "tar_path",
+					"value": "START_NODE.query_input.tar_path"
+				}
+			],
+			"result_info": []
+		},
+		{
+			"source": "NODE_A.process",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"target": "Conditional_Node.evaluate",
+			"target_handler": {
+				"type": "conditional",
+				"conditions": {
+					"branches": [
+						{
+							"type": "if",
+							"logic": "AND",
+							"rules": [
+								{
+									"refer_type": "indirect",
+									"variable": "NODE_A.process.tif_path",
+									"operator": "exist"
+								},
+								{
+									"refer_type": "indirect",
+									"variable": "NODE_A.process.txt_path",
+									"operator": "exist"
+								}
+							],
+							"actions": [
+								{
+									"action": "execution",
+									"value": "NODE_B.process"
+								},
+								{
+									"action": "execution",
+									"value": "NODE_G.process"
+								}
+							]
+						},
+						{
+							"type": "elif",
+							"logic": "AND",
+							"rules": [
+								{
+									"refer_type": "indirect",
+									"variable": "NODE_A.process.tif_path",
+									"operator": "exist"
+								},
+								{
+									"refer_type": "indirect",
+									"variable": "NODE_A.process.txt_path",
+									"operator": "not_exist"
+								}
+							],
+							"actions": [
+								{
+									"action": "execution",
+									"value": "NODE_B.process"
+								}
+							]
+						},
+						{
+							"type": "elif",
+							"logic": "AND",
+							"rules": [
+								{
+									"refer_type": "indirect",
+									"variable": "NODE_A.process.tif_path",
+									"operator": "not_exist"
+								},
+								{
+									"refer_type": "indirect",
+									"variable": "NODE_A.process.txt_path",
+									"operator": "exist"
+								}
+							],
+							"actions": [
+								{
+									"action": "execution",
+									"value": "NODE_G.process"
+								}
+							]
+						},
+						{
+							"type": "else",
+							"actions": [
+								{
+									"action": "stop"
+								}
+							]
+						}
+					]
+				},
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [],
+			"result_info": []
+		},
+		{
+			"source": "Conditional_Node.evaluate",
+			"source_handler": {
+				"type": "sequence"
+			},
+			"target": "NODE_B.process",
+			"target_handler": {
+				"type": "sequence"
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "tif_path",
+					"value": "NODE_A.process.tif_path"
+				}
+			],
+			"result_info": []
+		},
+		{
+			"source": "NODE_B.process",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"target": "NODE_C.process",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "img_path",
+					"value": "NODE_B.process.img_path"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "doccls_json_path",
+					"value": "NODE_B.process.doccls_json_path"
+				}
+			],
+			"result_info": []
+		},
+		{
+			"source": "NODE_C.process",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"target": "NODE_D.process",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "img_path",
+					"value": "NODE_B.process.img_path"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "doccls_json_path",
+					"value": "NODE_B.process.doccls_json_path"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "extr_json_path",
+					"value": "NODE_C.process.extr_json_path"
+				}
+			],
+			"result_info": []
+		},
+		{
+			"source": "NODE_D.process",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"target": "NODE_H.process",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "nlp_img_lc_path",
+					"value": "NODE_F.process.result_path"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "nlp_text_lc_path",
+					"value": "NODE_G.process.result_path"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "aiv_img_path",
+					"value": "NODE_D.process.save_FEtype_path"
+				}
+			],
+			"result_info": []
+		},
+		{
+			"source": "NODE_B.process",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"target": "NODE_F.process",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "lc_img_list",
+					"value": "NODE_B.process.lc_img_list"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "ocr_json_path_list",
+					"value": "NODE_E.process.ocr_json_path_list"
+				}
+			],
+			"result_info": []
+		},
+		{
+			"source": "NODE_F.process",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"target": "NODE_H.process",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "nlp_img_lc_path",
+					"value": "NODE_F.process.result_path"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "nlp_text_lc_path",
+					"value": "NODE_G.process.result_path"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "aiv_img_path",
+					"value": "NODE_D.process.save_FEtype_path"
+				}
+			],
+			"result_info": []
+		},
+		{
+			"source": "NODE_B.process",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"target": "NODE_E.process",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "img_path",
+					"value": "NODE_B.process.img_path"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "lc_img_list",
+					"value": "NODE_B.process.lc_img_list"
+				}
+			],
+			"result_info": []
+		},
+		{
+			"source": "NODE_E.process",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"target": "NODE_F.process",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "lc_img_list",
+					"value": "NODE_B.process.lc_img_list"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "ocr_json_path_list",
+					"value": "NODE_E.process.ocr_json_path_list"
+				}
+			],
+			"result_info": []
+		},
+		{
+			"source": "NODE_F.process",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"target": "NODE_H.process",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "nlp_img_lc_path",
+					"value": "NODE_F.process.result_path"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "nlp_text_lc_path",
+					"value": "NODE_G.process.result_path"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "aiv_img_path",
+					"value": "NODE_D.process.save_FEtype_path"
+				}
+			],
+			"result_info": []
+		},
+		{
+			"source": "Conditional_Node.evaluate",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"target": "NODE_G.process",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "text_path",
+					"value": "NODE_A.process.txt_path"
+				}
+			],
+			"result_info": []
+		},
+		{
+			"source": "NODE_G.process",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"target": "NODE_H.process",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "nlp_img_lc_path",
+					"value": "NODE_F.process.result_path"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "nlp_text_lc_path",
+					"value": "NODE_G.process.result_path"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "aiv_img_path",
+					"value": "NODE_D.process.save_FEtype_path"
+				}
+			],
+			"result_info": []
+		},
+		{
+			"source": "NODE_H.process",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"target": "END_NODE.output",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "result",
+					"value": "NODE_H.process.result_path"
+				}
+			],
+			"result_info": []
+		}
+	],
+	"resources": []
+}

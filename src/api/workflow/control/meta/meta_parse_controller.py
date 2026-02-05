@@ -62,7 +62,8 @@ class MetaParseController:
         node_env_map_pool = {}
         for edge_id, edge_meta in wf_edges_meta.items():
             node_id = self._extract_node_id(edge_meta)
-            env_info = edge_meta.get('env_info')
+            print(edge_id)
+            env_info = edge_meta.get('env_info', [])
             for env_map in env_info:
                 try:
                     key = env_map.pop('key')
@@ -78,7 +79,7 @@ class MetaParseController:
         node_asset_map_pool = {}
         for edge_id, edge_meta in wf_edges_meta.items():
             node_id = self._extract_node_id(edge_meta)
-            asset_info = edge_meta.get('asset_info')
+            asset_info = edge_meta.get('asset_info', [])
             for asset_map in asset_info:
                 try:
                     key = asset_map.pop('key')
@@ -151,6 +152,9 @@ class MetaParseController:
                 continue
             curr_node = edge_info.get('target')
             prev_node = edge_info.get('source')
+            if prev_node == "ENTRY":
+                backward_edge_graph[curr_node] = []
+                continue
             if curr_node in backward_edge_graph.keys():
                 backward_edge_graph[curr_node].append(prev_node)
             else:

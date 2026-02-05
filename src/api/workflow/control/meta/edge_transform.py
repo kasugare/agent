@@ -80,9 +80,10 @@ class EdgeTransformer:
         edge_params_map = dict()
         for edge_id, edge_info in wf_edges_meta.items():
             src_service_id = edge_info.get('source')
-            tar_service_id = edge_info.get('target')
+            if src_service_id == 'START':
+                src_service_id = edge_info.get('target')
             if src_service_id in start_nodes:
-                start_edge_id = f"{None}-{src_service_id}"
+                start_edge_id = f"START-{src_service_id}"
                 src_service_info = wf_service_pool.get(src_service_id)
                 params_info = self._set_default_params_info(src_service_id, src_service_info)
                 params_info = self._add_data_type_on_params_info(params_info, src_service_info)

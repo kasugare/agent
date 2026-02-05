@@ -48,7 +48,7 @@ class TargetHandlerTransformer:
 
     def extract_required_nodes_info(self, wf_nodes_meta, wf_edges_meta):
         for node_id, node_info in wf_nodes_meta.items():
-            required_nodes = node_info.get('required_nodes')
+            required_nodes = node_info.get('required_nodes', [])
             for required_map in required_nodes:
                 refer_key = required_map.get('reference_key')
                 required_nodes = self._find_required_node_ids(node_id, refer_key, wf_edges_meta)
