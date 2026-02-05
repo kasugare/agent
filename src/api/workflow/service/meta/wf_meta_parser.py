@@ -59,7 +59,6 @@ class WorkflowMetaParser(WorkflowMetaHandler):
             self._print_debug_data(node_asset_map_pool)
 
             nodes_asset_value_map = self.extract_node_asset_value_map(wf_nodes_meta, node_asset_map_pool, wf_asset_pool)  # DataIO
-            print("<nodes_asset_value_map>")
             self._print_debug_data(nodes_asset_value_map)
 
             self._logger.info("# [DAG Loader] Step 10. Extract node's customized result set")

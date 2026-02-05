@@ -56,7 +56,6 @@ class TargetHandlerTransformer:
                     node_meta = wf_nodes_meta.get(req_node_id)
                     api_info = node_meta.get('api_info')
                     base_url = api_info.get('base_url')
-                    print(node_id, refer_key, base_url)
 
 
 

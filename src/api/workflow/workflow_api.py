@@ -209,13 +209,14 @@ class WorkflowEngine(BaseRouter):
 
             data_service_pool = self._data_service_pool.get_service_map()
             for wf_id, datastore in data_service_pool.items():
-                self._logger.debug(f" <{wf_id}>")
+                self._logger.info(f"<{wf_id}>")
                 data_pool = datastore.get_service_data_pool_service()
-                for k, v in data_pool.items():
+                d = dict(sorted(data_pool.items()))
+                for k, v in d.items():
                     splited_key = k.split(".")
                     in_type = splited_key[0]
                     service_id = (".").join(splited_key[1:])
-                    self._logger.debug(f"\t[{in_type}] {service_id} : {v}")
+                    self._logger.info(f"  L [{in_type}] {service_id} : {v}")
             # return data_pool
 
         @self.router.get(path='/workflow/act_dag')

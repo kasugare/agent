@@ -215,9 +215,7 @@ class ActionPlanningService:
 
             self._logger.info(f" # Step 6. Generate Active Tasks")
             action_service_ids = self.gen_action_service_ids(act_forward_graph, act_backward_graph)
-            print(action_service_ids)
             act_task_map = self.gen_action_tasks(action_service_ids)
-            print(act_task_map)
             self._datastore.set_task_map_service(act_task_map)
 
             action_meta_pack['act_forward_graph'] = act_forward_graph

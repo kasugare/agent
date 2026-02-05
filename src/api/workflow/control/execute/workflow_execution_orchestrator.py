@@ -78,7 +78,7 @@ class WorkflowExecutionOrchestrator:
             return False
 
         space = "    " * depth
-        self._logger.warn(f"{space} # Service_id: {service_id}, state: {self._get_task_state(service_id)}")
+        self._logger.debug(f"{space} # Service_id: {service_id}, state: {self._get_task_state(service_id)}")
 
         edges_param_map = self._meta_pack['act_edges_param_map']
         if self._get_task_state(service_id) == TaskState.PENDING:
@@ -363,7 +363,7 @@ class WorkflowExecutionOrchestrator:
         start_ts = time.time()
         while True:
             try:
-                self._logger.info("<<< WAIT Q >>>")
+                self._logger.debug("<<< Ready: Job Q >>>")
                 service_id = self._job_Q.get()
                 if service_id == "SIGTERM":
                     self._logger.error("Exit process")
@@ -371,7 +371,7 @@ class WorkflowExecutionOrchestrator:
                 if service_id == 'None':
                     continue
 
-                time.sleep(0.1)
+                # time.sleep(0.01)
                 task = task_map.get(service_id)
                 task_state = task.get_state()
 
@@ -466,7 +466,7 @@ class WorkflowExecutionOrchestrator:
 
                     task_role = task.get_role()
                     if task_role == 'condition':
-                        self._logger.critical(f"   L RESULT: {customed_task_result}")
+                        self._logger.debug(f"   L RESULT: {customed_task_result}")
                         actions = customed_task_result.get('actions', [])
                         execution_service_ids = []
                         for action_map in actions:
@@ -544,7 +544,7 @@ class WorkflowExecutionOrchestrator:
 
     def _show_task(self, task_map):
         for service_id, task in task_map.items():
-            self._logger.debug(f" - [{task.get_state()}] {service_id}")
+            self._logger.info(f" - [{task.get_state()}] {service_id}")
 
     def _show_task_info(self, task):
         service_id = task.get_service_id()

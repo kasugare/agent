@@ -9,12 +9,46 @@
 	},
 	"environments": [
 		{
-			"env_code": "APIKEY",
-			"env_name": "api key",
+			"env_code": "doccls_env",
+			"env_name": "DOCCLS ENV",
 			"env_params": [
 				{
-					"key": "api-key",
-					"value": "12345678890"
+					"key": "DOCCLS_MODEL_STATE_NAME",
+					"value": "/share/tom/env/DOC_EXT/code_module/fe251q_master/api_module/MODEL/ex0034_ft/2026_01_14/base_lora_merged"
+				},
+				{
+					"key": "DOCCLS_PROMPT_PATH",
+					"value": "/database/FE_BANK251Q/platform_model/ailand/inference/DATA/prompt/doccls_prompt.json"
+				},
+				{
+					"key": "TAG_PATH",
+					"value": "/database/FE_BANK251Q/platform_model/vLLM_model/inference/DATA/tag/"
+				},
+				{
+					"key": "POOL_PATH",
+					"value": "/database/FE_BANK251Q/platform_model/output_sample/260115_run_data/"
+				}
+			]
+		},
+		{
+			"env_code": "extr_env",
+			"env_name": "EXTR_MODEL ENV",
+			"env_params": [
+				{
+					"key": "EXTR_MODEL_STATE_NAME",
+					"value": "/share/tom/env/DOC_EXT/code_module/fe251q_master/api_module/MODEL/ex0034_ft/2026_01_14/base_lora_merged"
+				},
+				{
+					"key": "EXTR_PROMPT_PATH",
+					"value": "/database/FE_BANK251Q/platform_model/ailand/inference/DATA/prompt/prompt_infer.json"
+				},
+				{
+					"key": "TAG_PATH",
+					"value": "/database/FE_BANK251Q/platform_model/vLLM_model/inference/DATA/tag/"
+				},
+				{
+					"key": "POOL_PATH",
+					"value": "/database/FE_BANK251Q/platform_model/output_sample/260115_run_data/"
 				}
 			]
 		}
@@ -179,8 +213,18 @@
 			"role": "processing",
 			"location": "outter",
 			"containable": false,
-			"required_nodes": [],
-			"api_keys": [],
+			"required_nodes": [
+				{
+					"node_type": "MODEL",
+					"refer_key": "llm_model_conn_env",
+					"req_value": "base_url"
+				},
+				{
+					"node_type": "MODEL",
+					"refer_key": "ocr_model_conn_env",
+					"req_value": "base_url"
+				}
+			],
 			"node_info": {
 				"type": "CODE",
 				"ref_id": "NODE_B",
@@ -194,13 +238,51 @@
 			},
 			"module_info": {
 				"module_path": "",
-				"class_name": "",
-				"sys_environments": {
-				    "params": []
-				},
-				"asset_environments": {
-				    "params": []
-				}
+				"class_name": ""
+			},
+			"environments": {
+			    "params": [
+				    {
+					    "required": true,
+					    "key": "tag_path",
+					    "type": "string"
+				    },
+				    {
+					    "required": true,
+					    "key": "pool_path",
+					    "type": "string"
+				    }
+			    ]
+			},
+			"asset_environments": {
+				"params": [
+				    {
+					    "required": true,
+					    "refer_key": "llm_model_conn_env",
+					    "req_value": "base_url",
+					    "key": "llm_url",
+					    "type": "string"
+				    },
+					{
+						"required": true,
+					    "key": "llm_model_name",
+					    "type": "string",
+						"default": "TEST_LLM"
+					},
+				    {
+					    "required": true,
+					    "refer_key": "ocr_model_conn_env",
+					    "req_value": "base_url",
+					    "key": "ocr_url",
+					    "type": "string"
+				    },
+					{
+						"required": true,
+					    "key": "ocr_model_name",
+					    "type": "string",
+						"default": "TEST_OCR"
+					}
+				]
 			},
 			"services": [
 				{
@@ -623,10 +705,132 @@
 					]
 				}
 			]
+		},
+		{
+			"node_id": "LLM_Model",
+			"node_type": "external",
+			"role": "processing",
+			"location": "outter",
+			"containable": false,
+			"required_nodes": [],
+			"node_info": {
+				"type": "MODEL",
+				"ref_id": "LLM_MODEL_test-1",
+				"ref_version": "1.0.0",
+				"title": "hidden model 1",
+				"desc": "DTM3"
+			},
+			"api_info": {
+				"connection": "direct",
+				"base_url": "http://127.0.0.1:10008"
+			},
+			"module_info": {
+				"module_path": "",
+				"class_name": ""
+			},
+			"services": [
+				{
+					"service_name": "process",
+					"function": "/process/node_h",
+					"api_method": "post",
+					"params": [
+						{
+							"required": false,
+							"key": "nlp_img_lc_path",
+							"type": "string",
+							"default": "None"
+						},
+						{
+							"required": false,
+							"key": "nlp_text_lc_path",
+							"type": "string",
+							"default": "None"
+						},
+						{
+							"required": false,
+							"key": "aiv_img_path",
+							"type": "string",
+							"default": "None"
+						}
+					],
+					"result": [
+						{
+							"key": "result_path",
+							"type": "str"
+						},
+						{
+							"key": "timestamp",
+							"type": "str"
+						}
+					]
+				}
+			]
+		},
+		{
+			"node_id": "OCR_Model",
+			"node_type": "external",
+			"role": "processing",
+			"location": "outter",
+			"containable": false,
+			"required_nodes": [],
+			"node_info": {
+				"type": "MODEL",
+				"ref_id": "OCR_MODEL-test-1",
+				"ref_version": "1.0.0",
+				"code": "ocr-model",
+				"title": "hidden model 2",
+				"desc": "DTM3"
+			},
+			"api_info": {
+				"connection": "direct",
+				"base_url": "http://127.0.0.1:10008"
+			},
+			"module_info": {
+				"module_path": "",
+				"class_name": ""
+			},
+			"services": [
+				{
+					"service_name": "process",
+					"function": "/process/node_h",
+					"api_method": "post",
+					"params": [
+						{
+							"required": false,
+							"key": "nlp_img_lc_path",
+							"type": "string",
+							"default": "None"
+						},
+						{
+							"required": false,
+							"key": "nlp_text_lc_path",
+							"type": "string",
+							"default": "None"
+						},
+						{
+							"required": false,
+							"key": "aiv_img_path",
+							"type": "string",
+							"default": "None"
+						}
+					],
+					"result": [
+						{
+							"key": "result_path",
+							"type": "str"
+						},
+						{
+							"key": "timestamp",
+							"type": "str"
+						}
+					]
+				}
+			]
 		}
 	],
 	"edges": [
 		{
+			"edge_type": "sequence",
 			"source": "START_NODE.query_input",
 			"source_handler": {
 				"type": "sequence",
@@ -655,6 +859,7 @@
 			"result_info": []
 		},
 		{
+			"edge_type": "sequence",
 			"source": "NODE_A.process",
 			"source_handler": {
 				"type": "sequence",
@@ -758,16 +963,66 @@
 			"result_info": []
 		},
 		{
+			"edge_type": "sequence",
 			"source": "Conditional_Node.evaluate",
 			"source_handler": {
-				"type": "sequence"
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
 			},
 			"target": "NODE_B.process",
 			"target_handler": {
-				"type": "sequence"
+				"type": "sequence",
+				"conditions": [],
+				"references": [
+					{
+						"refer_key": "llm_model_conn_env",
+						"node_id": "LLM_Model"
+					},
+					{
+						"refer_key": "ocr_model_conn_env",
+						"node_id": "OCR_Model"
+					}
+				],
+				"environments": [],
+				"formatter": []
 			},
-			"env_info": [],
-			"asset_info": [],
+			"env_info": [
+				{
+					"refer_type": "indirect",
+					"key": "tag_path",
+					"value": "doccls_env.TAG_PATH"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "pool_path",
+					"value": "doccls_env.POOL_PATH"
+				}
+			],
+			"asset_info": [
+				{
+					"refer_type": "indirect",
+					"key": "llm_url",
+					"value": "llm_model_conn_env.base_url"
+				},
+				{
+					"refer_type": "direct",
+					"key": "llm_model_name",
+					"value": "LLM MODEL NAME"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "ocr_url",
+					"value": "ocr_model_conn_env.base_url"
+				},
+				{
+					"refer_type": "direct",
+					"key": "ocr_model_name",
+					"value": "OCR Model"
+				}
+			],
 			"param_info": [
 				{
 					"refer_type": "indirect",
@@ -778,6 +1033,7 @@
 			"result_info": []
 		},
 		{
+			"edge_type": "sequence",
 			"source": "NODE_B.process",
 			"source_handler": {
 				"type": "sequence",
@@ -811,6 +1067,7 @@
 			"result_info": []
 		},
 		{
+			"edge_type": "sequence",
 			"source": "NODE_C.process",
 			"source_handler": {
 				"type": "sequence",
@@ -849,6 +1106,7 @@
 			"result_info": []
 		},
 		{
+			"edge_type": "sequence",
 			"source": "NODE_D.process",
 			"source_handler": {
 				"type": "sequence",
@@ -887,6 +1145,7 @@
 			"result_info": []
 		},
 		{
+			"edge_type": "sequence",
 			"source": "NODE_B.process",
 			"source_handler": {
 				"type": "sequence",
@@ -920,6 +1179,7 @@
 			"result_info": []
 		},
 		{
+			"edge_type": "sequence",
 			"source": "NODE_F.process",
 			"source_handler": {
 				"type": "sequence",
@@ -958,6 +1218,7 @@
 			"result_info": []
 		},
 		{
+			"edge_type": "sequence",
 			"source": "NODE_B.process",
 			"source_handler": {
 				"type": "sequence",
@@ -991,6 +1252,7 @@
 			"result_info": []
 		},
 		{
+			"edge_type": "sequence",
 			"source": "NODE_E.process",
 			"source_handler": {
 				"type": "sequence",
@@ -1024,6 +1286,7 @@
 			"result_info": []
 		},
 		{
+			"edge_type": "sequence",
 			"source": "NODE_F.process",
 			"source_handler": {
 				"type": "sequence",
@@ -1062,6 +1325,7 @@
 			"result_info": []
 		},
 		{
+			"edge_type": "sequence",
 			"source": "Conditional_Node.evaluate",
 			"source_handler": {
 				"type": "sequence",
@@ -1090,6 +1354,7 @@
 			"result_info": []
 		},
 		{
+			"edge_type": "sequence",
 			"source": "NODE_G.process",
 			"source_handler": {
 				"type": "sequence",
@@ -1128,6 +1393,7 @@
 			"result_info": []
 		},
 		{
+			"edge_type": "sequence",
 			"source": "NODE_H.process",
 			"source_handler": {
 				"type": "sequence",
@@ -1153,6 +1419,28 @@
 					"value": "NODE_H.process.result_path"
 				}
 			],
+			"result_info": []
+		},
+		{
+			"edge_type": "reference",
+			"source": "NODE_B.process",
+			"source_handler": {},
+			"target": "OCR_Model.process",
+			"target_handler": {},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [],
+			"result_info": []
+		},
+		{
+			"edge_type": "reference",
+			"source": "NODE_B.process",
+			"source_handler": {},
+			"target": "LLM_Model.process",
+			"target_handler": {},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [],
 			"result_info": []
 		}
 	],

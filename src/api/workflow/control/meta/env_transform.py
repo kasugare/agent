@@ -39,13 +39,16 @@ class EnvironmentsTransformer:
             node_env_params = module_env_info.get('params')
             if not node_env_params:
                 continue
-
+            print(wf_node_env_map_pool)
             edge_env_params_map = wf_node_env_map_pool.get(node_id, {})
+            print(edge_env_params_map)
             self._check_valid_env(node_env_params, edge_env_params_map)
 
             node_env_keys = set([node_env_param.get('key') for node_env_param in node_env_params])
             for node_env_key in node_env_keys:
                 edge_env_map = edge_env_params_map.get(node_env_key)
+                print(node_id, node_env_key)
+                print(edge_env_map)
                 if edge_env_map:
                     ref_type = edge_env_map.get('refer_type')
                     if ref_type.lower() == 'direct':
@@ -57,6 +60,7 @@ class EnvironmentsTransformer:
                     nodes_env_value_map[env_id] = value
                 else:
                     node_env_param_map = self._find_node_env_param(node_env_params, node_env_key)
+                    print(node_env_param_map)
                     if node_env_param_map.get('default'):
                         value = node_env_param_map.get('default')
                         env_id = f"{node_id}.{node_env_key}"

@@ -62,7 +62,6 @@ class MetaParseController:
         node_env_map_pool = {}
         for edge_id, edge_meta in wf_edges_meta.items():
             node_id = self._extract_node_id(edge_meta)
-            print(edge_id)
             env_info = edge_meta.get('env_info', [])
             for env_map in env_info:
                 try:
