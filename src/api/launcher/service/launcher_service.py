@@ -50,7 +50,6 @@ class DynamicRouterService(Service):
 
         try:
             if src_type == 'ZIP':
-                # helloworld params
                 path = './api/user.zip'
                 sys.path.insert(0, path)
                 module_name = "user.account.user_account"
@@ -93,7 +92,7 @@ class DynamicRouterService(Service):
                 'version': 0,
                 'prefix': prefix,
                 'module_name': module_name,
-                'class_name': service_key,
+                'class_name': class_name,
                 'route_paths': [route_path]
             }
 
@@ -104,6 +103,7 @@ class DynamicRouterService(Service):
             if isinstance(route, APIRoute):
                 if route.path == api_route_path:
                     del_index.append(index)
-        del_index.backward()
+        # del_index.backward()
+        del_index.reverse()
         for index in del_index:
             self._app.router.routes.pop(index)

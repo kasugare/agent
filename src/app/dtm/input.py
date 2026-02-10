@@ -9,6 +9,6 @@ class Input:
     def _set_asset(self):
         None
 
-    def query_input(self, query: str) -> str:
-        self._logger.debug(f" # START NODE: {query}")
-        return query
+    def input(self, tar_path: str) -> str:
+        self._logger.debug(f" # START NODE: {tar_path}")
+        return tar_path

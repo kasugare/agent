@@ -55,7 +55,6 @@ class BaseHandler:
             self._set_service_info(**service_api_info)
         self._add_service_router()
 
-
     async def _watch_routes(self):
         self._logger.debug(f"watch changeable route-path: routes.json")
         try:
@@ -71,7 +70,7 @@ class BaseHandler:
                 try:
                     route_info = json.load(fd)
                     for class_name, module_info in route_info.items():
-                        self._logger.warn(f"class_name: {class_name}")
+                        self._logger.debug(f"class_name: {class_name}")
                         prefix = module_info.get('prefix')
                         module_name = module_info.get('module_name')
                         class_name = module_info.get('class_name')
@@ -82,17 +81,7 @@ class BaseHandler:
     async def _sync_routes(self):
         if not os.path.exists(self._routes_file_path):
             return
-        with FileLock(f"{getLockDir()}/routes.lock"):
-            with open(self._routes_file_path, 'r') as fd:
-                try:
-                    route_info = json.load(fd)
-                    for class_name, module_info in route_info.items():
-                        prefix = module_info.get('prefix')
-                        module_name = module_info.get('module_name')
-                        class_name = module_info.get('class_name')
-                        self.dynamic_router.add_api_service(prefix, module_name, class_name)
-                except json.JSONDecodeError:
-                    self._logger.error("Invalid routes file format")
+        self._add_service_router()
 
     def _set_service_info(self, prefix, module_name, class_name):
         if os.path.exists(self._routes_file_path):
@@ -109,8 +98,8 @@ class BaseHandler:
                     'class_name': class_name
                 }
 
-                with open(self._routes_file_path, 'w') as f:
-                    json.dump(service_info, f, indent=2)
+                with open(self._routes_file_path, 'w') as fd:
+                    json.dump(service_info, fd, indent=2)
 
     async def add_api_service(self, prefix, module_name, class_name):
         self.dynamic_router.add_api_service(prefix, module_name, class_name)
@@ -119,7 +108,6 @@ class BaseHandler:
     def _set_db_conn(self):
         dbConn = None
         dbContext = getAiLandContext()
-        print(dbContext)
 
         try:
             dbConn = pymysql.connect(host=dbContext['host']
@@ -167,21 +155,19 @@ class ApiLauncher(BaseHandler):
         self._logger = logger
 
     def setup_routes(self):
-        @self.router.get("/add")
-        async def add_service() -> dict:
-            prefix = "/api/v1"
-            # module_name = "api.user.account.user_account"
-            # class_name = "UserAccountRouter"
-            module_name = "api.serving.serving_api"
-            class_name = "ServingProvider"
+        @self.router.post("/add")
+        async def add_service(prefix, module_name, class_name) -> dict:
+            # prefix = "/api/v1"
+            # module_name = "api.serving.serving_api"
+            # class_name = "ServingProvider"
 
             await self.add_api_service(prefix, module_name, class_name)
             self.reset_openapi()
             return {"prefix": prefix, "module_name": module_name, "class_name": class_name}
 
-        @self.router.get("/del")
-        async def del_service():
-            prefix = "/api/v1"
-            path = "/user/add"
-            self.dynamic_router.del_app_router(prefix, path)
+        @self.router.post("/del")
+        async def del_service(prefix, route_path):
+            # prefix = "/api/v1"
+            # path = "/user/add"
+            self.dynamic_router.del_app_router(prefix, route_path)
             self.reset_openapi()

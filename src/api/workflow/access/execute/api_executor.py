@@ -123,11 +123,14 @@ class ApiExecutor:
 
                 else:
                     raise ValueError(f"Unsupported HTTP method: {self._method}")
-
-            except Exception as e:
+            except ConnectionRefusedError as e:
                 self._logger.error(
-                    f"API call error: {str(e)}\n{traceback.format_exc()}"
+                    f"Connection call failed: {self.get_url()}"
                 )
+                raise ConnectionRefusedError
+            except Exception as e:
+                self._logger.error(f"API call error: {str(e)}")
+                self._logger.error(traceback.format_exc())
                 raise
 
     async def _handle_response(self, response: aiohttp.ClientResponse) -> Dict:

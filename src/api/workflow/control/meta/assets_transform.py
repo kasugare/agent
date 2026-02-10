@@ -73,9 +73,7 @@ class AssetsTransformer:
             edge_asset_params_map = wf_node_asset_map_pool.get(node_id, {})
             node_asset_keys = set([node_asset_param.get('key') for node_asset_param in node_asset_params])
             for node_asset_key in node_asset_keys:
-                print(node_asset_key)
                 edge_asset_map = edge_asset_params_map.get(node_asset_key)
-                print(edge_asset_map)
                 if edge_asset_map:
                     ref_type = edge_asset_map.get('refer_type')
                     if ref_type.lower() == 'direct':

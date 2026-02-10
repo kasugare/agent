@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import configparser
-import traceback
 import sys
 import os
 
@@ -21,10 +20,12 @@ def getConfig():
     conf.read(ini_path)
     return conf
 
+
 def getOperMode(section='OPERATION'):
     conf = getConfig()
     operMode = conf.get(section, 'operation_mode')
     return operMode.upper()
+
 
 def getWorkflowId(section='WORKFLOW'):
     conf = getConfig()

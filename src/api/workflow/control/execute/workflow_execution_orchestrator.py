@@ -457,7 +457,7 @@ class WorkflowExecutionOrchestrator:
                     executor.start()
 
                 elif task_state in [TaskState.COMPLETED]:
-                    self._logger.debug(f" - info 4. [COMPLETED] done task execution : {service_id}")
+                    self._logger.info(f" - Step 4. [COMPLETED] done task execution : {service_id}")
                     task_result = task.get_result()
                     customed_task_result = self._result_mapper(service_id, task_result)
                     task = task_map.get(service_id)

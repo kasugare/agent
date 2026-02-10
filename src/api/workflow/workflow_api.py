@@ -15,7 +15,7 @@ from api.workflow.protocol.workflow_headers import HeaderModel, get_headers
 from api.workflow.error_pool.error import NotDefinedWorkflowMetaException
 from error.parent_exception import InvalidInputException
 from error.parent_exception import NotDefinedMetaException
-from fastapi import APIRouter, WebSocket, Depends
+from fastapi import APIRouter, WebSocket, Depends, Request
 from multiprocessing import Queue
 from abc import abstractmethod
 from typing import Any
@@ -155,21 +155,24 @@ class WorkflowEngine(BaseRouter):
             return response
 
         @self.router.post(path='/workflow/inference', response_model=BaseResponse[dict[str, Any]])
-        async def call_chained_model_service(headers: HeaderModel = Depends(get_headers), request: schema.ReqCallChainedModelService = ...):
+        # async def call_chained_model_service(headers: HeaderModel = Depends(get_headers), request: schema.ReqCallChainedModelService = ...):
+        async def call_chained_model_service(request: Request, body: dict):
             # REQ: HEADER {request_id, session_id}, BODY: {from(opt), to(opt), question: "질의"}
             self._logger.info("################################################################")
             self._logger.info("#                        < INFERENCE >                         #")
             self._logger.info("################################################################")
 
-            params = request.parameter
+            params = {}
+            if request and request.headers:
+                params.update(dict(request.headers))
+            if body:
+                params.update(dict(body))
+
             response = {}
             try:
-                # req_id = headers.request_id
-                req_id = str(uuid.uuid4())
-                session_id = headers.session_id
+                req_id = params.get('request_id')
+                session_id = params.get('session_id', req_id)
                 wf_id = getWorkflowId()
-                if not session_id:
-                    session_id = req_id
 
                 metastore = self._meta_service_pool.get_metastore(wf_id)
                 _, datastore = self._data_service_pool.create_pool(wf_id, session_id, req_id)
@@ -197,7 +200,7 @@ class WorkflowEngine(BaseRouter):
                 meta_pack = metastore.get_meta_pack_service()
                 for k, v in meta_pack.items():
                     self._logger.debug(f" - {k} : \t{v}")
-            return meta_pack
+            return meta_pool
 
         # @self.router.get(path='/workflow/datapool', response_model=BaseResponse[schema.ResCallDataPool])
         # async def call_data_pool(headers: HeaderModel = Depends(get_headers), req: schema.ReqCallDataPool = ...):

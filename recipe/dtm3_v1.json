@@ -85,13 +85,13 @@
 			},
 			"services": [
 				{
-					"service_name": "query_input",
+					"service_name": "input_node",
 					"api_method": "",
-					"function": "query_input",
+					"function": "input",
 					"params": [
 						{
 							"required": true,
-							"key": "query",
+							"key": "tar_path",
 							"type": "string"
 						}
 					],
@@ -107,7 +107,7 @@
 		{
 			"node_id": "NODE_A",
 			"node_type": "external",
-			"role": "processing",
+			"role": "process",
 			"location": "outter",
 			"containable": false,
 			"api_keys": [],
@@ -831,7 +831,7 @@
 	"edges": [
 		{
 			"edge_type": "sequence",
-			"source": "START_NODE.query_input",
+			"source": "START_NODE.input_node",
 			"source_handler": {
 				"type": "sequence",
 				"conditions": [],
@@ -853,7 +853,7 @@
 				{
 					"refer_type": "indirect",
 					"key": "tar_path",
-					"value": "START_NODE.query_input.tar_path"
+					"value": "START_NODE.input_node.tar_path"
 				}
 			],
 			"result_info": []
