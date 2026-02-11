@@ -154,6 +154,9 @@ class TaskContext:
     def get_env_params(self):
         return self._env_params
 
+    def get_asset_params(self):
+        return self._asset_params
+
     def set_result(self, result):
         self._result = result
 
@@ -182,7 +185,7 @@ class TaskContext:
 
     def _init_timeout(self, timeout_config):
         self._max_retries = timeout_config.get('max_retries', 3)
-        self._timeout = timeout_config.get('timeout', 60.0)
+        self._timeout = timeout_config.get('timeout', None)
         self._delay_time = timeout_config.get('delay_time', 3.0)
         self._exponential_backoff = timeout_config.get('exponential_backoff', True)
         self._retry_count = 0

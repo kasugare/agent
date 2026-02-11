@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from common.conf_system import getAccessPoolType
-from api.workflow.access.data.cached_io_data_access import CachedIODataAccess
-from api.workflow.access.data.remote_cached_io_data_access import RemoteCachedIODataAccess
+from api.workflow.access.data.cached_data_io_access import CachedIODataAccess
+from api.workflow.access.data.remote_data_io_access import RemoteCachedIODataAccess
 
 
 class DataIOAccessController:

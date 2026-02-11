@@ -12,7 +12,7 @@ class Task(TaskContext):
     def __init__(self, logger, service_id, service_info, timeout_config):
         super().__init__(logger, service_id, service_info, timeout_config)
         self._logger = logger
-        self._start_dt = None
+        self._start_dt = 0.0
         self._end_dt = 0.0
 
         self.set_state(TaskState.PENDING)
@@ -33,6 +33,12 @@ class Task(TaskContext):
         if not self._start_dt:
             self._start_dt = time.time()
 
+    def get_start_dt(self):
+        return self._start_dt
+
+    def get_end_dt(self):
+        return self._end_dt
+
     def execute(self, timeout=0):
         executor = None
         sid = self.get_service_id()
@@ -51,7 +57,10 @@ class Task(TaskContext):
             if timeout == 0:
                 timeout = self.get_timeout()
             self._logger.info(f"# {self.get_service_id()}: Run service execution, timeout: {timeout}")
-            result = future.result(timeout=timeout)
+            if timeout == 0 or not timeout:
+                result = future.result()
+            else:
+                result = future.result(timeout=timeout)
             self.set_result(result)
             self.set_state(TaskState.COMPLETED)
         except TimeoutError as e:

@@ -56,7 +56,7 @@ class DynamicRouterService(Service):
                 class_name = 'UserAccountRouter'
 
                 module = __import__(module_name, fromlist=[module_name])
-                app_object = getattr(module, class_name)(self._logger, self._db_conn)
+                app_object = getattr(module, class_name)(self._logger)
                 api_router = app_object.get_router()
 
             elif src_type == 'SRC':
@@ -64,7 +64,7 @@ class DynamicRouterService(Service):
                 if 'api' != module_name.split('.')[0]:
                     module_name = f'api.{module_name}'
                 module = __import__(module_name, fromlist=[module_name])
-                app_object = getattr(module, class_name)(self._logger, self._db_conn)
+                app_object = getattr(module, class_name)(self._logger)
                 api_router = app_object.get_router()
             else:
                 raise Exception("Module not defined")

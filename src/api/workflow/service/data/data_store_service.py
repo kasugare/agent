@@ -1,18 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from api.workflow.control.data.type_transfer import DataTypeTransfer
 from api.workflow.control.data.data_io_controller import DataIoController
-from api.workflow.control.data.task_pool_controller import TaskPoolController
 from typing import Dict, Any
 
 
 class DataStoreService:
     def __init__(self, logger, cache_key):
         self._logger = logger
-        self._data_controller = DataIoController(logger)
-        self._taskpool_controller = TaskPoolController(logger)
-        self._data_controller.set_cache_key_ctl(cache_key)
+        self._data_controller = DataIoController(logger, cache_key)
 
     def set_init_values(self, meta_pack):
         wf_edges_meta = meta_pack.get('edges_info')
@@ -26,11 +22,9 @@ class DataStoreService:
 
     def clear(self):
         self._data_controller.clear_ctl()
-        self._taskpool_controller.clear_ctl()
 
     def clear_data(self):
         self._data_controller.clear_ctl()
-        self._taskpool_controller.clear_ctl()
 
     def set_cache_key_service(self, wf_key):
         self._data_controller.set_cache_key_ctl(wf_key)
@@ -58,12 +52,6 @@ class DataStoreService:
         """ service_id = {node_id}.{service_name}"""
         params = self._data_controller.get_start_service_params_ctl(service_id)
         return params
-
-    # def get_service_params_service(self, service_id: str) -> dict:
-    #     """ service_id = {node_id}.{service_name}"""
-    #     wf_edges_meta = self.get_edges_meta_service()
-    #     params = self._data_controller.get_service_params_ctl(service_id, wf_edges_meta)
-    #     return params
 
     def get_service_data_pool_service(self) -> Dict:
         data_pool = self._data_controller.get_data_pool_ctl()
@@ -97,10 +85,3 @@ class DataStoreService:
         data_pool = self.get_service_data_pool_service()
         service_node_info = data_pool.get(service_id)
         return service_node_info
-
-    def set_task_map_service(self, task_map):
-        self._taskpool_controller.set_task_map_control(task_map)
-
-    def get_task_map_service(self):
-        task_map = self._taskpool_controller.get_task_map_control()
-        return task_map

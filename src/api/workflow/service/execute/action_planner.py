@@ -3,15 +3,17 @@
 
 from api.workflow.error_pool.error import InvalidInputException
 from api.workflow.error_pool.error import NotDefinedWorkflowMetaException
-from api.workflow.service.task.task_load_service import TaskLoadService
+from api.workflow.service.task.task_generator import TaskGenerationService
 
 
 class ActionPlanningService:
-    def __init__(self, logger, meta_pack, datastore):
+    def __init__(self, logger, meta_pack, store_pack):
         self._logger = logger
         self._meta_pack = meta_pack
-        self._datastore = datastore
-        self._taskstore = TaskLoadService(logger, meta_pack)
+        self._store_pack = store_pack
+        self._datastore = store_pack.get('datastore', {})
+        self._taskstore = store_pack.get('taskstore', {})
+        self._task_generator = TaskGenerationService(logger, meta_pack)
 
     def _gen_task_graph_for_from(self, base_graph, from_service_id, count=0):
         count += 1
@@ -165,7 +167,7 @@ class ActionPlanningService:
         return act_service_ids
 
     def gen_action_tasks(self, action_service_ids):
-        task_map = self._taskstore.gen_active_tasks_service(action_service_ids)
+        task_map = self._task_generator.gen_active_tasks_service(action_service_ids)
         return task_map
 
     def _vaild_meta(self, action_meta_pack):
@@ -216,7 +218,7 @@ class ActionPlanningService:
             self._logger.info(f" # Step 6. Generate Active Tasks")
             action_service_ids = self.gen_action_service_ids(act_forward_graph, act_backward_graph)
             act_task_map = self.gen_action_tasks(action_service_ids)
-            self._datastore.set_task_map_service(act_task_map)
+            self._taskstore.set_init_task_map(act_task_map)
 
             action_meta_pack['act_forward_graph'] = act_forward_graph
             action_meta_pack['act_backward_graph'] = act_backward_graph
@@ -224,7 +226,7 @@ class ActionPlanningService:
             action_meta_pack['act_end_nodes'] = act_end_nodes
             action_meta_pack['act_edges_param_map'] = act_edges_param_map
             action_meta_pack['act_task_map'] = act_task_map
-            self._print_map(action_meta_pack)
+            # self._print_map(action_meta_pack)
             return action_meta_pack
         except NotDefinedWorkflowMetaException as e:
             self._logger.error(e)

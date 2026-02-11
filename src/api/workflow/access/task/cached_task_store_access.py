@@ -7,10 +7,14 @@ import threading
 
 
 class CachedTaskPoolAccess:
-    def __init__(self, logger):
+    def __init__(self, logger, cache_key=None):
         self._logger = logger
+        self._cache_key = cache_key
         self._thread_lock = threading.Lock()
         self._task_pool = {}
+
+    def set_cache_key_access(self, cache_key):
+        self._cache_key = cache_key
 
     def set_task_map_access(self, task_map: Dict[str, Any]) -> None:
         self._thread_lock.acquire()

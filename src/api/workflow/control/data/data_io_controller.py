@@ -1,26 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from api.workflow.access.data.cached_io_data_access import CachedIODataAccess
+from api.workflow.access.data.cached_data_io_access import CachedIODataAccess
 from api.workflow.control.data.data_io_access_controller import DataIOAccessController
 from api.workflow.error_pool.error import NotExistedData
 
 
 class DataIoController:
-    # _instance = None
-    #
-    # def __new__(cls, *args, **kwargs):
-    #     if cls._instance is None:
-    #         cls._instance = super().__new__(cls)
-    #     return cls._instance
-
-    def __init__(self, logger):
+    def __init__(self, logger, cache_key=None):
         self._logger = logger
         self._data_access_controller = DataIOAccessController(logger)
         self._data_access = self._data_access_controller.get_data_access_instance()
+        if cache_key:
+            self.set_cache_key_ctl(cache_key)
 
-    def set_cache_key_ctl(self, wf_key):
-        self._data_access.set_cache_key_access(wf_key)
+    def set_cache_key_ctl(self, cache_key):
+        self._data_access.set_cache_key_access(cache_key)
 
     def clear_ctl(self):
         self._data_access.clear_access()

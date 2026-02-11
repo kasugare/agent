@@ -14,8 +14,8 @@ class CachedIODataAccess:
         self._thread_lock = threading.Lock()
         self._data_pool = {}
 
-    def set_cache_key_access(self, wf_key):
-        self._cache_key = wf_key
+    def set_cache_key_access(self, cache_key):
+        self._cache_key = cache_key
 
     def clear_access(self):
         try:

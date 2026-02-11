@@ -35,15 +35,14 @@ class EngineAdapter(BaseRouter):
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self, logger, db_conn=None):
+    def __init__(self, logger):
         super().__init__(logger, tags=['DTM Adaptor'])
         self._logger = logger
-
         self._engine_adaptor_service = EngineAdaptorService(logger)
 
         self._isWorking = False
-        self._call_back_error_url = ''
-        self._call_back_url = ''
+        self._call_back_error_url = 'http://10.0.0.1:8080/call_back_error'
+        self._call_back_url = 'http://10.0.0.1:8080/call_back'
         self._member_id = ''
         self._user_data = ''
 
@@ -55,17 +54,16 @@ class EngineAdapter(BaseRouter):
         async with httpx.AsyncClient() as client:
             try:
                 if method.upper() == "POST":
-                    response = await client.post(url, json=json_data, headers=headers, timeout=30.0)
+                    response = await client.post(url, json=json_data, headers=headers, timeout=None)
                 elif method.upper() == "GET":
-                    response = await client.get(url, params=params, headers=headers, timeout=30.0)
+                    response = await client.get(url, params=params, headers=headers, timeout=None)
                 elif method.upper() == "PUT":
-                    response = await client.put(url, json=json_data, headers=headers, timeout=30.0)
+                    response = await client.put(url, json=json_data, headers=headers, timeout=None)
                 elif method.upper() == "DELETE":
-                    response = await client.delete(url, headers=headers, timeout=30.0)
+                    response = await client.delete(url, headers=headers, timeout=None)
                 else:
                     raise ValueError(f"Unsupported HTTP method: {method}")
 
-                # 에러 처리
                 if response.status_code >= 400:
                     error_detail = response.json() if response.headers.get('content-type') == 'application/json' else response.text
                     self._logger.error(f"Workflow API error: {error_detail}")
@@ -114,9 +112,12 @@ class EngineAdapter(BaseRouter):
                     headers={
                         "Content-Type": "application/json",
                         "secret_key": "",
+                        "job_id": f"{job_id}",
                         "user_id": "test_user",
                         "request-id": str(uuid.uuid4()),
-                        "session-id": "session1234"
+                        "session-id": str(uuid.uuid4()),
+                        "call_back_error_url": call_back_url,
+                        "call_back_url": call_back_error_url
                     },
                     json_data={"tar_path": path_list}
                 )
@@ -174,9 +175,24 @@ class EngineAdapter(BaseRouter):
             self._logger.info("################################################################")
             self._logger.info("#                       < Is Working >                         #")
             self._logger.info("################################################################")
+            result = await asyncio.create_task(self._call_workflow_api(
+                    method="GET",
+                    path="/api/v1/workflow/working_state",
+                    headers={
+                        "Content-Type": "application/json"
+                    }
+                )
+            )
+
+            if not result:
+                is_working = False
+            else:
+                is_working = result.get('is_working')
+
+
             response = {
                 "data": {
-                    "isworking": self._isWorking,
+                    "isworking": is_working,
                     "async_queue_count": 0,
                     "job_list": []
                 },
@@ -192,28 +208,69 @@ class EngineAdapter(BaseRouter):
             self._logger.info("#                        < Job List >                          #")
             self._logger.info("################################################################")
             job_id = headers.x_sampl_job_id
+            result = await asyncio.create_task(self._call_workflow_api(
+                    method="GET",
+                    path="/api/v1/workflow/job_state",
+                    headers={
+                        "Content-Type": "application/json",
+                        "secret_key": "",
+                        "job_id": f"{job_id}",
+                    }
+                )
+            )
+            if not result:
+                completion_yn = 'N'
+                start_datetime = "0"
+                end_datetime = "0"
+                status = None
+                call_back_url = None
+                call_back_error_url = None
+                error_yn = 'N'
+            else:
+                processing_time = result.get('processing_time')
+                start_datetime = processing_time.get('start_dt', "0")
+                end_datetime = processing_time.get('end_dt', "0")
+                status = result.get('status')
+                params = result.get('params', {})
+                if params:
+                    call_back_url = params.get('call_back_url')
+                    call_back_error_url = params.get('call_back_error_url')
+                else:
+                    call_back_url = None
+                    call_back_error_url = None
+
+                if status == 'COMPLETED':
+                    completion_yn = 'Y'
+                    error_yn = "N"
+                elif status == 'FAILED':
+                    completion_yn = 'Y'
+                    error_yn = "Y"
+                else:
+                    completion_yn = 'N'
+                    error_yn = 'N'
+
             response = {
                 "data": {
                     "cnt": 0,
                     "data": [{
-                        "call_back_error_url": self._call_back_error_url,
-                        "call_back_url": self._call_back_url,
-                        "completion_yn": "Y",
+                        "call_back_error_url": call_back_error_url,
+                        "call_back_url": call_back_url,
+                        "completion_yn": completion_yn,
                         "conveyor": "ocr_online",
                         "data": {},
-                        "end_datetime": "20251111010842",
-                        "error_yn": "N",
+                        "end_datetime": end_datetime,
+                        "error_yn": error_yn,
                         "job_id": job_id,
                         "member_id": self._member_id,
                         "message": "Success",
                         "notified": "",
-                        "pid": 900,
-                        "pid_created_time": 1762822473.55,
-                        "reg_datetime": "20251111010837",
-                        "start_datetime": "20251111010837",
-                        "status": "COMPLETED",
-                        "thread_id": 140084576745216,
-                        "uid": "900-1762822473.55-OCR-1.29.31.34290ce846db4019a664f4e2b9c955d6"
+                        "pid": 0,
+                        "pid_created_time": 0,
+                        "reg_datetime": start_datetime,
+                        "start_datetime": start_datetime,
+                        "status": status,
+                        "thread_id": 0,
+                        "uid": ""
                     }]
                 },
                 "status": 0,

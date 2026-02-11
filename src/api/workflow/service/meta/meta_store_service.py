@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from common.conf_system import getRecipeDir, getRecipeFile, isMetaAutoLoad
-from api.workflow.control.data.metastore_controller import MetastoreController
-from typing import Dict, Any
+from common.conf_system import getRecipeDir
+from api.workflow.control.meta.metastore_controller import MetastoreController
+from typing import Dict
 import time
 import os
 
@@ -149,14 +149,14 @@ class MetaStoreService:
             self.set_wf_meta_service(new_wf_meta)
         return new_meta_pack
 
-    def set_wf_meta(self, new_meta_pack, request_id):
-        new_wf_meta = new_meta_pack.get('wf_meta')
+    def set_wf_meta(self, meta_pack, request_id):
+        wf_meta = meta_pack.get('wf_meta')
         self._logger.debug("# New Meta Update")
-        new_wf_comm = new_wf_meta.get('common')
-        dirpath, filename = self._gen_dag_file_path(new_wf_comm, request_id)
-        self.set_wf_meta_file_service(new_wf_meta, dirpath=dirpath, filename=filename)
-        self.set_wf_meta_service(new_wf_meta)
-        return new_meta_pack
+        wf_comm = wf_meta.get('common')
+        dirpath, filename = self._gen_dag_file_path(wf_comm, request_id)
+        self.set_wf_meta_file_service(wf_meta, dirpath=dirpath, filename=filename)
+        self.set_wf_meta_service(wf_meta)
+        return meta_pack
 
     def get_meta_pack_service(self) -> Dict:
         meta_pack = self._metastore_controller.get_metas_ctl()

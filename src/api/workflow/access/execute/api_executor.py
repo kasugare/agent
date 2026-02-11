@@ -81,7 +81,8 @@ class ApiExecutor:
                     async with session.get(
                             self.get_url(),
                             headers=headers,
-                            params=params
+                            params=params,
+                            timeout=None
                     ) as response:
                         return await self._handle_response(response)
 
@@ -90,7 +91,8 @@ class ApiExecutor:
                     async with session.post(
                             self.get_url(),
                             headers=headers,
-                            json=params
+                            json=params,
+                            timeout=None
                     ) as response:
                         return await self._handle_response(response)
 
@@ -99,7 +101,8 @@ class ApiExecutor:
                     async with session.put(
                             self.get_url(),
                             headers=headers,
-                            json=params
+                            json=params,
+                            timeout=None
                     ) as response:
                         return await self._handle_response(response)
 
@@ -108,7 +111,8 @@ class ApiExecutor:
                     async with session.patch(
                             self.get_url(),
                             headers=headers,
-                            json=params
+                            json=params,
+                            timeout=None
                     ) as response:
                         return await self._handle_response(response)
 
@@ -117,7 +121,8 @@ class ApiExecutor:
                     async with session.delete(
                             self.get_url(),
                             headers=headers,
-                            json=params if params else None
+                            json=params if params else None,
+                            timeout=None
                     ) as response:
                         return await self._handle_response(response)
 

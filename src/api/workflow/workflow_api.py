@@ -2,13 +2,15 @@
 # -*- coding: utf-8 -*-
 
 from common.conf_serving import getWorkflowId
-from api.workflow.data_pool.meta_service_pool import MetaServicePool
-from api.workflow.data_pool.data_service_pool import DataServicePool
+from api.workflow.service.admin.metric_service import MetricService
 from api.workflow.service.meta.auto_meta_loader import AutoMetaLoader
 from api.workflow.service.meta.wf_meta_parser import WorkflowMetaParser
 from api.workflow.service.meta.prompt_meta_generator import PromptMetaGenerator
 from api.workflow.service.execute.workflow_executor import WorkflowExecutor
 from api.workflow.service.stream.web_stream_connection_manager import WSConnectionManager
+from api.workflow.service.meta.meta_store_service import MetaStoreService
+from api.workflow.service.data.data_store_service import DataStoreService
+from api.workflow.service.task.task_store_service import TaskStoreService
 from api.workflow.service.stream.web_stream_handler import WebStreamHandler
 from api.workflow.protocol.schema import BaseResponse
 from api.workflow.protocol.workflow_headers import HeaderModel, get_headers
@@ -16,7 +18,6 @@ from api.workflow.error_pool.error import NotDefinedWorkflowMetaException
 from error.parent_exception import InvalidInputException
 from error.parent_exception import NotDefinedMetaException
 from fastapi import APIRouter, WebSocket, Depends, Request
-from multiprocessing import Queue
 from abc import abstractmethod
 from typing import Any
 import api.workflow.protocol.workflow_schema as schema
@@ -39,21 +40,50 @@ class BaseRouter:
 
 
 class WorkflowEngine(BaseRouter):
-    _instance = None
-
-    def __new__(cls, *args, **kwargs):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
-
-    def __init__(self, logger, db_conn=None):
+    def __init__(self, logger):
         super().__init__(logger, tags=['Workflow Engine'])
-        self._job_Q = Queue()
         self._ws_manager = WSConnectionManager(logger)
-        self._meta_service_pool = MetaServicePool(logger)
-        self._data_service_pool = DataServicePool(logger)
-        auto_meta_loader = AutoMetaLoader(self._logger, self._meta_service_pool)
+        self._metric_service = MetricService(logger)
+
+        auto_meta_loader = AutoMetaLoader(self._logger)
         auto_meta_loader.init_workflow_meta()
+
+        self._task_pool = {}
+
+    def _set_task_executor(self, job_id, executor):
+        if len(self._task_pool) > 10:
+            self._task_pool.popitem()
+        else:
+            self._task_pool[job_id] = executor
+
+    def _get_task_executor(self, job_id) -> WorkflowExecutor:
+        task_executor = self._task_pool.get(job_id, {})
+        return task_executor
+
+    def _get_executor_all(self):
+        return self._task_pool
+
+    def _cvt_params(self, request, body={}):
+        params = {}
+        if request and request.headers:
+            params.update(dict(request.headers))
+        if body:
+            params.update(dict(body))
+        self._logger.debug("Input Params")
+        for k, v in params.items():
+            self._logger.warn(f" - {k}: {v}")
+        return params
+
+    def _set_store_pack(self, wf_id, job_id):
+        store_pack = {}
+        metastore = MetaStoreService(self._logger, wf_id)
+        datastore = DataStoreService(self._logger, job_id)
+        taskstore = TaskStoreService(self._logger, job_id)
+        store_pack['metastore'] = metastore
+        store_pack['datastore'] = datastore
+        store_pack['taskstore'] = taskstore
+        return store_pack
+
 
     def setup_routes(self):
         @self.router.post(path='/workflow/meta', response_model=BaseResponse[schema.ResCreateWorkflow])
@@ -72,15 +102,10 @@ class WorkflowEngine(BaseRouter):
                 raise InvalidInputException(err_detail="Invalid workflow meta")
 
             meta_paraser = WorkflowMetaParser(self._logger)
-            new_meta_pack = meta_paraser.parse_wf_meta(new_wf_meta)
-            wf_id = new_meta_pack.get('workflow_id')
-
-            metastore = self._meta_service_pool.get_metastore(wf_id)
-            if metastore:
-                metastore.update_wf_meta(new_meta_pack, request_id)
-            else:
-                _, metastore = self._meta_service_pool.create_pool(wf_id)
-                metastore.set_wf_meta(new_meta_pack, request_id)
+            meta_pack = meta_paraser.parse_wf_meta(new_wf_meta)
+            wf_id = meta_pack.get('workflow_id')
+            metastore = MetaStoreService(self._logger, wf_id)
+            metastore.set_wf_meta(meta_pack, request_id)
             return {}
 
         @self.router.post(path='/workflow/prompt', response_model=BaseResponse[dict[str, Any]])
@@ -96,16 +121,15 @@ class WorkflowEngine(BaseRouter):
             new_meta_pack = meta_paraser.parse_wf_meta(wf_meta_template)
             wf_id = new_meta_pack.get('workflow_id')
 
-            metastore = self._meta_service_pool.get_metastore(wf_id)
-            if metastore:
-                metastore.update_wf_meta(new_meta_pack, request_id)
-            else:
-                _, metastore = self._meta_service_pool.create_pool(wf_id)
-                metastore.set_wf_meta(new_meta_pack, request_id)
+            metastore = MetaStoreService(self._logger, wf_id)
+            metastore.set_wf_meta(new_meta_pack, request_id)
 
             response = {}
             try:
-                workflow_executor = WorkflowExecutor(self._logger, self._datastore, self._job_Q)
+                job_id = params.get('job_id', str(uuid.uuid4()))
+                datastore = DataStoreService(self._logger, request_id)
+                store_pack = self._set_store_pack(wf_id, job_id)
+                workflow_executor = WorkflowExecutor(self._logger, store_pack)
                 result = workflow_executor.run_workflow(params)
                 response = {
                     "result": result
@@ -123,26 +147,24 @@ class WorkflowEngine(BaseRouter):
             self._logger.info("################################################################")
             self._logger.info("#                         < Clear All >                        #")
             self._logger.info("################################################################")
-            self._datastore.clear()
             return {}
 
         @self.router.post(path='/workflow/run', response_model=BaseResponse[dict[str, Any]])
-        async def call_chained_model_service(headers: HeaderModel = Depends(get_headers), request: schema.ReqCallChainedModelService = ...):
-            # REQ: HEADER {request_id, session_id}, BODY: {from(opt), to(opt), question: "질의"}
+        async def call_chained_model_service(request: Request, body: dict):
             self._logger.info("################################################################")
             self._logger.info("#                            < RUN >                           #")
             self._logger.info("################################################################")
-            start_node, end_node, params = request.from_node, request.to_node, request.parameter
-            wf_id = request.wf_id
+            params = self._cvt_params(request, body)
             response = {}
-            try:
-                req_id = headers.request_id
-                session_id = headers.session_id
 
-                metastore = self._meta_service_pool.get_metastore(wf_id)
-                datastore = self._data_service_pool.create_pool(wf_id, session_id, req_id)
-                workflow_executor = WorkflowExecutor(self._logger, metastore, datastore, self._job_Q)
-                result = workflow_executor.run_workflow(params, start_node, end_node)
+            try:
+                req_id = params.get('request-id')
+                session_id = params.get('session-id', req_id)
+                wf_id = params.get('workflow_id', getWorkflowId())
+                job_id = params.get('job_id', session_id)
+                store_pack = self._set_store_pack(wf_id, job_id)
+                workflow_executor = WorkflowExecutor(self._logger, store_pack)
+                result = workflow_executor.run_workflow(params)
                 response = {
                     "result": result
                 }
@@ -155,29 +177,23 @@ class WorkflowEngine(BaseRouter):
             return response
 
         @self.router.post(path='/workflow/inference', response_model=BaseResponse[dict[str, Any]])
-        # async def call_chained_model_service(headers: HeaderModel = Depends(get_headers), request: schema.ReqCallChainedModelService = ...):
         async def call_chained_model_service(request: Request, body: dict):
-            # REQ: HEADER {request_id, session_id}, BODY: {from(opt), to(opt), question: "질의"}
             self._logger.info("################################################################")
             self._logger.info("#                        < INFERENCE >                         #")
             self._logger.info("################################################################")
 
-            params = {}
-            if request and request.headers:
-                params.update(dict(request.headers))
-            if body:
-                params.update(dict(body))
-
+            params = self._cvt_params(request, body)
             response = {}
-            try:
-                req_id = params.get('request_id')
-                session_id = params.get('session_id', req_id)
-                wf_id = getWorkflowId()
 
-                metastore = self._meta_service_pool.get_metastore(wf_id)
-                _, datastore = self._data_service_pool.create_pool(wf_id, session_id, req_id)
-                workflow_executor = WorkflowExecutor(self._logger, metastore, datastore, self._job_Q)
+            try:
+                req_id = params.get('request-id')
+                session_id = params.get('session-id', req_id)
+                wf_id = params.get('workflow_id', getWorkflowId())
+                job_id = params.get('job_id', session_id)
+                store_pack = self._set_store_pack(wf_id, job_id)
+                workflow_executor = WorkflowExecutor(self._logger, store_pack)
                 result = workflow_executor.run_workflow(params)
+                self._set_task_executor(job_id, workflow_executor)
                 response = {
                     "result": result
                 }
@@ -191,10 +207,11 @@ class WorkflowEngine(BaseRouter):
 
         @self.router.get(path='/workflow/metapack')
         async def call_meta_pack(wf_id=None):
-            self._logger.info("################################################################")
-            self._logger.info("#                         < Meta Pack >                        #")
-            self._logger.info("################################################################")
-            meta_pool = self._meta_service_pool.get_service_pool()
+            self._logger.warn("################################################################")
+            self._logger.warn("#                         < Meta Pack >                        #")
+            self._logger.warn("################################################################")
+            # meta_pool = self._meta_service_pool.get_service_pool()
+            meta_pool = {}
             for wf_id, metastore in meta_pool.items():
                 self._logger.debug(f" <{wf_id}>")
                 meta_pack = metastore.get_meta_pack_service()
@@ -202,74 +219,64 @@ class WorkflowEngine(BaseRouter):
                     self._logger.debug(f" - {k} : \t{v}")
             return meta_pool
 
-        # @self.router.get(path='/workflow/datapool', response_model=BaseResponse[schema.ResCallDataPool])
-        # async def call_data_pool(headers: HeaderModel = Depends(get_headers), req: schema.ReqCallDataPool = ...):
         @self.router.get(path='/workflow/datapool')
-        async def call_data_pool():
+        async def call_data_pool(request: Request):
             self._logger.info("################################################################")
             self._logger.info("#                         < Data Pool >                        #")
             self._logger.info("################################################################")
-
-            data_service_pool = self._data_service_pool.get_service_map()
-            for wf_id, datastore in data_service_pool.items():
-                self._logger.info(f"<{wf_id}>")
-                data_pool = datastore.get_service_data_pool_service()
-                d = dict(sorted(data_pool.items()))
-                for k, v in d.items():
-                    splited_key = k.split(".")
-                    in_type = splited_key[0]
-                    service_id = (".").join(splited_key[1:])
-                    self._logger.info(f"  L [{in_type}] {service_id} : {v}")
-            # return data_pool
+            datastore = DataStoreService(self._logger, "test")
+            data_pool = self._metric_service.extract_io_data(datastore)
+            return data_pool
 
         @self.router.get(path='/workflow/act_dag')
-        async def call_active_dag():
+        async def call_active_dag(request: Request):
             self._logger.info("################################################################")
             self._logger.info("#                        < Active DAG >                        #")
             self._logger.info("################################################################")
-            act_meta = self._workflow_executor.get_act_meta()
-            for k, v in act_meta.items():
-                self._logger.info(f" - {k}")
-                if isinstance(v, dict):
-                    for kk, vv in v.items():
-                        self._logger.debug(f" \t- {kk}: {vv}")
-                elif isinstance(v, list):
-                    for l in v:
-                        self._logger.debug(f" \t- {l}")
-                else:
-                    self._logger.debug(f" \t- {v}")
-                self._logger.debug("*" * 200)
-            # return act_meta
+            params = self._cvt_params(request)
+            job_id = params.get('job-id')
+            workflow_executor = self._get_task_executor(job_id)
+            if not workflow_executor:
+                return
+
+            active_meta = self._metric_service.extract_active_dag(workflow_executor)
+            return active_meta
 
         @self.router.get(path='/workflow/tasks')
-        async def call_task_pool():
+        async def call_task_pool(request: Request):
             self._logger.info("################################################################")
             self._logger.info("#                       < Active Tasks >                       #")
             self._logger.info("################################################################")
-            act_meta = self._workflow_executor.get_act_meta()
-            act_task_map = act_meta.get('act_task_map')
-            if not act_task_map:
+            params = self._cvt_params(request)
+            job_id = params.get('job-id')
+            workflow_executor = self._get_task_executor(job_id)
+            if not workflow_executor:
                 return
-            for task_id, task_obj in act_task_map.items():
-                self._logger.info(f" - {task_id}")
-                service_id = task_obj.get_service_id()
+            active_tasks = self._metric_service.extract_active_task_pool()
+            return active_tasks
 
-                state = task_obj.get_state()
-                env = task_obj.get_env_params()
-                params = task_obj.get_params()
-                result = task_obj.get_result()
-                error = task_obj.get_error()
-                node_type = task_obj.get_node_type()
-                self._logger.debug(f"\t- service_id: {service_id}")
-                self._logger.debug(f"\t- state:      {state}")
-                self._logger.debug(f"\t- env:        {env}")
-                self._logger.debug(f"\t- params:     {params}")
-                self._logger.debug(f"\t- result:     {result}")
-                self._logger.debug(f"\t- Error:      {error}")
-                self._logger.debug(f"\t- node_type:  {node_type}")
-                task_obj.print_service_info()
-                self._logger.debug("*" * 100)
-            # return act_task_map
+        @self.router.get(path='/workflow/job_state')
+        async def call_job_state(request: Request):
+            self._logger.info("################################################################")
+            self._logger.info("#                        < Job State >                         #")
+            self._logger.info("################################################################")
+            params = self._cvt_params(request)
+            job_id = params.get('job-id')
+            if not job_id:
+                job_id = params.get('job_id')
+            workflow_executor = self._get_task_executor(job_id)
+            if not workflow_executor:
+                return
+            job_status = self._metric_service.extract_job_state(workflow_executor)
+            return job_status
+
+        @self.router.get(path='/workflow/working_state')
+        async def call_working_state(request: Request):
+            self._logger.info("################################################################")
+            self._logger.info("#                      < Working State >                       #")
+            self._logger.info("################################################################")
+            is_working = self._metric_service.get_working_state()
+            return is_working
 
         @self.router.websocket("/workflow/chat")
         async def websocket_endpoint(websocket: WebSocket):
@@ -280,5 +287,8 @@ class WorkflowEngine(BaseRouter):
             connection_id = str(uuid.uuid4())
 
             await self._ws_manager.connect(websocket, connection_id)
-            stream_handler = WebStreamHandler(self._logger, self._ws_manager, self._datastore)
+            session_id = 'session-id'
+            wf_id = getWorkflowId()
+            store_pack = self._set_store_pack(wf_id, None)
+            stream_handler = WebStreamHandler(self._logger, self._ws_manager, store_pack)
             await stream_handler.run_stream(connection_id)

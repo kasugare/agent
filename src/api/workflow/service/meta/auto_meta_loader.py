@@ -1,23 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from common.conf_system import getRecipeDir, getRecipeFile, isMetaAutoLoad
+from common.conf_system import getRecipeDir, getRecipeFile
 from api.workflow.service.meta.wf_meta_parser import WorkflowMetaParser
 from api.workflow.access.meta.meta_file_access import MetaFileAccess
-from typing import Dict, List, Any
+from api.workflow.service.meta.meta_store_service import MetaStoreService
+from typing import Any
 from watchfiles import awatch
 import traceback
 import threading
 import asyncio
-import time
 import os
 
 
 class AutoMetaLoader:
-    def __init__(self, logger, meta_service_pool):
+    def __init__(self, logger):
         self._logger = logger
-        self._meta_service_pool = meta_service_pool
-        # self.init_workflow_meta()
         self._auto_loader()
 
     def _auto_loader(self, dirpath: str = None, filename: str = None) -> None:
@@ -59,7 +57,8 @@ class AutoMetaLoader:
             return
 
         wf_id = filed_meta_pack.get('workflow_id')
-        metastore = self._meta_service_pool.get_metastore(wf_id)
+        metastore = MetaStoreService(self._logger, wf_id)
+        # metastore = self._meta_service_pool.get_metastore(wf_id)
 
         if metastore:
             current_wf_meta = metastore.get_wf_meta_service()
@@ -70,7 +69,7 @@ class AutoMetaLoader:
             else:
                 return
         else:
-            _, metastore = self._meta_service_pool.create_pool(wf_id)
+            # _, metastore = self._meta_service_pool.create_pool(wf_id)
             metastore.set_meta_pack_service(filed_meta_pack)
 
     def init_workflow_meta(self):
@@ -80,5 +79,7 @@ class AutoMetaLoader:
         meta_parser = WorkflowMetaParser(self._logger)
         meta_pack = meta_parser.parse_wf_meta(wf_meta)
         wf_id = meta_pack.get("workflow_id")
-        _, metastore = self._meta_service_pool.create_pool(wf_id)
+        metastore = MetaStoreService(self._logger, wf_id)
+
+        # _, metastore = self._meta_service_pool.create_pool(wf_id)
         metastore.set_meta_pack_service(meta_pack)

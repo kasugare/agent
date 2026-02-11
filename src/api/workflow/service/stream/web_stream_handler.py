@@ -21,15 +21,14 @@ import time
 
 
 class WebStreamHandler:
-    def __init__(self, logger, ws_manager, datastore):
+    def __init__(self, logger, ws_manager, store_pack):
         self._logger = logger
         self._stream_Q = Queue()
         self._job_Q = Queue()
         self._ws_manager = ws_manager
-        self._datastore = datastore
 
         self._protocol = ProtocolParser(logger)
-        self._workflow_executor = WorkflowExecutor(logger, datastore, self._job_Q, self._stream_Q)
+        self._workflow_executor = WorkflowExecutor(logger, store_pack, self._stream_Q)
 
         self._auth_key_pool = {}
         self._req_message_pool = {}

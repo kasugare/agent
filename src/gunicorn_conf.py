@@ -6,7 +6,7 @@ import resource
 import os
 
 bind = "0.0.0.0:8080"
-workers = 1
+workers = 2
 worker_class = "uvicorn.workers.UvicornWorker"
 timeout = 5000
 keepalive = 3
@@ -18,6 +18,7 @@ max_requests_jitter = 100
 def on_starting(server):
     """서버 시작 시 실행"""
     multiprocessing.current_process().name = 'main'
+    resource.setrlimit(resource.RLIMIT_NOFILE, (65536, 65536))
 
 def when_ready(server):
     """서버가 요청을 받을 준비가 됐을 때"""
@@ -40,7 +41,3 @@ def worker_exit(server, worker):
         multiprocessing.resource_tracker._resource_tracker._fd = None
     except Exception:
         pass
-
-def on_starting(server):
-    # 파일 디스크립터 제한 증가
-    resource.setrlimit(resource.RLIMIT_NOFILE, (65536, 65536))

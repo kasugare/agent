@@ -1,6 +1,6 @@
 from common.conf_system import getAccessPoolType
-from api.workflow.access.data.cached_metastore_access import CachedMetastoreAccess
-from api.workflow.access.meta.remote_cached_metastore_access import RemoteCachedMetastoreAccess
+from api.workflow.access.meta.cached_metastore_access import CachedMetastoreAccess
+from api.workflow.access.meta.remote_metastore_access import RemoteCachedMetastoreAccess
 
 
 class MetastoreAccessController:

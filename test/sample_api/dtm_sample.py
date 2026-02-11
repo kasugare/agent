@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from typing import Dict, List, Optional, Any
@@ -7,6 +10,7 @@ import asyncio
 import uuid
 import json
 import random
+import time
 
 
 # 데이터 모델 정의
@@ -50,6 +54,7 @@ async def process_node(request: NodeA_Model):
     print("#" * 100)
     print(f"< Node A >")
     print(f"  L PARAMS: {request.tar_path}")
+    # time.sleep(10)
     response = {
         "tif_path": "/data/2026_01_16/033500010101722969020240422093257001_1/in_tar_file/033500010101722969020240422093257001_1_merged.tif",
         "txt_path": "/data/2026_01_16/033500010101722969020240422093257001_1/in_tar_file/03B100094800000000020251201091648714.txt",

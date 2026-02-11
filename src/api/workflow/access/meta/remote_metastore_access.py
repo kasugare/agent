@@ -11,7 +11,7 @@ from common.dependancy import get_redis_client
 
 class RemoteCachedMetastoreAccess(RedisAccess):
     def __init__(self, logger, wf_id=None):
-        super().__init__(logger)
+        super().__init__(logger, db=0)
         if wf_id:
             self._cache_key = f'{wf_id}.meta'
         else:

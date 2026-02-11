@@ -5,7 +5,7 @@ from api.workflow.control.execute.task import Task
 from common.conf_system import getWorkflowTimeoutConfig
 
 
-class TaskLoadController:
+class TaskGenerationController:
     def __init__(self, logger, meta_pack):
         self._logger = logger
         self._meta_pack = meta_pack

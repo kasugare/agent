@@ -21,6 +21,10 @@ class DataServicePool(ServicePool):
         store_key = f"{workflow_id}-{session_id}-{request_id}"
         return store_key
 
+    def create_pool_by_store_key(self, store_key):
+        service_key, instance = self.create_service_instance(store_key, DataStoreService)
+        return service_key, instance
+
     def create_pool(self, workflow_id, session_id, request_id):
         store_key = self._gen_store_key(workflow_id, session_id, request_id)
         service_key, instance = self.create_service_instance(store_key, DataStoreService)
@@ -35,3 +39,6 @@ class DataServicePool(ServicePool):
 
     def del_datastore(self, store_key):
         self.del_service_instance(store_key)
+
+    def clear_all(self):
+        self.clear()

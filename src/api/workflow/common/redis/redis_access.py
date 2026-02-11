@@ -7,24 +7,24 @@ import json
 
 
 class RedisAccess:
-    _instance = None
-
-    def __new__(cls, *args, **kwargs):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
-
-    def __init__(self, logger):
+    def __init__(self, logger, db=0, ttl=0):
         self._logger = logger
-        self._redis_client = redis.Redis(host='127.0.0.1', port=6379, decode_responses=True, db=0)
+        self._db = db
+        self._ttl = ttl
+        self._host = '127.0.0.1'
+        self._port = 6379
+        self._redis_client = redis.Redis(host=self._host, port=self._port, decode_responses=True, db=db)
 
     def __del__(self):
         if self._redis_client:
             self._redis_client.close()
 
+    def get_db(self):
+        return self._db
+
     def hset(self, key: str, mapping: Dict) -> None:
         try:
-            ttl_seconds = 0
+            ttl_seconds = self._ttl
             serializable_mapping = {k: str(v) for k, v in mapping.items()}
             self._redis_client.hset(name=key, mapping=serializable_mapping)
             if ttl_seconds > 0:
@@ -72,5 +72,16 @@ class RedisAccess:
         except Exception as e:
             self._logger.error(f"Redis DELETE failed: {e}")
 
+    def switch_db(self, db):
+        """DB 변경"""
+        self._redis_client = redis.Redis(
+            host=self._host,
+            port=self._port,
+            decode_responses=True,
+            db=db
+        )
+        self._db = db
+
     def flush(self):
-        pass
+        self._logger.critical(f"Redis flushed DB: {self._db}")
+        self._redis_client.flushdb()

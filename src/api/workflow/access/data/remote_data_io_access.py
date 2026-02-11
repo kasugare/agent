@@ -6,12 +6,12 @@ from api.workflow.common.redis.redis_access import RedisAccess
 
 class RemoteCachedIODataAccess(RedisAccess):
     def __init__(self, logger, cache_key=None):
-        super().__init__(logger)
+        super().__init__(logger, db=1, ttl=2592000)
         self._logger = logger
         self._cache_key = cache_key
 
-    def set_cache_key_access(self, wf_key):
-        self._cache_key = f"{wf_key}.io"
+    def set_cache_key_access(self, cache_key):
+        self._cache_key = f"{cache_key}.io"
 
     def get_data(self, field):
         return self.hget(key=self._cache_key, field=field)
@@ -26,8 +26,5 @@ class RemoteCachedIODataAccess(RedisAccess):
     def delete(self, field):
         self.hdel(key=self._cache_key, field=field)
 
-    def clear(self):
-        self.clear(key=self._cache_key)
-
     def clear_access(self):
-        pass
+        self.clear(key=self._cache_key)

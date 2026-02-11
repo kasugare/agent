@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from api.workflow.data_pool.service_pool import ServicePool
-from api.workflow.service.data.meta_store_service import MetaStoreService
+from api.workflow.service.meta.meta_store_service import MetaStoreService
 
 
 class MetaServicePool(ServicePool):

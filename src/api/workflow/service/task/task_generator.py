@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from api.workflow.control.task.task_load_controller import TaskLoadController
+from api.workflow.control.task.task_generation_controller import TaskGenerationController
 
 
-class TaskLoadService:
+class TaskGenerationService:
     def __init__(self, logger, metastore):
         self._logger = logger
-        self._task_controller = TaskLoadController(logger, metastore)
+        self._task_controller = TaskGenerationController(logger, metastore)
 
     def gen_init_tasks_service(self):
         task_map = self._task_controller.make_task_map()
