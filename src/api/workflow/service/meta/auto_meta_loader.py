@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from common.conf_system import getRecipeDir, getRecipeFile
+from common.conf_serving import getRecipeDir, getRecipeFile
 from api.workflow.service.meta.wf_meta_parser import WorkflowMetaParser
 from api.workflow.access.meta.meta_file_access import MetaFileAccess
 from api.workflow.service.meta.meta_store_service import MetaStoreService

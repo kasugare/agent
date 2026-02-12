@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from common.conf_system import getRecipeDir, getLockDir
+from common.conf_serving import getRecipeDir, getLockDir
 from api.serving.access.file_lock import FileLock
 from typing import Dict
 import traceback

@@ -6,11 +6,11 @@ import resource
 import os
 
 bind = "0.0.0.0:8080"
-workers = 2
+workers = 10
 worker_class = "uvicorn.workers.UvicornWorker"
-timeout = 5000
+timeout = 60*60*24
 keepalive = 3
-worker_connections = 1000
+worker_connections = 10000
 max_requests = 1000
 max_requests_jitter = 100
 # preload_app = True

@@ -139,9 +139,6 @@ class ApiExecutor:
                 raise
 
     async def _handle_response(self, response: aiohttp.ClientResponse) -> Dict:
-        """
-        API 응답 처리
-        """
         try:
             if response.status >= 400:
                 error_json = await response.json()

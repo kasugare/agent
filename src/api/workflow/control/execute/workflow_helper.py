@@ -3,13 +3,7 @@
 
 from api.workflow.control.execute.task_state import TaskState
 from api.workflow.control.execute.env_template import AutoTemplateRenderer
-from api.workflow.protocol.protocol_message import SYS_NODE_STATUS
-from api.workflow.error_pool.error import ExceedExecutionRetryError
 from jinja2 import Template, meta, Environment
-from multiprocessing import Queue
-from threading import Thread
-import traceback
-import time
 
 
 class WorkflowHelper:
@@ -58,7 +52,8 @@ class WorkflowHelper:
         service_pool = self._meta_pack['service_pool']
         service_info = service_pool.get(service_id, {})
         service_params = service_info.get('params', [])
-        required_params = [service_param for service_param in service_params if service_param.get('required', False)]
+        required_params = [service_param
+                           for service_param in service_params if service_param.get('required', False)]
         return required_params
 
     def _set_blocked_nodes(self, service_id, depth=0):
@@ -74,7 +69,8 @@ class WorkflowHelper:
                 ref_task_state = self._get_task_state(ref_service_id)
                 self._logger.debug(f"{space}    - {ref_service_id} : {ref_task_state}")
                 self._logger.debug(f"{space}    - {value_id}: {ref_value}")
-                if ref_task_state in [TaskState.STOPPED, TaskState.SKIPPED, TaskState.BLOCKED] and ref_value is None:
+                if ref_task_state in [TaskState.STOPPED,
+                                      TaskState.SKIPPED, TaskState.BLOCKED] and ref_value is None:
                     return True
             return False
 
@@ -264,13 +260,15 @@ class WorkflowHelper:
         results_schema = service_pool[service_id]['result']
         result_map = {}
         if isinstance(result, dict):
-            schema_keys = [schema_map.get('key') for schema_map in results_schema if schema_map.get('key')]
+            schema_keys = [schema_map.get('key')
+                           for schema_map in results_schema if schema_map.get('key')]
             res_keys = list(result.keys())
             inter_res_keys = list(set(res_keys).intersection(set(schema_keys)))
             for res_key in inter_res_keys:
                 result_map[res_key] = result.get(res_key)
         elif isinstance(result, list) or isinstance(result, tuple):
-            schema_keys = [schema_map.get('key') for schema_map in results_schema if schema_map.get('key')]
+            schema_keys = [schema_map.get('key')
+                           for schema_map in results_schema if schema_map.get('key')]
             for _index, res_key in enumerate(schema_keys):
                 result_map[res_key] = result[_index]
         else:
@@ -301,6 +299,13 @@ class WorkflowHelper:
         task = self._get_task(service_id)
         task_state = task.get_state()
         return task_state
+
+    def _set_task_start(self, service_id):
+        self._taskstore.set_start_ts(service_id)
+
+    def _set_task_end(self, service_id):
+        self._taskstore.set_end_ts(service_id)
+        self._taskstore.set_duration_ts(service_id)
 
     def _set_task_state(self, service_id, state):
         task = self._get_task(service_id)
@@ -356,7 +361,8 @@ class WorkflowHelper:
     def _check_all_completed(self, task_map):
         be_completed = True
         for k, task in task_map.items():
-            if task.get_state() not in [TaskState.COMPLETED, TaskState.STOPPED, TaskState.FAILED, TaskState.SKIPPED, TaskState.BLOCKED]:
+            if task.get_state() not in [TaskState.COMPLETED, TaskState.STOPPED,
+                                        TaskState.FAILED, TaskState.SKIPPED, TaskState.BLOCKED]:
                 be_completed = False
                 break
         return be_completed

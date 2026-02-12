@@ -2,7 +2,7 @@
 # -*- code utf-8 -*-
 
 from typing import Dict, List, Any
-from common.conf_system import getRecipeDir, getRecipeFile
+from common.conf_serving import getRecipeDir, getRecipeFile
 from jinja2 import Environment, meta, StrictUndefined
 from ast import literal_eval
 import json

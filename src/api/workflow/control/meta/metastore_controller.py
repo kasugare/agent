@@ -62,6 +62,10 @@ class MetastoreController:
     def set_nodes_meta_ctl(self, wf_nodes_meta):
         self._metastore_access.set_nodes_meta_access(wf_nodes_meta)
 
+    def get_nodes_meta_ctl(self):
+        wf_nodes_meta = self._metastore_access.get_nodes_meta_access()
+        return wf_nodes_meta
+
     def set_node_service_pool_ctl(self, wf_service_pool):
         self._metastore_access.set_node_service_pool_access(wf_service_pool)
 
@@ -146,6 +150,7 @@ class MetastoreController:
 
     def get_metas_ctl(self):
         meta_pack = {
+            "wf_meta": self._metastore_access.get_wf_meta_access(),
             "project_id": self._metastore_access.get_project_id_access(),
             "workflow_id": self._metastore_access.get_workflow_id_access(),
             "start_nodes": self._metastore_access.get_start_nodes_meta_access(),

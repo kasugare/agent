@@ -54,7 +54,7 @@ async def process_node(request: NodeA_Model):
     print("#" * 100)
     print(f"< Node A >")
     print(f"  L PARAMS: {request.tar_path}")
-    # time.sleep(10)
+    time.sleep(10)
     response = {
         "tif_path": "/data/2026_01_16/033500010101722969020240422093257001_1/in_tar_file/033500010101722969020240422093257001_1_merged.tif",
         "txt_path": "/data/2026_01_16/033500010101722969020240422093257001_1/in_tar_file/03B100094800000000020251201091648714.txt",
@@ -72,6 +72,7 @@ app_node_b = FastAPI(title="Node B - Business Logic 1")
 async def process_node(request: NodeB_Model):
     print(f"< Node B >")
     print(f"  L PARAMS: {request.tif_path}")
+    time.sleep(5)
     await asyncio.sleep(random.randrange(1, 5)*0.1)
 
     response = {
@@ -97,6 +98,7 @@ async def process_node(request: NodeC_Model):
     print(f"< Node C >")
     print(f"  L PARAMS: {request.img_path}")
     print(f"  L PARAMS: {request.doccls_json_path}")
+    time.sleep(5)
     await asyncio.sleep(random.randrange(1, 5)*0.1)
 
     response = {
@@ -119,6 +121,7 @@ async def process_node(request: NodeD_Model):
     print(f"  L PARAMS: {request.img_path}")
     print(f"  L PARAMS: {request.doccls_json_path}")
     print(f"  L PARAMS: {request.extr_json_path}")
+    time.sleep(5)
     await asyncio.sleep(random.randrange(1, 5) * 0.1)
 
     response = {
@@ -131,7 +134,7 @@ async def process_node(request: NodeD_Model):
 # Node E - Business Logic 3
 class NodeE_Model(BaseModel):
     img_path: str
-    lc_img_list: str
+    lc_img_list: list
 
 app_node_e = FastAPI(title="Node E - Business Logic 4")
 @app_node_e.post("/process/node_e")#, response_model=WorkflowResponse)
@@ -153,8 +156,8 @@ async def process_node(request: NodeE_Model):
 
 # Node F - Business Logic 3
 class NodeF_Model(BaseModel):
-    lc_img_list: str
-    ocr_json_path_list: str
+    lc_img_list: list
+    ocr_json_path_list: list
 
 app_node_f = FastAPI(title="Node F - Business Logic 5")
 @app_node_f.post("/process/node_f")#, response_model=WorkflowResponse)

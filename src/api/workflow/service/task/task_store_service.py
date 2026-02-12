@@ -16,6 +16,12 @@ class TaskStoreService:
     def clear_data(self):
         self._task_store_ctl.clear_ctl()
 
+    def set_workflow_start_ts(self):
+        self._task_store_ctl.set_workflow_start_ts()
+
+    def set_workflow_end_ts(self):
+        self._task_store_ctl.set_workflow_end_ts()
+
     def set_cache_key(self, cache_key):
         self._task_store_ctl.set_cache_key_ctl(cache_key)
 
@@ -43,3 +49,47 @@ class TaskStoreService:
     def set_handler(self, service_id, handler):
         self._task_store_ctl.set_handler_ctl(service_id, handler)
 
+    def set_start_ts(self, service_id):
+        self._task_store_ctl.set_start_ts_clt(service_id)
+
+    def set_end_ts(self, service_id):
+        self._task_store_ctl.set_end_ts_clt(service_id)
+
+    def set_duration_ts(self, service_id):
+        self._task_store_ctl.set_duration_ts_clt(service_id)
+
+    def get_assigned_ts(self, service_id):
+        return self._task_store_ctl.get_assigned_ts_ctl(service_id)
+
+    def get_start_ts(self, service_id):
+        return self._task_store_ctl.get_start_ts_ctl(service_id)
+
+    def get_end_ts(self, service_id):
+        return self._task_store_ctl.get_end_ts_ctl(service_id)
+
+    def get_env_params(self, service_id):
+        return self._task_store_ctl.get_env_params_ctl(service_id)
+
+    def get_asset_params(self, service_id):
+        return self._task_store_ctl.get_asset_params_ctl(service_id)
+
+    def get_params(self, service_id):
+        return self._task_store_ctl.get_params_ctl(service_id)
+
+    def get_result(self, service_id):
+        return self._task_store_ctl.get_result_ctl(service_id)
+
+    def get_error_msg(self, service_id):
+        return self._task_store_ctl.get_error_msg_ctl(service_id)
+
+    def get_state_(self, service_id):
+        return self._task_store_ctl.get_state_ctl(service_id)
+
+    def get_handler(self, service_id):
+        return self._task_store_ctl.get_handler_ctl(service_id)
+
+    def get_workflow_status(self):
+        return self._task_store_ctl.get_task_status_ctl()
+
+    def get_processing_time(self):
+        return self._task_store_ctl.get_processing_time_ctl()

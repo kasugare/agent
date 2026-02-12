@@ -87,9 +87,9 @@ class EngineAdapter(BaseRouter):
                                , data: str = Form(...)
                                , files: list[UploadFile] = File(...)
                                , bg: BackgroundTasks = None):
-            self._logger.info("################################################################")
-            self._logger.info("#                         < Predict >                          #")
-            self._logger.info("################################################################")
+            # self._logger.info("################################################################")
+            # self._logger.info("#                         < Predict >                          #")
+            # self._logger.info("################################################################")
 
             path_list = await self._engine_adaptor_service.upload_files(files)
             job_id = headers.x_sampl_job_id
@@ -172,9 +172,9 @@ class EngineAdapter(BaseRouter):
 
         @self.router.post(path='/isworking', response_model=schema.ResAdaptWorkflow)
         async def check_is_working():
-            self._logger.info("################################################################")
-            self._logger.info("#                       < Is Working >                         #")
-            self._logger.info("################################################################")
+            # self._logger.info("################################################################")
+            # self._logger.info("#                       < Is Working >                         #")
+            # self._logger.info("################################################################")
             result = await asyncio.create_task(self._call_workflow_api(
                     method="GET",
                     path="/api/v1/workflow/working_state",
@@ -204,9 +204,9 @@ class EngineAdapter(BaseRouter):
 
         @self.router.post(path='/joblist', response_model=schema.ResAdaptWorkflow)
         async def get_job_list(headers: StatusHeaderModel = Depends(get_status_headers)):
-            self._logger.info("################################################################")
-            self._logger.info("#                        < Job List >                          #")
-            self._logger.info("################################################################")
+            # self._logger.info("################################################################")
+            # self._logger.info("#                        < Job List >                          #")
+            # self._logger.info("################################################################")
             job_id = headers.x_sampl_job_id
             result = await asyncio.create_task(self._call_workflow_api(
                     method="GET",
@@ -228,6 +228,7 @@ class EngineAdapter(BaseRouter):
                 error_yn = 'N'
             else:
                 processing_time = result.get('processing_time')
+                reg_datetime = processing_time.get('assigned_dt', "0")
                 start_datetime = processing_time.get('start_dt', "0")
                 end_datetime = processing_time.get('end_dt', "0")
                 status = result.get('status')
@@ -266,7 +267,7 @@ class EngineAdapter(BaseRouter):
                         "notified": "",
                         "pid": 0,
                         "pid_created_time": 0,
-                        "reg_datetime": start_datetime,
+                        "reg_datetime": reg_datetime,
                         "start_datetime": start_datetime,
                         "status": status,
                         "thread_id": 0,

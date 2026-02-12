@@ -41,21 +41,6 @@ def getRouteDir(section='HOME'):
     homeDir = conf.get(section, 'route_dir')
     return homeDir
 
-def getRecipeDir(section='DAG'):
-    conf = getConfig()
-    homeDir = conf.get(section, 'dag_dir')
-    return homeDir
-
-def getRecipeFile(section='DAG'):
-    conf = getConfig()
-    fileName = conf.get(section, 'dag_file')
-    return fileName
-
-def getPromptRecipeFile(section='DAG'):
-    conf = getConfig()
-    fileName = conf.get(section, 'prompt_dag_file')
-    return fileName
-
 def getAccessPoolType(section='WORKFLOW', option='access_pool_type'):
     conf = getConfig()
     access_type = conf.get(section, option)

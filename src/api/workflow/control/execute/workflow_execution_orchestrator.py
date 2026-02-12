@@ -24,12 +24,6 @@ class WorkflowExecutionOrchestrator(WorkflowHelper):
         self._job_Q = Queue()
         self._stream_Q = stream_Q
 
-    def _set_start_jobs(self, request_params):
-        start_service_ids = self._get_start_nodes()
-        for start_service_id in start_service_ids:
-            self._datastore.set_service_params_service(start_service_id, request_params)
-            self._job_Q.put_nowait(start_service_id)
-
     def _execute_task(self, task):
         task.execute()
         service_id = task.get_service_id()
@@ -56,18 +50,25 @@ class WorkflowExecutionOrchestrator(WorkflowHelper):
         time.sleep(timeout)
         self._job_Q.put_nowait("SIGTERM")
 
-    def _run_pending(self, service_id):
+    def _set_start_jobs(self, request_params):
+        start_service_ids = self._get_start_nodes()
+        for start_service_id in start_service_ids:
+            self._datastore.set_service_params_service(start_service_id, request_params)
+            self._job_Q.put_nowait(start_service_id)
+
+    def _run_pending_job(self, service_id):
         runnable = self._check_prev_task_compledted(service_id)
         self._logger.debug(f"   L RUNNABLE: {service_id} : {runnable}")
         if runnable:
             self._set_task_state(service_id, TaskState.SCHEDULED)
+            self._set_task_start(service_id)
             self._job_Q.put_nowait(service_id)
 
-    def _run_scheduled(self, service_id):
+    def _run_scheduled_job(self, service_id):
         self._set_task_state(service_id, TaskState.QUEUED)
         self._job_Q.put_nowait(service_id)
 
-    def _run_queue(self, service_id, task_map, task):
+    def _run_queue_job(self, service_id, task_map, task):
         runnable = True
         prev_service_ids = self._get_prev_service_ids(service_id)
         if prev_service_ids:
@@ -179,15 +180,15 @@ class WorkflowExecutionOrchestrator(WorkflowHelper):
 
                 if task_state in [TaskState.PENDING]:
                     self._logger.info(f" - Step 1. [PENDING  ] wait order to run: {service_id}")
-                    self._run_pending(service_id)
+                    self._run_pending_job(service_id)
 
                 elif task_state in [TaskState.SCHEDULED]:
                     self._logger.info(f" - Step 2. [SCHEDULED] prepared service resources: {service_id}")
-                    self._run_scheduled(service_id)
+                    self._run_scheduled_job(service_id)
 
                 elif task_state in [TaskState.QUEUED]:
                     self._logger.info(f" - Step 3. [QUEUED   ] aggregation params and run: {service_id}")
-                    is_runnable = self._run_queue(service_id, task_map, task)
+                    is_runnable = self._run_queue_job(service_id, task_map, task)
                     if not is_runnable:
                         break
 
@@ -198,33 +199,40 @@ class WorkflowExecutionOrchestrator(WorkflowHelper):
                 elif task_state in [TaskState.COMPLETED]:
                     self._logger.info(f" - Step 5. [COMPLETED] done task execution : {service_id}")
                     self._run_task_completed(service_id, task_map, task)
+                    self._set_task_end(service_id)
                     if self._check_all_completed(task_map):
                         result = self._get_job_result(task_map)
                         break
 
                 elif task_state in [TaskState.TIMEOUT]:
                     self._logger.info(f" - Step 6. [TIMEOUT   ] task timeout : {service_id}")
+                    self._set_task_end(service_id)
                     self._show_task(task_map)
                     break
 
                 elif task_state in [TaskState.FAILED]:
                     self._logger.info(f" - Step 7. [FAILED   ] job failed : {service_id}")
+                    self._set_task_end(service_id)
                     self._show_task(task_map)
                     break
 
                 elif task_state in [TaskState.PAUSED]:
                     self._logger.info(f" - Step 8. [PAUSED   ] paused task by user : {service_id}")
+                    self._set_task_end(service_id)
                     break
 
                 elif task_state in [TaskState.STOPPED]:
                     self._logger.warn(f" - Step 9. [STOP     ] stop task by user : {service_id}")
+                    self._set_task_end(service_id)
                     break
 
                 elif task_state in [TaskState.SKIPPED]:
                     self._logger.info(f" - Step 10. [SKIPPED  ] skipped task: {service_id}")
+                    self._set_task_end(service_id)
 
                 elif task_state in [TaskState.BLOCKED]:
                     self._logger.info(f" - Step 11. [BLOCKED  ] blocked task: {service_id}")
+                    self._set_task_end(service_id)
                     break
                 else:
                     break

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from common.conf_system import getRecipeDir
+from common.conf_serving import getRecipeDir
 from api.serving.control.dag_meta_controller import DagMetaController
 from typing import Dict, List, Any
 from watchfiles import awatch

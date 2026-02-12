@@ -26,5 +26,6 @@ class TaskGenerationController:
         for active_service_id in active_service_ids:
             service_info = service_pool.get(active_service_id)
             task_obj = Task(self._logger, active_service_id, service_info, timeout_config)
+            task_obj.set_assigned_ts()
             task_map[active_service_id] = task_obj
         return task_map

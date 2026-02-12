@@ -12,14 +12,15 @@ class Task(TaskContext):
     def __init__(self, logger, service_id, service_info, timeout_config):
         super().__init__(logger, service_id, service_info, timeout_config)
         self._logger = logger
-        self._start_dt = 0.0
-        self._end_dt = 0.0
+        self._assigned_ts = 0.0
+        self._start_ts = 0.0
+        self._end_ts = 0.0
 
         self.set_state(TaskState.PENDING)
         self.init_retry_count()
 
     def get_duration(self):
-        duration = "%0.2f" %(self._end_dt - self._start_dt)
+        duration = "%0.2f" %(self._end_ts - self._start_ts)
         return duration
 
     def _set_current_task_state(self):
@@ -29,22 +30,30 @@ class Task(TaskContext):
         elif curr_state in [TaskState.TIMEOUT]:
             self.set_state(TaskState.RETRYING)
 
-    def _set_start_time(self):
-        if not self._start_dt:
-            self._start_dt = time.time()
+    def set_assigned_ts(self):
+        self._assigned_ts = time.time()
 
-    def get_start_dt(self):
-        return self._start_dt
+    def set_start_ts(self):
+        self._start_ts = time.time()
 
-    def get_end_dt(self):
-        return self._end_dt
+    def set_end_ts(self):
+        self._end_ts = time.time()
+
+    def get_assigned_ts(self):
+        return self._assigned_ts
+
+    def get_start_ts(self):
+        return self._start_ts
+
+    def get_end_ts(self):
+        return self._end_ts
 
     def execute(self, timeout=0):
         executor = None
         sid = self.get_service_id()
         try:
             self._set_current_task_state()
-            self._set_start_time()
+            self.set_start_ts()
 
             executor = ThreadPoolExecutor(max_workers=1)
             params = self.get_params()
@@ -84,7 +93,7 @@ class Task(TaskContext):
         finally:
             if executor:
                 executor.shutdown(wait=False)
-            self._end_dt = time.time()
+            self.set_end_ts()
         self._logger.debug(f" - Process Time: {self.get_duration()}/ms")
 
     def cancel(self):

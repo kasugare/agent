@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from typing import Dict
+from typing import Dict, Any
 import redis
 import json
 
@@ -25,14 +25,17 @@ class RedisAccess:
     def hset(self, key: str, mapping: Dict) -> None:
         try:
             ttl_seconds = self._ttl
-            serializable_mapping = {k: str(v) for k, v in mapping.items()}
+            # dict/list는 JSON으로, 나머지는 str로 변환
+            serializable_mapping = {}
+            for k, v in mapping.items():
+                if isinstance(v, (dict, list)):
+                    serializable_mapping[k] = json.dumps(v)
+                else:
+                    serializable_mapping[k] = str(v)
+
             self._redis_client.hset(name=key, mapping=serializable_mapping)
             if ttl_seconds > 0:
                 self._redis_client.expire(key, ttl_seconds)
-            # pipe = self._redis_client.pipeline()
-            # pipe.hset(name=key, mapping=serializable_mapping)
-            # pipe.expire(key, ttl_seconds)
-            # pipe.execute()
         except Exception as e:
             self._logger.error(f"Redis HSET failed: {e}")
 
@@ -41,24 +44,36 @@ class RedisAccess:
             data = self._redis_client.hget(key, field)
             if data is None:
                 return None
-            result = None
+
+            # JSON 파싱 시도
             try:
-                result = json.loads(data)
-            except Exception as e:
-                if isinstance(data, str) and len(data) > 0:
-                    result = data
-            return result
+                return json.loads(data)
+            except (json.JSONDecodeError, ValueError):
+                # JSON이 아니면 원본 문자열 반환
+                return data
         except Exception as e:
             self._logger.error(f"Redis HGET failed: {e}")
+            return None
 
-    def hgetall(self, key: str):
+    def hgetall(self, key: str) -> Dict[str, Any]:
         try:
             data = self._redis_client.hgetall(key)
-            if data is None:
-                return None
-            return data or {}
+            if not data:
+                return {}
+
+            # 모든 값을 역직렬화 (JSON 파싱 시도)
+            result = {}
+            for k, v in data.items():
+                try:
+                    result[k] = json.loads(v)
+                except (json.JSONDecodeError, ValueError):
+                    # JSON이 아니면 원본 문자열
+                    result[k] = v
+
+            return result
         except Exception as e:
             self._logger.error(f"Redis HGETALL failed: {e}")
+            return {}
 
     def hdel(self, key: str, field: str):
         try:

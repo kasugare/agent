@@ -74,7 +74,7 @@ class WorkflowEngine(BaseRouter):
             self._logger.warn(f" - {k}: {v}")
         return params
 
-    def _set_store_pack(self, wf_id, job_id):
+    def _gen_store_pack(self, wf_id, job_id):
         store_pack = {}
         metastore = MetaStoreService(self._logger, wf_id)
         datastore = DataStoreService(self._logger, job_id)
@@ -128,7 +128,7 @@ class WorkflowEngine(BaseRouter):
             try:
                 job_id = params.get('job_id', str(uuid.uuid4()))
                 datastore = DataStoreService(self._logger, request_id)
-                store_pack = self._set_store_pack(wf_id, job_id)
+                store_pack = self._gen_store_pack(wf_id, job_id)
                 workflow_executor = WorkflowExecutor(self._logger, store_pack)
                 result = workflow_executor.run_workflow(params)
                 response = {
@@ -162,7 +162,7 @@ class WorkflowEngine(BaseRouter):
                 session_id = params.get('session-id', req_id)
                 wf_id = params.get('workflow_id', getWorkflowId())
                 job_id = params.get('job_id', session_id)
-                store_pack = self._set_store_pack(wf_id, job_id)
+                store_pack = self._gen_store_pack(wf_id, job_id)
                 workflow_executor = WorkflowExecutor(self._logger, store_pack)
                 result = workflow_executor.run_workflow(params)
                 response = {
@@ -190,7 +190,7 @@ class WorkflowEngine(BaseRouter):
                 session_id = params.get('session-id', req_id)
                 wf_id = params.get('workflow_id', getWorkflowId())
                 job_id = params.get('job_id', session_id)
-                store_pack = self._set_store_pack(wf_id, job_id)
+                store_pack = self._gen_store_pack(wf_id, job_id)
                 workflow_executor = WorkflowExecutor(self._logger, store_pack)
                 result = workflow_executor.run_workflow(params)
                 self._set_task_executor(job_id, workflow_executor)
@@ -205,26 +205,41 @@ class WorkflowEngine(BaseRouter):
                 self._logger.error(e)
             return response
 
+        @self.router.get(path='/workflow/meta')
+        async def call_meta(wf_id=None):
+            self._logger.info("################################################################")
+            self._logger.info("#                         < Meta Pack >                        #")
+            self._logger.info("################################################################")
+            if not wf_id:
+                wf_id = getWorkflowId()
+            metastore = MetaStoreService(self._logger, wf_id)
+            meta_pack = metastore.get_meta_pack_service()
+            wf_meta = meta_pack.get('wf_meta', {})
+            for k, v in wf_meta.items():
+                self._logger.debug(f" - {k} : \t{v}")
+            return wf_meta
+
         @self.router.get(path='/workflow/metapack')
         async def call_meta_pack(wf_id=None):
-            self._logger.warn("################################################################")
-            self._logger.warn("#                         < Meta Pack >                        #")
-            self._logger.warn("################################################################")
-            # meta_pool = self._meta_service_pool.get_service_pool()
-            meta_pool = {}
-            for wf_id, metastore in meta_pool.items():
-                self._logger.debug(f" <{wf_id}>")
-                meta_pack = metastore.get_meta_pack_service()
-                for k, v in meta_pack.items():
-                    self._logger.debug(f" - {k} : \t{v}")
-            return meta_pool
+            self._logger.info("################################################################")
+            self._logger.info("#                         < Meta Pack >                        #")
+            self._logger.info("################################################################")
+            if not wf_id:
+                wf_id = getWorkflowId()
+            metastore = MetaStoreService(self._logger, wf_id)
+            meta_pack = metastore.get_meta_pack_service()
+            for k, v in meta_pack.items():
+                self._logger.debug(f" - {k} : \t{v}")
+            return meta_pack
 
         @self.router.get(path='/workflow/datapool')
         async def call_data_pool(request: Request):
             self._logger.info("################################################################")
             self._logger.info("#                         < Data Pool >                        #")
             self._logger.info("################################################################")
-            datastore = DataStoreService(self._logger, "test")
+            params = self._cvt_params(request)
+            job_id = params.get('job-id', params.get('job_id', None))
+            datastore = DataStoreService(self._logger, job_id)
             data_pool = self._metric_service.extract_io_data(datastore)
             return data_pool
 
@@ -234,7 +249,7 @@ class WorkflowEngine(BaseRouter):
             self._logger.info("#                        < Active DAG >                        #")
             self._logger.info("################################################################")
             params = self._cvt_params(request)
-            job_id = params.get('job-id')
+            job_id = params.get('job-id', params.get('job_id', None))
             workflow_executor = self._get_task_executor(job_id)
             if not workflow_executor:
                 return
@@ -261,13 +276,11 @@ class WorkflowEngine(BaseRouter):
             self._logger.info("#                        < Job State >                         #")
             self._logger.info("################################################################")
             params = self._cvt_params(request)
-            job_id = params.get('job-id')
-            if not job_id:
-                job_id = params.get('job_id')
-            workflow_executor = self._get_task_executor(job_id)
-            if not workflow_executor:
-                return
-            job_status = self._metric_service.extract_job_state(workflow_executor)
+            job_id = params.get('job-id', params.get('job_id', None))
+            if job_id:
+                job_status = self._metric_service.extract_job_state(job_id)
+            else:
+                job_status = {}
             return job_status
 
         @self.router.get(path='/workflow/working_state')
@@ -275,7 +288,8 @@ class WorkflowEngine(BaseRouter):
             self._logger.info("################################################################")
             self._logger.info("#                      < Working State >                       #")
             self._logger.info("################################################################")
-            is_working = self._metric_service.get_working_state()
+            wf_id = getWorkflowId()
+            is_working = self._metric_service.check_working_state(wf_id)
             return is_working
 
         @self.router.websocket("/workflow/chat")
@@ -289,6 +303,6 @@ class WorkflowEngine(BaseRouter):
             await self._ws_manager.connect(websocket, connection_id)
             session_id = 'session-id'
             wf_id = getWorkflowId()
-            store_pack = self._set_store_pack(wf_id, None)
+            store_pack = self._gen_store_pack(wf_id, None)
             stream_handler = WebStreamHandler(self._logger, self._ws_manager, store_pack)
             await stream_handler.run_stream(connection_id)

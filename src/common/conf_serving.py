@@ -31,3 +31,21 @@ def getWorkflowId(section='WORKFLOW'):
     conf = getConfig()
     workflow_id = conf.get(section, 'workflow_id')
     return workflow_id
+
+
+def getRecipeDir(section='DAG'):
+    conf = getConfig()
+    homeDir = conf.get(section, 'dag_dir')
+    return homeDir
+
+
+def getRecipeFile(section='DAG'):
+    conf = getConfig()
+    fileName = conf.get(section, 'dag_file')
+    return fileName
+
+
+def getPromptRecipeFile(section='DAG'):
+    conf = getConfig()
+    fileName = conf.get(section, 'prompt_dag_file')
+    return fileName

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from common.conf_system import getRecipeDir
+from common.conf_serving import getRecipeDir
 from api.workflow.control.meta.metastore_controller import MetastoreController
 from typing import Dict
 import time
@@ -46,6 +46,10 @@ class MetaStoreService:
     def set_nodes_meta_service(self, wf_nodes_meta):
         self._metastore_controller.set_nodes_meta_ctl(wf_nodes_meta)
 
+    def get_nodes_meta_service(self):
+        wf_nodes_meta = self._metastore_controller.get_nodes_meta_ctl()
+        return wf_nodes_meta
+
     def set_node_service_pool_service(self, wf_service_pool):
         self._metastore_controller.set_node_service_pool_ctl(wf_service_pool)
 
@@ -63,7 +67,7 @@ class MetaStoreService:
     def set_nodes_env_value_map_service(self, wf_nodes_env_map_pool):
         self._metastore_controller.set_nodes_env_value_map_ctl(wf_nodes_env_map_pool)
 
-    def get_node_env_value_map_service(self):
+    def get_nodes_env_value_map_service(self):
         wf_nodes_env_map_pool = self._metastore_controller.get_nodes_env_value_map_ctl()
         return wf_nodes_env_map_pool
 
