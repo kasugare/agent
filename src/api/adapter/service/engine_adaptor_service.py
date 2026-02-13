@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 
 from common.conf_adapter import getDownloadPath
-from pathlib import Path
-from dotenv import load_dotenv
 import os
 
 
@@ -12,15 +10,9 @@ class EngineAdaptorService:
         self._logger = logger
         self._pjt_id = 'pjt_id'
         self._wf_id = 'wf_id'
-        # path = Path(__file__).resolve().parents[4] / 'config/docker-dev.env'
-        # load_dotenv(dotenv_path=path)
-        # self.UPLOAD_FILE_PATH = os.getenv("UPLOAD_FILE_PATH")
-        # if not self.UPLOAD_FILE_PATH:
-        #     raise ValueError("UPLOAD_FILE_PATH must be set")
         self._upload_path = getDownloadPath()
 
     async def upload_files(self, files):
-        print(self._upload_path)
         try:
             if len(files) < 1:
                 raise FileNotFoundError("File to upload does not exist")

@@ -4,8 +4,8 @@
 import api.adapter.schema.engine_adaptor_schema as schema
 from api.adapter.schema.engine_adaptor_header import get_file_headers, get_status_headers, FileHeaderModel, StatusHeaderModel
 from api.adapter.service.engine_adaptor_service import EngineAdaptorService
-from fastapi import APIRouter, Depends, UploadFile, File, Form, BackgroundTasks, FastAPI
-from fastapi import HTTPException
+from fastapi import APIRouter, Depends, UploadFile, File, Form, BackgroundTasks
+from fastapi import HTTPException, Request
 from abc import abstractmethod
 from typing import Dict
 import asyncio
@@ -41,26 +41,31 @@ class EngineAdapter(BaseRouter):
         self._engine_adaptor_service = EngineAdaptorService(logger)
 
         self._isWorking = False
-        self._call_back_error_url = 'http://10.0.0.1:8080/call_back_error'
-        self._call_back_url = 'http://10.0.0.1:8080/call_back'
         self._member_id = ''
         self._user_data = ''
 
-    async def _call_workflow_api(self, method: str, path: str, headers: Dict = None, json_data: Dict = None, params: Dict = None):
+    async def _call_workflow_api(self, base_url: str, method: str, path: str, headers: Dict = None, json_data: Dict = None, params: Dict = None):
         """WorkflowEngine API를 내부적으로 호출하는 헬퍼 메서드"""
-        self.base_url = 'http://127.0.0.1:8080'
-        url = f"{self.base_url}{path}"
+        if not base_url:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Internal API call failed: - check base_url: {base_url}"
+            )
+        if base_url[-1] == "/":
+            url_path = f"{base_url[:-1]}{path}"
+        else:
+            url_path = f"{base_url}{path}"
 
         async with httpx.AsyncClient() as client:
             try:
                 if method.upper() == "POST":
-                    response = await client.post(url, json=json_data, headers=headers, timeout=None)
+                    response = await client.post(url_path, json=json_data, headers=headers, timeout=None)
                 elif method.upper() == "GET":
-                    response = await client.get(url, params=params, headers=headers, timeout=None)
+                    response = await client.get(url_path, params=params, headers=headers, timeout=None)
                 elif method.upper() == "PUT":
-                    response = await client.put(url, json=json_data, headers=headers, timeout=None)
+                    response = await client.put(url_path, json=json_data, headers=headers, timeout=None)
                 elif method.upper() == "DELETE":
-                    response = await client.delete(url, headers=headers, timeout=None)
+                    response = await client.delete(url_path, headers=headers, timeout=None)
                 else:
                     raise ValueError(f"Unsupported HTTP method: {method}")
 
@@ -83,14 +88,13 @@ class EngineAdapter(BaseRouter):
 
     def setup_routes(self):
         @self.router.post(path='/predict/web', response_model=schema.ResAdaptWorkflow)
-        async def predict_file(headers: FileHeaderModel = Depends(get_file_headers)
+        async def predict_file(request: Request, headers: FileHeaderModel = Depends(get_file_headers)
                                , data: str = Form(...)
                                , files: list[UploadFile] = File(...)
                                , bg: BackgroundTasks = None):
             # self._logger.info("################################################################")
             # self._logger.info("#                         < Predict >                          #")
             # self._logger.info("################################################################")
-
             path_list = await self._engine_adaptor_service.upload_files(files)
             job_id = headers.x_sampl_job_id
             call_back_url = headers.x_sampl_callback
@@ -105,23 +109,26 @@ class EngineAdapter(BaseRouter):
             self._logger.debug(f" - user_data: {user_data}")
             self._logger.debug(f" - file_path: {path_list}")
 
-            asyncio.create_task(self._call_workflow_api
-                    (
-                    method="POST",
-                    path="/api/v1/workflow/inference",
-                    headers={
-                        "Content-Type": "application/json",
-                        "secret_key": "",
-                        "job_id": f"{job_id}",
-                        "user_id": "test_user",
-                        "request-id": str(uuid.uuid4()),
-                        "session-id": str(uuid.uuid4()),
-                        "call_back_error_url": call_back_url,
-                        "call_back_url": call_back_error_url
-                    },
-                    json_data={"tar_path": path_list}
+            try:
+                asyncio.create_task(self._call_workflow_api(
+                        base_url=str(request.base_url),
+                        method="POST",
+                        path="/api/v1/workflow/inference",
+                        headers={
+                            "Content-Type": "application/json",
+                            "secret_key": "",
+                            "job_id": f"{job_id}",
+                            "user_id": "test_user",
+                            "request-id": str(uuid.uuid4()),
+                            "session-id": str(uuid.uuid4()),
+                            "call_back_error_url": call_back_url,
+                            "call_back_url": call_back_error_url
+                        },
+                        json_data={"tar_path": path_list}
+                    )
                 )
-            )
+            except Exception as e:
+                self._logger.error(e)
 
             response = {
                 "data": {},
@@ -140,7 +147,7 @@ class EngineAdapter(BaseRouter):
                         "image": [
                             {
                                 "uuid": 1,
-                                "name": "test.png",
+                                "name": path_list,
                                 "success": "Y",
                                 "page": 1,
                                 "data": [],
@@ -157,12 +164,12 @@ class EngineAdapter(BaseRouter):
                         ]
                     },
                     "data": {
-                        "user_id": "admin",
+                        "user_id": member_id,
                         "user_uid": 1,
                         "site_uid": 1,
                         "infer_uid": 1,
-                        "batch_uid": "25a97d7e11504b83bf1cebe909e075bf",
-                        "uuid": "25a97d7e11504b83bf1cebe909e075bf"
+                        "batch_uid": "",
+                        "uuid": ""
                     }
                 }
             }
@@ -171,23 +178,27 @@ class EngineAdapter(BaseRouter):
             return response
 
         @self.router.post(path='/isworking', response_model=schema.ResAdaptWorkflow)
-        async def check_is_working():
+        async def check_is_working(request: Request):
             # self._logger.info("################################################################")
             # self._logger.info("#                       < Is Working >                         #")
             # self._logger.info("################################################################")
-            result = await asyncio.create_task(self._call_workflow_api(
-                    method="GET",
-                    path="/api/v1/workflow/working_state",
-                    headers={
-                        "Content-Type": "application/json"
-                    }
+            try:
+                result = await asyncio.create_task(self._call_workflow_api(
+                        base_url=str(request.base_url),
+                        method="GET",
+                        path="/api/v1/workflow/working_state",
+                        headers={
+                            "Content-Type": "application/json"
+                        }
+                    )
                 )
-            )
 
-            if not result:
-                is_working = False
-            else:
-                is_working = result.get('is_working')
+                if not result:
+                    is_working = False
+                else:
+                    is_working = result.get('is_working')
+            except Exception as e:
+                self._logger.error(e)
 
 
             response = {
@@ -203,21 +214,26 @@ class EngineAdapter(BaseRouter):
             return response
 
         @self.router.post(path='/joblist', response_model=schema.ResAdaptWorkflow)
-        async def get_job_list(headers: StatusHeaderModel = Depends(get_status_headers)):
+        async def get_job_list(request: Request, headers: StatusHeaderModel = Depends(get_status_headers)):
             # self._logger.info("################################################################")
             # self._logger.info("#                        < Job List >                          #")
             # self._logger.info("################################################################")
             job_id = headers.x_sampl_job_id
-            result = await asyncio.create_task(self._call_workflow_api(
-                    method="GET",
-                    path="/api/v1/workflow/job_state",
-                    headers={
-                        "Content-Type": "application/json",
-                        "secret_key": "",
-                        "job_id": f"{job_id}",
-                    }
+            try:
+                result = await asyncio.create_task(self._call_workflow_api(
+                        base_url=str(request.base_url),
+                        method="GET",
+                        path="/api/v1/workflow/job_state",
+                        headers={
+                            "Content-Type": "application/json",
+                            "secret_key": "",
+                            "job_id": f"{job_id}",
+                        }
+                    )
                 )
-            )
+            except Exception as e:
+                self._logger.error(e)
+
             if not result:
                 completion_yn = 'N'
                 start_datetime = "0"
@@ -282,9 +298,7 @@ class EngineAdapter(BaseRouter):
 
     async def call_back_response(self, req, url, user_data):
         self._isWorking = True
-        print('sleep start')
         await asyncio.sleep(60)
-        print('sleep end')
         async with httpx.AsyncClient() as client:
             response = await client.post(url, json=req, headers={
                 'X-SAMPL-USER-DATA': user_data,
