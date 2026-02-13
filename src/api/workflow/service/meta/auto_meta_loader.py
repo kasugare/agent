@@ -36,14 +36,17 @@ class AutoMetaLoader:
         asyncio.create_task(self._watch_recipe(dirpath, filename))
 
     async def _watch_recipe(self, dirpath: str, filename: str) -> Any:
-        self._logger.debug(f"watch changeable recipe file: {dirpath}/{filename}")
-        wf_filepath = os.path.join(dirpath, filename)
-        async for changes in awatch(wf_filepath):
-            try:
-                await self._sync_workflow_meta()
-            except Exception as e:
-                self._logger.error(traceback.format_exc())
-                self._logger.warn(f"Not ready {wf_filepath} file")
+        try:
+            self._logger.debug(f"watch changeable recipe file: {dirpath}/{filename}")
+            wf_filepath = os.path.join(dirpath, filename)
+            async for changes in awatch(wf_filepath):
+                try:
+                    await self._sync_workflow_meta()
+                except Exception as e:
+                    self._logger.error(traceback.format_exc())
+                    self._logger.warn(f"Not ready {wf_filepath} file")
+        except Exception as e:
+            print(traceback.format_exc())
 
     async def _sync_workflow_meta(self):
         filed_wf_meta = MetaFileAccess(self._logger).load_wf_meta_on_file()

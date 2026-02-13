@@ -36,7 +36,6 @@ def post_fork(server, worker):
 
 def worker_exit(server, worker):
     print("""워커 종료 시""")
-    # 리소스 정리
     try:
         multiprocessing.resource_tracker._resource_tracker._fd = None
     except Exception:

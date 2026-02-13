@@ -27,7 +27,7 @@ class WorkflowMetaParser(WorkflowMetaHandler):
 
             self._logger.info("# [DAG Loader] Step 02. Extract Resource Meta")
             wf_resources_meta = self.get_wf_to_resources(wf_meta)
-            # self._print_debug_data(wf_resources_meta)
+            self._print_debug_data(wf_resources_meta)
 
             self._logger.info("# [DAG Loader] Step 03. Extract Nodes")
             wf_nodes_meta = self.extract_wf_to_nodes(wf_meta)

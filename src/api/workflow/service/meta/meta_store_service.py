@@ -48,6 +48,8 @@ class MetaStoreService:
 
     def get_nodes_meta_service(self):
         wf_nodes_meta = self._metastore_controller.get_nodes_meta_ctl()
+        if not wf_nodes_meta:
+            wf_nodes_meta = {}
         return wf_nodes_meta
 
     def set_node_service_pool_service(self, wf_service_pool):

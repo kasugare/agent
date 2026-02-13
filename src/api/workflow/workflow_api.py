@@ -294,7 +294,6 @@ class WorkflowEngine(BaseRouter):
 
         @self.router.websocket("/workflow/chat")
         async def websocket_endpoint(websocket: WebSocket):
-            # REQ: HEADER {request_id, session_id}, BODY: {}
             self._logger.info("################################################################")
             self._logger.info("#                        < Web Socket >                        #")
             self._logger.info("################################################################")

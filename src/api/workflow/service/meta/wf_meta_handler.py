@@ -12,7 +12,7 @@ class WorkflowMetaHandler:
 
     def check_meta_validation(self, wf_meta: Dict) -> bool:
         wf_comm_meta = self._meta_controller.check_meta_validation(wf_meta)
-
+        return wf_comm_meta
 
     def extract_wf_id(self, wf_meta: Dict) -> str:
         wf_comm_meta = self._meta_controller.extract_wf_common_info_ctl(wf_meta)

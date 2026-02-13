@@ -236,11 +236,11 @@ class BackendPodManager:
     """
 
     def __init__(self, backend_urls: List[str]):
-        self.pods = {}
+        self.servers = {}
         self.lock = threading.Lock()
 
         for url in backend_urls:
-            self.pods[url] = {
+            self.servers[url] = {
                 'busy': False,
                 'current_job_id': None,
                 'total_processed': 0,
@@ -248,17 +248,17 @@ class BackendPodManager:
                 'draining': False
             }
 
-        print(f"[BackendPodManager] Initialized with {len(self.pods)} backend pods:")
-        for url in self.pods.keys():
+        print(f"[BackendPodManager] Initialized with {len(self.servers)} backend servers:")
+        for url in self.servers.keys():
             print(f"  - {url}")
 
     def add_backend(self, url: str) -> bool:
         """Backend Pod 추가"""
         with self.lock:
-            if url in self.pods:
+            if url in self.servers:
                 return False
 
-            self.pods[url] = {
+            self.servers[url] = {
                 'busy': False,
                 'current_job_id': None,
                 'total_processed': 0,
@@ -272,43 +272,43 @@ class BackendPodManager:
     def remove_backend(self, url: str) -> bool:
         """Backend Pod 제거 (drain 모드이고 busy가 아닐 때만)"""
         with self.lock:
-            if url not in self.pods:
+            if url not in self.servers:
                 return False
 
-            if not self.pods[url]['draining']:
+            if not self.servers[url]['draining']:
                 return False
 
-            if self.pods[url]['busy']:
+            if self.servers[url]['busy']:
                 return False
 
-            del self.pods[url]
+            del self.servers[url]
             print(f"[BackendPodManager] Removed backend: {url}")
             return True
 
     def start_draining(self, url: str) -> bool:
         """Backend를 drain 모드로 설정"""
         with self.lock:
-            if url not in self.pods:
+            if url not in self.servers:
                 return False
 
-            self.pods[url]['draining'] = True
+            self.servers[url]['draining'] = True
             print(f"[BackendPodManager] Started draining: {url}")
             return True
 
     def stop_draining(self, url: str) -> bool:
         """Backend의 drain 모드 해제"""
         with self.lock:
-            if url not in self.pods:
+            if url not in self.servers:
                 return False
 
-            self.pods[url]['draining'] = False
+            self.servers[url]['draining'] = False
             print(f"[BackendPodManager] Stopped draining: {url}")
             return True
 
     def get_available_pod(self) -> Optional[str]:
         """유휴한 Pod URL 반환 (drain 모드가 아닌 것만)"""
         with self.lock:
-            for url, status in self.pods.items():
+            for url, status in self.servers.items():
                 if not status['busy'] and not status['draining']:
                     return url
         return None
@@ -316,20 +316,20 @@ class BackendPodManager:
     def mark_busy(self, url: str, job_id: str) -> bool:
         """Pod를 busy 상태로 마킹"""
         with self.lock:
-            if url in self.pods and not self.pods[url]['busy']:
-                self.pods[url]['busy'] = True
-                self.pods[url]['current_job_id'] = job_id
-                self.pods[url]['last_used'] = datetime.now()
+            if url in self.servers and not self.servers[url]['busy']:
+                self.servers[url]['busy'] = True
+                self.servers[url]['current_job_id'] = job_id
+                self.servers[url]['last_used'] = datetime.now()
                 return True
         return False
 
     def mark_free(self, url: str):
         """Pod를 free 상태로 마킹"""
         with self.lock:
-            if url in self.pods:
-                self.pods[url]['busy'] = False
-                self.pods[url]['current_job_id'] = None
-                self.pods[url]['total_processed'] += 1
+            if url in self.servers:
+                self.servers[url]['busy'] = False
+                self.servers[url]['current_job_id'] = None
+                self.servers[url]['total_processed'] += 1
 
     def get_status(self) -> Dict[str, Any]:
         """모든 Pod의 상태 반환"""
@@ -342,24 +342,24 @@ class BackendPodManager:
                     'last_used': status['last_used'].isoformat() if status['last_used'] else None,
                     'draining': status['draining']
                 }
-                for url, status in self.pods.items()
+                for url, status in self.servers.items()
             }
 
     def get_available_count(self) -> int:
         """유휴한 Pod 개수"""
         with self.lock:
-            return sum(1 for status in self.pods.values()
+            return sum(1 for status in self.servers.values()
                       if not status['busy'] and not status['draining'])
 
     def get_draining_backends(self) -> List[str]:
         """drain 모드인 Backend 목록"""
         with self.lock:
-            return [url for url, status in self.pods.items() if status['draining']]
+            return [url for url, status in self.servers.items() if status['draining']]
 
     def get_backend_list(self) -> List[str]:
         """등록된 모든 Backend URL 목록"""
         with self.lock:
-            return list(self.pods.keys())
+            return list(self.servers.keys())
 
 
 # ============================================================================
@@ -612,7 +612,7 @@ class GatewayApplication:
         print(f"\n{'='*60}")
         print(f"Starting Simple Queue Gateway (OOP)")
         print(f"{'='*60}")
-        print(f"Backend Pods: {len(Config.BACKEND_API_URLS)}")
+        print(f"Backend servers: {len(Config.BACKEND_API_URLS)}")
         for i, url in enumerate(Config.BACKEND_API_URLS, 1):
             print(f"  {i}. {url}")
         print(f"{'='*60}\n")
@@ -724,7 +724,7 @@ class GatewayApplication:
                 'pending': status['queue_size'],
                 'processing': status['processing']
             },
-            'backend_pods': {
+            'backend_servers': {
                 'total': total_backends,
                 'available': available_backends,
                 'busy': total_backends - available_backends,
@@ -746,7 +746,7 @@ class GatewayApplication:
         for url in self.backend_manager.get_backend_list():
             self.backend_manager.mark_free(url)
 
-        print("Backend pods reset to free state")
+        print("Backend servers reset to free state")
 
         target_worker_count = len(self.backend_manager.get_backend_list())
         self.worker_manager.restart_all(self.queue_manager, self.backend_manager, target_worker_count)
@@ -759,7 +759,7 @@ class GatewayApplication:
             'status': 'success',
             'message': 'All workers have been reset',
             'workers_restarted': target_worker_count,
-            'backend_pods_reset': len(self.backend_manager.get_backend_list()),
+            'backend_servers_reset': len(self.backend_manager.get_backend_list()),
             'timestamp': datetime.now().isoformat()
         }
 
