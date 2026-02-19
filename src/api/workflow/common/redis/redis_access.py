@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from common.conf_system import getRemoteConnInfo
 from typing import Dict, Any
 import redis
 import json
@@ -8,12 +9,16 @@ import json
 
 class RedisAccess:
     def __init__(self, logger, db=0, ttl=0):
-        self._logger = logger
-        self._db = db
-        self._ttl = ttl
-        self._host = '127.0.0.1'
-        self._port = 6379
-        self._redis_client = redis.Redis(host=self._host, port=self._port, decode_responses=True, db=db)
+        self._logger = self._db = self._ttl = ttl
+        redis_conn = getRemoteConnInfo()
+        self._host = redis_conn.get('host')
+        self._port = redis_conn.get('port')
+        self._passwd = redis_conn.get('passwd')
+        self._redis_client = redis.Redis(host=self._host,
+        		port=self._port,
+        		password=self._passwd,
+        		decode_responses=True,
+        		db=db)
 
     def __del__(self):
         if self._redis_client:

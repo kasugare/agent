@@ -6,8 +6,10 @@ import traceback
 import sys
 import os
 
+
 CONF_FILENAME = "../conf/"
 CONF_NAME = "system.conf"
+
 
 def getConfig():
     src_path = os.path.dirname(CONF_FILENAME)
@@ -63,6 +65,20 @@ def numOfBackupMetas(section='WORKFLOW', option='num_of_backup_metas'):
         num_of_backup_metas = 20
     return num_of_backup_metas
 
+def getRemoteConnInfo(section='REMOTEPOOL'):
+    conf = getConfig()
+    host = os.environ.get(f'{section}_ip', conf.get(section, 'ip'))
+    port = int(os.environ.get(f'{section}_port', conf.get(section, 'port')))
+    passwd = os.environ.get(f'{section}_password', conf.get(section, 'password'))
+    ttl = int(os.environ.get(f'{section}_ttl', conf.get(section, 'ttl')))
+    redisInfo = {
+        'host': host,
+        'port': port,
+        'passwd': passwd,
+        'ttl': ttl
+    }
+    return redisInfo
+
 def getSecretKey(section='SECRETKEY', option='secret_key'):
     conf = getConfig()
     secret_key = conf.get(section, option)
@@ -70,11 +86,11 @@ def getSecretKey(section='SECRETKEY', option='secret_key'):
 
 def getAiLandContext(section='AILAND'):
     conf = getConfig()
-    host = conf.get(section, 'host')
-    port = int(conf.get(section, 'port'))
-    db = conf.get(section, 'db')
-    user = conf.get(section, 'user')
-    passwd = conf.get(section, 'passwd')
+    host = os.environ.get(f'{section}_host', conf.get(section, 'host'))
+    port = int(os.environ.get(f'{section}_port', conf.get(section, 'port')))
+    db = os.environ.get(f'{section}_db', conf.get(section, 'db'))
+    user = os.environ.get(f'{section}_user', conf.get(section, 'user'))
+    passwd = os.environ.get(f'{section}_passwd', conf.get(section, 'passwd'))
     dbContext = {
         'host': host,
         'port': port,
