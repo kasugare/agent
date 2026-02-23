@@ -9,6 +9,6 @@ class Input:
     def _set_asset(self):
         None
 
-    def input(self, tar_path: str) -> str:
+    def input(self, tar_path: list, call_back_url: str, call_back_error_url: str, user_id: str):
         self._logger.debug(f" # START NODE: {tar_path}")
-        return tar_path
+        return tar_path, call_back_url, call_back_error_url, user_id

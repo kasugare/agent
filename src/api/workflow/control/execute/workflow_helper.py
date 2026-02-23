@@ -14,6 +14,11 @@ class WorkflowHelper:
         self._taskstore = store_pack.get('taskstore', {})
         self._meta_pack = meta_pack
 
+    def _get_task(self, service_id):
+        task_map = self._meta_pack.get('act_task_map')
+        task = task_map.get(service_id)
+        return task
+
     def _get_next_service_ids(self, service_id):
         edges_graph = self._meta_pack['act_forward_graph']
         next_service_ids = edges_graph.get(service_id)
@@ -26,9 +31,37 @@ class WorkflowHelper:
         prev_service_ids = prev_edges_graph.get(service_id)
         return prev_service_ids
 
-    def _set_action_skip_nodes(self, service_id, skip_target_service_ids, depth=0):
-        def check_prev_task_state(service_id):
-            task_state = self._get_task_state(service_id)
+    def _get_edge_param_map(self, service_id, prev_service_id):
+        task = self._get_task(service_id)
+        task_role = task.get_role()
+        if task_role.lower() == 'aggregation':
+            edges_param_map = self._meta_pack['act_edges_param_map']
+            edge_id = f"{prev_service_id}-{service_id}"
+            param_map_list = edges_param_map.get(edge_id, [])
+            req_param_keys = [param_map.get('key') for param_map in self._get_required_params(service_id) if param_map.get('key')]
+            for edge_param_map in param_map_list:
+                ref_type = edge_param_map.get('refer_type')
+                if ref_type.lower() == 'indirect':
+                    ref_param_key = edge_param_map.get('key')
+                    ref_value_addr = edge_param_map.get('value')
+                    ref_service_id = ".".join(ref_value_addr.split('.')[:-1])
+                    task_state = self._get_task_state(ref_service_id)
+                else:
+                    self._logger.warn(f" {service_id}: PENDING")
+        else:
+            self._logger.warn(f" {service_id}: PENDING")
+
+    def _check_skipable(self, service_id, prev_service_id):
+        # self._get_edge_param_map(service_id, prev_service_id)
+        task_state = self._get_task_state(prev_service_id)
+        if task_state in [TaskState.COMPLETED, TaskState.SKIPPED, TaskState.BLOCKED]:
+            return True
+        else:
+            return False
+
+    def _set_action_skip_nodes(self, service_id, skip_target_service_ids, execution_service_ids, depth=0):
+        def check_skipable(prev_service_id):
+            task_state = self._get_task_state(prev_service_id)
             if task_state in [TaskState.COMPLETED, TaskState.SKIPPED, TaskState.BLOCKED]:
                 return True
             else:
@@ -38,15 +71,17 @@ class WorkflowHelper:
         self._logger.debug(f"{space}   L skip target service ids: {skip_target_service_ids}")
 
         for skip_target_service_id in skip_target_service_ids:
-            prev_edges_graph = self._meta_pack['act_backward_graph']
-            prev_service_ids = prev_edges_graph.get(skip_target_service_id)
-            if all(check_prev_task_state(prev_service_id) for prev_service_id in prev_service_ids):
-                self._set_task_state(skip_target_service_id, TaskState.SKIPPED)
-                self._logger.error(f"{space}   @ skip service ids: {skip_target_service_id}")
+            backward_graph = self._meta_pack['act_backward_graph']
+            prev_service_ids = backward_graph.get(skip_target_service_id)
+
+            if all(check_skipable(prev_service_id) for prev_service_id in prev_service_ids):
+                if skip_target_service_id not in execution_service_ids:
+                    self._set_task_state(skip_target_service_id, TaskState.SKIPPED)
+                    self._logger.debug(f"{space}   @ skip service ids: {skip_target_service_id}")
 
             next_skip_service_ids = self._get_next_service_ids(skip_target_service_id)
             next_depth = depth + 1
-            self._set_action_skip_nodes(skip_target_service_id, next_skip_service_ids, next_depth)
+            self._set_action_skip_nodes(skip_target_service_id, next_skip_service_ids, execution_service_ids, next_depth)
 
     def _get_required_params(self, service_id):
         service_pool = self._meta_pack['service_pool']
@@ -60,22 +95,27 @@ class WorkflowHelper:
         def check_blocked_task_state(edge_param_map):
             key_required = edge_param_map.get('key_required', False)
             refer_type = edge_param_map.get('refer_type')
+            result = False
 
             if key_required and refer_type == 'indirect':
                 value_id = edge_param_map.get('value')
                 splited_value_id = value_id.split(".")
                 ref_service_id = ".".join(splited_value_id[:-1])
-                ref_value = self._datastore.get_output_value(value_id)
+                has_ref_value = False
+                if 'default' in edge_param_map.keys():
+                    has_ref_value = True
                 ref_task_state = self._get_task_state(ref_service_id)
-                self._logger.debug(f"{space}    - {ref_service_id} : {ref_task_state}")
-                self._logger.debug(f"{space}    - {value_id}: {ref_value}")
+                # ref_value = self._datastore.get_output_value(value_id)
+                # self._logger.debug(f"{space}    L {ref_service_id} : {ref_task_state}")
+                # self._logger.debug(f"{space}    L {value_id}: {ref_value}")
                 if ref_task_state in [TaskState.STOPPED,
-                                      TaskState.SKIPPED, TaskState.BLOCKED] and ref_value is None:
-                    return True
-            return False
+                                      TaskState.SKIPPED,
+                                      TaskState.BLOCKED] and not has_ref_value:
+                    result = True
+            return result
 
         space = "    " * depth
-        self._logger.debug(f"{space} # Service_id: {service_id}, state: {self._get_task_state(service_id)}")
+        self._logger.info(f"{space} # Service_id: {service_id}, state: {self._get_task_state(service_id)}")
 
         edges_param_map = self._meta_pack['act_edges_param_map']
         if self._get_task_state(service_id) == TaskState.PENDING:
@@ -83,11 +123,9 @@ class WorkflowHelper:
             for edge_id in edge_ids:
                 edge_param_map_list = edges_param_map.get(edge_id)
                 self._logger.debug(f"{space}   L edge_id:  {edge_id}")
-                for edge_param_map in edge_param_map_list:
-                    self._logger.debug(f"{space}     - edge_map: {edge_param_map}")
                 if any(check_blocked_task_state(edge_param_map) for edge_param_map in edge_param_map_list):
+                    self._logger.debug(f"{space}   @ blocked service ids: {service_id}")
                     self._set_task_state(service_id, TaskState.BLOCKED)
-                    self._logger.error(f"{space}   @ blocked service ids: {service_id}")
                     break
         # else:
         #     # Check Next services
@@ -260,17 +298,25 @@ class WorkflowHelper:
         results_schema = service_pool[service_id]['result']
         result_map = {}
         if isinstance(result, dict):
-            schema_keys = [schema_map.get('key')
-                           for schema_map in results_schema if schema_map.get('key')]
+            schema_keys = [schema_map.get('key') for schema_map in results_schema if schema_map.get('key')]
             res_keys = list(result.keys())
             inter_res_keys = list(set(res_keys).intersection(set(schema_keys)))
             for res_key in inter_res_keys:
                 result_map[res_key] = result.get(res_key)
         elif isinstance(result, list) or isinstance(result, tuple):
-            schema_keys = [schema_map.get('key')
-                           for schema_map in results_schema if schema_map.get('key')]
-            for _index, res_key in enumerate(schema_keys):
-                result_map[res_key] = result[_index]
+            schema_keys = [schema_map.get('key') for schema_map in results_schema if schema_map.get('key')]
+
+            if len(result) == 1 and results_schema[0].get('type') == 'list':
+                schema = results_schema[0]
+                key = schema.get('key')
+                result_map[key] = result
+            else:
+                try:
+                    for _index, res_key in enumerate(schema_keys):
+                        result_map[res_key] = result[_index]
+                except IndexError:
+                    self._logger.warn("Wrong output schema: output result schema not matched ")
+                    self._logger.warn(f" - output schema: {str(results_schema)}")
         else:
             for schema in results_schema:
                 result_name = schema['key']
@@ -346,6 +392,11 @@ class WorkflowHelper:
             return result
 
     def _check_prev_task_compledted(self, service_id):
+        task = self._get_task(service_id)
+        processing_type = task.get_processing_type()
+        if processing_type.lower() == 'first_come':
+            return True
+
         backward_graph = self._meta_pack['backward_graph']
         prev_service_list = backward_graph.get(service_id, [])
         if not prev_service_list:

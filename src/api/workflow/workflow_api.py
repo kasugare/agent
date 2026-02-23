@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from common.conf_serving import getWorkflowId
+from api.workflow.error_pool.error import MetaTypeError
 from api.workflow.service.admin.metric_service import MetricService
 from api.workflow.service.meta.auto_meta_loader import AutoMetaLoader
 from api.workflow.service.meta.wf_meta_parser import WorkflowMetaParser
@@ -101,12 +102,26 @@ class WorkflowEngine(BaseRouter):
                 self._logger.warn("InvalidInputException: invalid workflow meta")
                 raise InvalidInputException(err_detail="Invalid workflow meta")
 
-            meta_paraser = WorkflowMetaParser(self._logger)
-            meta_pack = meta_paraser.parse_wf_meta(new_wf_meta)
-            wf_id = meta_pack.get('workflow_id')
-            metastore = MetaStoreService(self._logger, wf_id)
-            metastore.set_wf_meta(meta_pack, request_id)
-            return {}
+            try:
+                meta_paraser = WorkflowMetaParser(self._logger)
+                meta_pack = meta_paraser.parse_wf_meta(new_wf_meta)
+                wf_id = meta_pack.get('workflow_id')
+                metastore = MetaStoreService(self._logger, wf_id)
+                metastore.set_wf_meta(meta_pack, request_id)
+                state = "success"
+                message = "success"
+            except MetaTypeError as e:
+                state = "fail"
+                message = str(e)
+            except Exception as e:
+                state = "fail"
+                message = str(e)
+
+            result_state = {
+                "state": state,
+                "message": message
+            }
+            return result_state
 
         @self.router.post(path='/workflow/prompt', response_model=BaseResponse[dict[str, Any]])
         async def call_prompt_test(headers: HeaderModel = Depends(get_headers), request: schema.ReqCreateWorkflow = ...):

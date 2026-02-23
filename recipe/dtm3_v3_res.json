@@ -91,13 +91,40 @@
 						{
 							"required": true,
 							"key": "tar_path",
-							"type": "string"
+							"type": "list"
+						},
+						{
+							"required": true,
+							"key": "call_back_url",
+							"type": "str"
+						},
+						{
+							"required": true,
+							"key": "call_back_error_url",
+							"type": "str"
+						},
+						{
+							"required": true,
+							"key": "user_id",
+							"type": "str"
 						}
 					],
 					"result": [
 						{
 							"key": "tar_path",
-							"type": "string"
+							"type": "list"
+						},
+						{
+							"key": "call_back_url",
+							"type": "str"
+						},
+						{
+							"key": "call_back_error_url",
+							"type": "str"
+						},
+						{
+							"key": "user_id",
+							"type": "str"
 						}
 					]
 				}
@@ -140,7 +167,7 @@
 						{
 							"required": true,
 							"key": "tar_path",
-							"type": "string"
+							"type": "list"
 						}
 					],
 					"result": [
@@ -208,7 +235,7 @@
 		{
 			"node_id": "NODE_B",
 			"node_type": "external",
-			"role": "processing",
+			"role": "process",
 			"location": "outter",
 			"containable": false,
 			"required_nodes": [
@@ -314,7 +341,7 @@
 		{
 			"node_id": "NODE_C",
 			"node_type": "external",
-			"role": "processing",
+			"role": "process",
 			"location": "outter",
 			"containable": false,
 			"node_info": {
@@ -368,7 +395,7 @@
 		{
 			"node_id": "NODE_D",
 			"node_type": "external",
-			"role": "processing",
+			"role": "process",
 			"location": "outter",
 			"containable": false,
 			"node_info": {
@@ -427,7 +454,7 @@
 		{
 			"node_id": "NODE_E",
 			"node_type": "external",
-			"role": "processing",
+			"role": "process",
 			"location": "outter",
 			"containable": false,
 			"node_info": {
@@ -481,7 +508,7 @@
 		{
 			"node_id": "NODE_F",
 			"node_type": "external",
-			"role": "processing",
+			"role": "process",
 			"location": "outter",
 			"containable": false,
 			"node_info": {
@@ -539,7 +566,7 @@
 		{
 			"node_id": "NODE_G",
 			"node_type": "external",
-			"role": "processing",
+			"role": "process",
 			"location": "outter",
 			"containable": false,
 			"node_info": {
@@ -572,7 +599,14 @@
 						{
 							"required": true,
 							"key": "text_path",
-							"type": "string"
+							"type": "string",
+							"default": null
+						},
+						{
+							"required": false,
+							"key": "img_path",
+							"type": "string",
+							"default": null
 						}
 					],
 					"result": [
@@ -591,7 +625,7 @@
 		{
 			"node_id": "NODE_H",
 			"node_type": "external",
-			"role": "processing",
+			"role": "process",
 			"location": "outter",
 			"containable": false,
 			"node_info": {
@@ -622,9 +656,10 @@
 					"function": "/process/node_h",
 					"params": [
 						{
-							"required": true,
+							"required": false,
 							"key": "nlp_img_lc_path",
-							"type": "string"
+							"type": "string",
+							"default": null
 						},
 						{
 							"required": true,
@@ -632,15 +667,86 @@
 							"type": "string"
 						},
 						{
-							"required": true,
+							"required": false,
 							"key": "aiv_img_path",
-							"type": "string"
+							"type": "string",
+							"default": null
 						}
 					],
 					"result": [
 						{
 							"key": "result_path",
 							"type": "str"
+						}
+					]
+				}
+			]
+		},
+		{
+			"node_id": "EXTERNAL_CALLBACK",
+			"node_type": "module",
+			"role": "external",
+			"location": "inner",
+			"containable": true,
+			"node_info": {
+				"type": "MODULE",
+				"ref_id": "EXTERNAL_CALLBACK",
+				"ref_version": "1.0.0",
+				"code": "external_callback",
+				"title": "External output callback",
+				"desc": "External output callback"
+			},
+			"required_nodes": [],
+			"api_info": {
+				"base_url": ""
+			},
+			"module_info": {
+				"module_path": "app.dtm.external_api_requester",
+				"class_name": "ExternalApiRequester",
+				"sys_environments": {
+					"params": []
+				},
+				"asset_environments": {
+					"params": []
+				}
+			},
+			"services": [
+				{
+					"service_name": "callback",
+					"api_method": "",
+					"function": "call_external_api",
+					"params": [
+						{
+							"required": true,
+							"key": "callback_url",
+							"type": "str"
+						},
+						{
+							"required": true,
+							"key": "callback_error_url",
+							"type": "str"
+						},
+						{
+							"required": true,
+							"key": "user_id",
+							"type": "str"
+						},
+						{
+							"required": true,
+							"key": "file_path_list",
+							"type": "list"
+						},
+						{
+							"required": true,
+							"key": "result_path",
+							"type": "str"
+						}
+					],
+					"result": [
+						{
+							"required": true,
+							"key": "result",
+							"type": "string"
 						}
 					]
 				}
@@ -699,7 +805,7 @@
 		{
 			"node_id": "LLM_Model",
 			"node_type": "external",
-			"role": "processing",
+			"role": "process",
 			"location": "outter",
 			"containable": false,
 			"required_nodes": [],
@@ -758,7 +864,7 @@
 		{
 			"node_id": "OCR_Model",
 			"node_type": "external",
-			"role": "processing",
+			"role": "process",
 			"location": "outter",
 			"containable": false,
 			"required_nodes": [],
@@ -1117,7 +1223,8 @@
 				{
 					"refer_type": "indirect",
 					"key": "nlp_img_lc_path",
-					"value": "NODE_F.process.result_path"
+					"value": "NODE_F.process.result_path",
+					"default": null
 				},
 				{
 					"refer_type": "indirect",
@@ -1127,7 +1234,44 @@
 				{
 					"refer_type": "indirect",
 					"key": "aiv_img_path",
-					"value": "NODE_D.process.save_FEtype_path"
+					"value": "NODE_D.process.save_FEtype_path",
+					"default": null
+				}
+			],
+			"result_info": []
+		},
+		{
+			"edge_type": "sequence",
+			"source": "NODE_B.process",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"target": "NODE_G.process",
+			"target_handler": {
+				"type": "first_come",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "text_path",
+					"value": "NODE_A.process.txt_path",
+					"default": null
+				},
+				{
+					"refer_type": "indirect",
+					"key": "img_path",
+					"value": "NODE_B.process.img_path",
+					"default": null
 				}
 			],
 			"result_info": []
@@ -1190,7 +1334,8 @@
 				{
 					"refer_type": "indirect",
 					"key": "nlp_img_lc_path",
-					"value": "NODE_F.process.result_path"
+					"value": "NODE_F.process.result_path",
+					"default": null
 				},
 				{
 					"refer_type": "indirect",
@@ -1200,7 +1345,8 @@
 				{
 					"refer_type": "indirect",
 					"key": "aiv_img_path",
-					"value": "NODE_D.process.save_FEtype_path"
+					"value": "NODE_D.process.save_FEtype_path",
+					"default": null
 				}
 			],
 			"result_info": []
@@ -1297,7 +1443,8 @@
 				{
 					"refer_type": "indirect",
 					"key": "nlp_img_lc_path",
-					"value": "NODE_F.process.result_path"
+					"value": "NODE_F.process.result_path",
+					"default": null
 				},
 				{
 					"refer_type": "indirect",
@@ -1307,7 +1454,8 @@
 				{
 					"refer_type": "indirect",
 					"key": "aiv_img_path",
-					"value": "NODE_D.process.save_FEtype_path"
+					"value": "NODE_D.process.save_FEtype_path",
+					"default": null
 				}
 			],
 			"result_info": []
@@ -1324,7 +1472,7 @@
 			},
 			"target": "NODE_G.process",
 			"target_handler": {
-				"type": "sequence",
+				"type": "first_come",
 				"conditions": [],
 				"references": [],
 				"environments": [],
@@ -1337,6 +1485,11 @@
 					"refer_type": "indirect",
 					"key": "text_path",
 					"value": "NODE_A.process.txt_path"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "img_path",
+					"value": "NODE_B.process.img_path"
 				}
 			],
 			"result_info": []
@@ -1365,7 +1518,8 @@
 				{
 					"refer_type": "indirect",
 					"key": "nlp_img_lc_path",
-					"value": "NODE_F.process.result_path"
+					"value": "NODE_F.process.result_path",
+					"default": null
 				},
 				{
 					"refer_type": "indirect",
@@ -1375,7 +1529,8 @@
 				{
 					"refer_type": "indirect",
 					"key": "aiv_img_path",
-					"value": "NODE_D.process.save_FEtype_path"
+					"value": "NODE_D.process.save_FEtype_path",
+					"default": null
 				}
 			],
 			"result_info": []
@@ -1383,6 +1538,56 @@
 		{
 			"edge_type": "sequence",
 			"source": "NODE_H.process",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"target": "EXTERNAL_CALLBACK.callback",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "callback_url",
+					"value": "START_NODE.input_node.call_back_url"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "callback_error_url",
+					"value": "START_NODE.input_node.call_back_error_url"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "user_id",
+					"value": "START_NODE.input_node.user_id"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "file_path_list",
+					"value": "START_NODE.input_node.tar_path"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "result_path",
+					"value": "NODE_H.process.result_path",
+					"default": null
+				}
+			],
+			"result_info": []
+		},
+		{
+			"edge_type": "sequence",
+			"source": "EXTERNAL_CALLBACK.callback",
 			"source_handler": {
 				"type": "sequence",
 				"conditions": [],
@@ -1404,7 +1609,7 @@
 				{
 					"refer_type": "indirect",
 					"key": "result",
-					"value": "NODE_H.process.result_path"
+					"value": "EXTERNAL_CALLBACK.callback.result"
 				}
 			],
 			"result_info": []

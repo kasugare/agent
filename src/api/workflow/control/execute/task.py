@@ -9,15 +9,26 @@ import time
 
 
 class Task(TaskContext):
-    def __init__(self, logger, service_id, service_info, timeout_config):
+    def __init__(self, logger, service_id, service_info, timeout_config, processing_type):
         super().__init__(logger, service_id, service_info, timeout_config)
         self._logger = logger
         self._assigned_ts = 0.0
         self._start_ts = 0.0
         self._end_ts = 0.0
+        self._is_completed = False
+        self._processing_type = processing_type
 
         self.set_state(TaskState.PENDING)
         self.init_retry_count()
+
+    def is_completed(self):
+        return self._is_completed
+
+    def set_completed(self):
+        self._is_completed = True
+
+    def get_processing_type(self):
+        return self._processing_type
 
     def get_duration(self):
         duration = "%0.2f" %(self._end_ts - self._start_ts)

@@ -11,6 +11,7 @@ from typing import Dict
 import asyncio
 import httpx
 import uuid
+import json
 
 
 class BaseRouter:
@@ -118,7 +119,8 @@ class EngineAdapter(BaseRouter):
                             "Content-Type": "application/json",
                             "secret_key": "",
                             "job_id": f"{job_id}",
-                            "user_id": "test_user",
+                            "user_id": f"{member_id}",
+                            "file_path_list": json.dumps(path_list),
                             "request-id": str(uuid.uuid4()),
                             "session-id": str(uuid.uuid4()),
                             "call_back_error_url": call_back_url,
@@ -182,6 +184,7 @@ class EngineAdapter(BaseRouter):
             # self._logger.info("################################################################")
             # self._logger.info("#                       < Is Working >                         #")
             # self._logger.info("################################################################")
+            is_working = True
             try:
                 result = await asyncio.create_task(self._call_workflow_api(
                         base_url=str(request.base_url),
@@ -219,6 +222,7 @@ class EngineAdapter(BaseRouter):
             # self._logger.info("#                        < Job List >                          #")
             # self._logger.info("################################################################")
             job_id = headers.x_sampl_job_id
+            result = None
             try:
                 result = await asyncio.create_task(self._call_workflow_api(
                         base_url=str(request.base_url),
@@ -236,6 +240,7 @@ class EngineAdapter(BaseRouter):
 
             if not result:
                 completion_yn = 'N'
+                reg_datetime = "0"
                 start_datetime = "0"
                 end_datetime = "0"
                 status = None

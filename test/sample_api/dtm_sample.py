@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Request
 from pydantic import BaseModel
 from typing import Dict, List, Optional, Any
 import uvicorn
@@ -46,7 +46,7 @@ class WorkflowMergeResponse(BaseModel):
 
 # Node A (Start Node) - API Gateway
 class NodeA_Model(BaseModel):
-    tar_path: str
+    tar_path: list
 
 @app_node_a.post("/process/node_a")#, response_model=WorkflowResponse)
 async def process_node(request: NodeA_Model):
@@ -72,7 +72,7 @@ app_node_b = FastAPI(title="Node B - Business Logic 1")
 async def process_node(request: NodeB_Model):
     print(f"< Node B >")
     print(f"  L PARAMS: {request.tif_path}")
-    # time.sleep(5)
+    time.sleep(1)
     await asyncio.sleep(random.randrange(1, 5)*0.1)
 
     response = {
@@ -177,12 +177,14 @@ async def process_node(request: NodeF_Model):
 # Node G - Business Logic 3
 class NodeG_Model(BaseModel):
     text_path: str
+    img_path: str
 
 app_node_g = FastAPI(title="Node G - Business Logic 6")
 @app_node_g.post("/process/node_g")#, response_model=WorkflowResponse)
 async def process_node(request: NodeG_Model):
     print(f"< Node G >")
     print(f"  L PARAMS: {request.text_path}")
+    print(f"  L PARAMS: {request.img_path}")
     await asyncio.sleep(random.randrange(1, 5) * 0.1)
 
     response = {
@@ -239,6 +241,20 @@ async def aggregate_results(request: WorkflowRequest):
         timestamp=datetime.now().isoformat()
     )
 
+# Node z - Result Aggregator
+app_callback = FastAPI(title="Result Received callback server")
+@app_callback.post("/v1/success")#, response_model=WorkflowResponse)
+async def callback_success(request):
+    print(f"# Callback Success")
+    print(request)
+
+@app_callback.post("/v1/error")#, response_model=WorkflowResponse)
+async def call_chained_model_service(request: Request, body: dict):
+    print(f"# Callback Error")
+    print(request.headers)
+    print(request.body)
+    print(body)
+
 # 각 노드별 서버 실행을 위한 설정
 def run_node_a():
     uvicorn.run(app_node_a, host="127.0.0.1", port=10001)
@@ -274,6 +290,9 @@ def run_node_h():
 
 def run_node_z():
     uvicorn.run(app_node_z, host="127.0.0.1", port=10020)
+
+def run_callback():
+    uvicorn.run(app_callback, host="127.0.0.1", port=9000)
 
 
 # 테스트를 위한 클라이언트 코드
@@ -345,7 +364,8 @@ if __name__ == "__main__":
         multiprocessing.Process(target=run_node_e),
         multiprocessing.Process(target=run_node_f),
         multiprocessing.Process(target=run_node_g),
-        multiprocessing.Process(target=run_node_h)
+        multiprocessing.Process(target=run_node_h),
+        multiprocessing.Process(target=run_callback)
     ]
 
     # 프로세스 시작

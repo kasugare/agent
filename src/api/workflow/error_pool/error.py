@@ -118,3 +118,16 @@ class ExceedExecutionRetryError(Exception):
 
     def error_code(self):
         return self._errorCode
+
+
+class MetaTypeError(Exception):
+    def __init__(self):
+        super().__init__("Meta Type Error")
+        self._errorCode = "MetaTypeErrorException"
+        self._errorMessage = "This metadata is wrong for workflow's meta."
+
+    def __str__(self):
+        return self._errorMessage
+
+    def error_code(self):
+        return self._errorCode

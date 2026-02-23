@@ -71,12 +71,14 @@ class WorkflowExecutionOrchestrator(WorkflowHelper):
     def _run_queue_job(self, service_id, task_map, task):
         runnable = True
         prev_service_ids = self._get_prev_service_ids(service_id)
+
         if prev_service_ids:
             for prev_service_id in prev_service_ids:
                 prev_task = task_map.get(prev_service_id)
-                if prev_task.get_state() not in [TaskState.COMPLETED, TaskState.SKIPPED]:
+                if task.get_processing_type() == 'first_come':
+                    runnable = True
+                elif prev_task.get_state() not in [TaskState.COMPLETED, TaskState.SKIPPED, TaskState.RUNNING]:
                     runnable = False
-                    return False
         else:
             runnable = True
         self._logger.debug(f"   L RUNNABLE: {service_id} : {runnable}")
@@ -150,8 +152,9 @@ class WorkflowExecutionOrchestrator(WorkflowHelper):
             edges_graph = self._meta_pack['act_forward_graph']
             next_service_ids = edges_graph.get(service_id)
             skip_target_service_ids = list(set(next_service_ids).difference(set(execution_service_ids)))
-            self._set_action_skip_nodes(service_id, skip_target_service_ids)
+            self._set_action_skip_nodes(service_id, skip_target_service_ids, execution_service_ids)
             self._set_blocked_nodes(service_id)
+            next_service_ids = execution_service_ids
         else:
             next_service_ids = self._get_next_service_ids(service_id)
 
@@ -174,6 +177,8 @@ class WorkflowExecutionOrchestrator(WorkflowHelper):
                 task = task_map.get(service_id)
                 task_state = task.get_state()
                 self._set_task_state(service_id, task_state)
+                if service_id == 'NODE_G.process':
+                    self._logger.warn(service_id)
 
                 if self._stream_Q:
                     self._send_status(request_id, service_id, task)
@@ -198,8 +203,10 @@ class WorkflowExecutionOrchestrator(WorkflowHelper):
 
                 elif task_state in [TaskState.COMPLETED]:
                     self._logger.info(f" - Step 5. [COMPLETED] done task execution : {service_id}")
-                    self._run_task_completed(service_id, task_map, task)
-                    self._set_task_end(service_id)
+                    if not task.is_completed():
+                        task.set_completed()
+                        self._run_task_completed(service_id, task_map, task)
+                        self._set_task_end(service_id)
                     if self._check_all_completed(task_map):
                         result = self._get_job_result(task_map)
                         break

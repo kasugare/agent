@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from api.workflow.error_pool.error import MetaTypeError
 from api.workflow.service.meta.wf_meta_handler import WorkflowMetaHandler
 from api.workflow.control.meta.meta_parse_controller import MetaParseController
 from typing import Dict, List, Any
@@ -111,32 +112,10 @@ class WorkflowMetaParser(WorkflowMetaHandler):
                 "nodes_env_value_map": nodes_env_value_map,
                 "nodes_asset_value_map": nodes_asset_value_map
             }
-
-            # self._metastore.set_comm_meta_service(wf_comm_meta) # metastore
-            # self._metastore.set_env_pool_service(wf_env_pool) # metastore
-            # self._metastore.set_resources_meta_service(wf_resources_meta) # metastore
-            # self._metastore.set_nodes_meta_service(wf_nodes_meta) # metastore
-            # self._metastore.set_node_service_pool_service(wf_service_pool) # metastore
-            # self._metastore.set_edges_meta_service(wf_edges_meta) # metastore
-            #
-            # self._metastore.set_nodes_env_value_map_service(nodes_env_value_map) # metastore
-            # self._metastore.set_nodes_asset_value_map_service(nodes_asset_value_map)  # metastore
-            #
-            # self._metastore.set_custom_result_meta_service(custom_result_meta) # metastore
-            # self._metastore.set_forward_edge_graph_meta_service(wf_forward_edge_graph) # metastore
-            # self._metastore.set_forward_graph_meta_service(wf_forward_graph) # metastore
-            # self._metastore.set_backward_graph_meta_service(wf_backward_graph) # metastore
-            # self._metastore.set_start_nodes_meta_service(start_nodes) # metastore
-            # self._metastore.set_end_nodes_meta_service(end_nodes) # metastore
-            # self._metastore.set_edges_param_map_service(edges_param_map) # metastore
-
-            # self._metastore.set_init_service_params_service(wf_edges_meta) # dataio - meta_pack: edges_info
-            # self._metastore.set_init_nodes_env_params_service(nodes_env_value_map) # dataio
-            # self._metastore.set_init_nodes_asset_params_service(nodes_asset_value_map) # dataio
             self._meta_pack = meta_pack
         except Exception as e:
             self._logger.error("Wrong workflow meta")
-            raise
+            raise MetaTypeError
         return self._meta_pack
 
     def _print_task_map(self, task_map, edges_param_map):

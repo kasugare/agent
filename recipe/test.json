@@ -1,619 +1,8 @@
 {
-	"name": "API Workflow for DTM 3",
-	"description": "API based workflow with parallel processing support",
-	"metadata": {
-		"version": "1.0",
-		"project_id": "DTM3",
-		"workflow_id": "DTM3_WF_002",
-		"type": "DTM3"
-	},
-	"environments": [
-		{
-			"env_code": "APIKEY",
-			"env_name": "api key",
-			"env_params": [
-				{
-					"key": "api-key",
-					"value": "12345678890"
-				}
-			]
-		}
-	],
-	"nodes": [
-		{
-			"node_id": "START_NODE",
-			"node_type": "module",
-			"role": "start",
-			"location": "inner",
-			"containable": true,
-			"api_keys": [],
-			"node_info": {
-				"type": "MODULE",
-				"ref_id": "START_NODE",
-				"ref_version": "1.0.0",
-				"code": "Input",
-				"title": "1. 파일 위치 입력",
-				"desc": ""
-			},
-			"api_info": {
-				"base_url": ""
-			},
-			"module_info": {
-				"module_path": "app.dtm.input",
-				"class_name": "Input",
-				"sys_environments": {
-					"params": []
-				},
-				"asset_environments": {
-					"params": []
-				}
-			},
-			"services": [
-				{
-					"service_name": "query_input",
-					"api_method": "",
-					"function": "query_input",
-					"params": [
-						{
-							"required": true,
-							"key": "query",
-							"type": "string"
-						}
-					],
-					"result": [
-						{
-							"key": "tar_path",
-							"type": "string"
-						}
-					]
-				}
-			]
-		},
-		{
-			"node_id": "NODE_A",
-			"node_type": "external",
-			"role": "start",
-			"location": "outter",
-			"containable": false,
-			"api_keys": [],
-			"node_info": {
-				"type": "CODE",
-				"ref_id": "NODE_A",
-				"ref_version": "1.0.0",
-				"code": "STEP1",
-				"title": "2. 압축 해제",
-				"desc": "DTM3"
-			},
-			"api_info": {
-				"base_url": "http://127.0.0.1:10001"
-			},
-			"module_info": {
-				"module_path": "",
-				"class_name": "",
-				"sys_environments": {
-				    "params": []
-				},
-				"asset_environments": {
-				    "params": []
-				}
-			},
-			"services": [
-				{
-					"service_name": "process",
-					"api_method": "post",
-					"function": "/process/node_a",
-					"params": [
-						{
-							"required": true,
-							"key": "tar_path",
-							"type": "string"
-						}
-					],
-					"result": [
-						{
-							"key": "tif_path",
-							"type": "str"
-						},
-						{
-							"key": "txt_path",
-							"type": "str"
-						}
-					]
-				}
-			]
-		},
-		{
-		    "node_id": "Conditional_Node",
-		    "node_type": "module",
-		    "role": "conditional",
-		    "location": "inner",
-		    "containable": false,
-		    "node_info": {
-			    "type": "MODULE",
-		        "ref_id": "Conditional_Node",
-		        "ref_version": "1.0.0",
-			    "code": "COND1",
-			    "title": "3. 해제된 압축파일의 종류 확인 후 분기 처리",
-		        "desc": "조건 분기 및 변수 조작 노드"
-		    },
-		    "condition_config": {
-		        "operators": {
-			        "comparison": [">", "<", ">=", "<=", "==", "!="],
-			        "existence": ["exist", "not_exist"],
-			        "logical": ["AND", "OR", "NOT"]
-			    },
-			    "action_types": {
-			        "variable": ["set_variable", "increment", "decrement", "copy_variable", "delete_variable"],
-			        "calculation": ["calculate"],
-			        "collection": ["append", "merge"],
-				    "execution": ["execute"]
-			    },
-			    "branch_types": ["if", "elif", "else"]
-		    },
-		    "services": [
-			    {
-		            "function": "evaluate_condition",
-		            "params": [
-		                {
-		                    "required": true,
-		                    "key": "branches",
-		                    "type": "list"
-		                }
-		            ],
-		            "result": [
-		                {
-		                    "key": "next_target",
-		                    "type": "string"
-		                }
-		            ]
-		        }
-		    ]
-		},
-		{
-			"node_id": "NODE_B",
-			"node_type": "external",
-			"role": "processing",
-			"location": "outter",
-			"containable": false,
-			"api_keys": [],
-			"node_info": {
-				"type": "CODE",
-				"ref_id": "NODE_B",
-				"ref_version": "1.0.0",
-				"code": "STEP2",
-				"title": "4. 이미지 데이터에 대한 문서 분류 수행 --> vLLM 문서 모델 연계",
-				"desc": "DTM3"
-			},
-			"api_info": {
-				"base_url": "http://127.0.0.1:10002"
-			},
-			"module_info": {
-				"module_path": "",
-				"class_name": "",
-				"sys_environments": {
-				    "params": []
-				},
-				"asset_environments": {
-				    "params": []
-				}
-			},
-			"services": [
-				{
-					"service_name": "process",
-					"api_method": "post",
-					"function": "/process/node_b",
-					"params": [
-						{
-							"required": true,
-							"key": "tif_path",
-							"type": "string"
-						}
-					],
-					"result": [
-						{
-							"key": "img_path",
-							"type": "str"
-						},
-						{
-							"key": "doccls_json_path",
-							"type": "str"
-						},
-						{
-							"key": "lc_img_list",
-							"type": "list"
-						}
-					]
-				}
-			]
-		},
-		{
-			"node_id": "NODE_C",
-			"node_type": "external",
-			"role": "processing",
-			"location": "outter",
-			"containable": false,
-			"api_keys": [],
-			"node_info": {
-				"type": "CODE",
-				"ref_id": "NODE_C",
-				"ref_version": "1.0.0",
-				"code": "STEP3",
-				"title": "5. OCR 수행 --> OCR 모델 연계",
-				"desc": "DTM3"
-			},
-			"api_info": {
-				"base_url": "http://127.0.0.1:10003"
-			},
-			"module_info": {
-				"module_path": "",
-				"class_name": "",
-				"sys_environments": {
-				    "params": []
-				},
-				"asset_environments": {
-				    "params": []
-				}
-			},
-			"services": [
-				{
-					"service_name": "process",
-					"api_method": "post",
-					"function": "/process/node_c",
-					"params": [
-						{
-							"required": true,
-							"key": "img_path",
-							"type": "string"
-						},
-						{
-							"required": true,
-							"key": "doccls_json_path",
-							"type": "json"
-						}
-					],
-					"result": [
-						{
-							"key": "extr_json_path",
-							"type": "str"
-						}
-					]
-				}
-			]
-		},
-		{
-			"node_id": "NODE_D",
-			"node_type": "external",
-			"role": "processing",
-			"location": "outter",
-			"containable": false,
-			"api_keys": [],
-			"node_info": {
-				"type": "CODE",
-				"ref_id": "NODE_D",
-				"ref_version": "1.0.0",
-				"code": "STEP1",
-				"title": "input",
-				"desc": "DTM3"
-			},
-			"api_info": {
-				"base_url": "http://127.0.0.1:10004"
-			},
-			"module_info": {
-				"module_path": "",
-				"class_name": "",
-				"sys_environments": {
-				    "params": []
-				},
-				"asset_environments": {
-				    "params": []
-				}
-			},
-			"services": [
-				{
-					"service_name": "process",
-					"api_method": "post",
-					"function": "/process/node_d",
-					"params": [
-						{
-							"required": true,
-							"key": "img_path",
-							"type": "string"
-						},
-						{
-							"required": true,
-							"key": "doccls_json_path",
-							"type": "string"
-						},
-						{
-							"required": true,
-							"key": "extr_json_path",
-							"type": "string"
-						}
-					],
-					"result": [
-						{
-							"key": "save_FEtype_path",
-							"type": "str"
-						}
-					]
-				}
-			]
-		},
-		{
-			"node_id": "NODE_E",
-			"node_type": "external",
-			"role": "processing",
-			"location": "outter",
-			"containable": false,
-			"api_keys": [],
-			"node_info": {
-				"type": "CODE",
-				"ref_id": "NODE_E",
-				"ref_version": "1.0.0",
-				"code": "STEP1",
-				"title": "input",
-				"desc": "DTM3"
-			},
-			"api_info": {
-				"base_url": "http://127.0.0.1:10005"
-			},
-			"module_info": {
-				"module_path": "",
-				"class_name": "",
-				"sys_environments": {
-				    "params": []
-				},
-				"asset_environments": {
-				    "params": []
-				}
-			},
-			"services": [
-				{
-					"service_name": "process",
-					"api_method": "post",
-					"function": "/process/node_e",
-					"params": [
-						{
-							"required": true,
-							"key": "img_path",
-							"type": "string"
-						},
-						{
-							"required": true,
-							"key": "lc_img_list",
-							"type": "json"
-						}
-					],
-					"result": [
-						{
-							"key": "ocr_json_path_list",
-							"type": "list"
-						}
-					]
-				}
-			]
-		},
-		{
-			"node_id": "NODE_F",
-			"node_type": "external",
-			"role": "processing",
-			"location": "outter",
-			"containable": false,
-			"api_keys": [],
-			"node_info": {
-				"type": "CODE",
-				"ref_id": "NODE_F",
-				"ref_version": "1.0.0",
-				"code": "STEP1",
-				"title": "input",
-				"desc": "DTM3"
-			},
-			"api_info": {
-				"base_url": "http://127.0.0.1:10006"
-			},
-			"module_info": {
-				"module_path": "",
-				"class_name": "",
-				"sys_environments": {
-				    "params": []
-				},
-				"asset_environments": {
-				    "params": []
-				}
-			},
-			"services": [
-				{
-					"service_name": "process",
-					"api_method": "post",
-					"function": "/process/node_f",
-					"params": [
-						{
-							"required": true,
-							"key": "lc_img_list",
-							"type": "string"
-						},
-						{
-							"required": true,
-							"key": "ocr_json_path_list",
-							"type": "json"
-						}
-					],
-					"result": [
-						{
-							"key": "lc_number",
-							"type": "str"
-						},
-						{
-							"key": "result_path",
-							"type": "str"
-						}
-					]
-				}
-			]
-		},
-		{
-			"node_id": "NODE_G",
-			"node_type": "external",
-			"role": "processing",
-			"location": "outter",
-			"containable": false,
-			"api_keys": [],
-			"node_info": {
-				"ref_id": "NODE_G",
-				"ref_version": "1.0.0",
-				"code": "STEP1",
-				"title": "input",
-				"desc": "DTM3"
-			},
-			"api_info": {
-				"base_url": "http://127.0.0.1:10007"
-			},
-			"module_info": {
-				"module_path": "",
-				"class_name": "",
-				"sys_environments": {
-				    "params": []
-				},
-				"asset_environments": {
-				    "params": []
-				}
-			},
-			"services": [
-				{
-					"service_name": "process",
-					"api_method": "post",
-					"function": "/process/node_g",
-					"params": [
-						{
-							"required": true,
-							"key": "text_path",
-							"type": "string"
-						}
-					],
-					"result": [
-						{
-							"key": "lc_number",
-							"type": "str"
-						},
-						{
-							"key": "result_path",
-							"type": "str"
-						}
-					]
-				}
-			]
-		},
-		{
-			"node_id": "NODE_H",
-			"node_type": "external",
-			"role": "processing",
-			"location": "outter",
-			"containable": false,
-			"api_keys": [],
-			"node_info": {
-				"ref_id": "NODE_H",
-				"ref_version": "1.0.0",
-				"code": "STEP1",
-				"title": "input",
-				"desc": "DTM3"
-			},
-			"api_info": {
-				"base_url": "http://127.0.0.1:10008"
-			},
-			"module_info": {
-				"module_path": "",
-				"class_name": "",
-				"sys_environments": {
-				    "params": []
-				},
-				"asset_environments": {
-				    "params": []
-				}
-			},
-			"services": [
-				{
-					"service_name": "process",
-					"api_method": "post",
-					"function": "/process/node_h",
-					"params": [
-						{
-							"required": true,
-							"key": "nlp_img_lc_path",
-							"type": "string"
-						},
-						{
-							"required": true,
-							"key": "nlp_text_lc_path",
-							"type": "string"
-						},
-						{
-							"required": true,
-							"key": "aiv_img_path",
-							"type": "string"
-						}
-					],
-					"result": [
-						{
-							"key": "result_path",
-							"type": "str"
-						}
-					]
-				}
-			]
-		},
-		{
-			"node_id": "END_NODE",
-			"node_type": "module",
-			"role": "output",
-			"location": "inner",
-			"containable": true,
-			"api_keys": [
-				""
-			],
-			"node_info": {
-				"ref_id": "END_NODE",
-				"ref_version": "1.0.0",
-				"code": "DTM_OUTPUT",
-				"title": "Output",
-				"desc": "Output Node"
-			},
-			"api_info": {
-				"base_url": ""
-			},
-			"module_info": {
-				"module_path": "app.dtm.output",
-				"class_name": "Output",
-				"sys_environments": {
-					"params": []
-				},
-				"asset_environments": {
-					"params": []
-				}
-			},
-			"services": [
-				{
-					"function": "output",
-					"params": [
-						{
-							"required": true,
-							"key": "result",
-							"type": "str"
-						}
-					],
-					"result": [
-						{
-							"required": true,
-							"key": "result",
-							"type": "string"
-						}
-					]
-				}
-			]
-		}
-	],
 	"edges": [
 		{
-			"source": "START_NODE.query_input",
+			"edge_type": "sequence",
+			"source": "START_NODE.input",
 			"source_handler": {
 				"type": "sequence",
 				"conditions": [],
@@ -621,7 +10,7 @@
 				"environments": [],
 				"formatter": []
 			},
-			"target": "NODE_A.process",
+			"target": "tar_extractor.extract",
 			"target_handler": {
 				"type": "sequence",
 				"conditions": [],
@@ -629,19 +18,26 @@
 				"environments": [],
 				"formatter": []
 			},
-			"env_info": [],
+			"env_info": [
+				{
+					"refer_type": "indirect",
+					"key": "POOL_PATH",
+					"value": "TAR_EXTRACTOR.POOL_PATH"
+				}
+			],
 			"asset_info": [],
 			"param_info": [
 				{
 					"refer_type": "indirect",
 					"key": "tar_path",
-					"value": "START_NODE.query_input.tar_path"
+					"value": "START_NODE.input_node.tar_path"
 				}
 			],
 			"result_info": []
 		},
 		{
-			"source": "NODE_A.process",
+			"edge_type": "sequence",
+			"source": "tar_extractor.extract",
 			"source_handler": {
 				"type": "sequence",
 				"conditions": [],
@@ -649,7 +45,7 @@
 				"environments": [],
 				"formatter": []
 			},
-			"target": "NODE_B.process",
+			"target": "Conditional_Node.evaluate",
 			"target_handler": {
 				"type": "conditional",
 				"conditions": {
@@ -660,23 +56,19 @@
 							"rules": [
 								{
 									"refer_type": "indirect",
-									"variable": "NODE_A.process.tif_path",
+									"variable": "tar_extractor.extract.tif_path",
 									"operator": "exist"
 								},
 								{
 									"refer_type": "indirect",
-									"variable": "NODE_A.process.txt_path",
+									"variable": "tar_extractor.extract.txt_path",
 									"operator": "exist"
 								}
 							],
 							"actions": [
 								{
 									"action": "execution",
-									"value": "NODE_B.process"
-								},
-								{
-									"action": "execution",
-									"value": "NODE_G.process"
+									"value": "aiv_doccls.doccls"
 								}
 							]
 						},
@@ -686,19 +78,19 @@
 							"rules": [
 								{
 									"refer_type": "indirect",
-									"variable": "NODE_A.process.tif_path",
+									"variable": "tar_extractor.extract.tif_path",
 									"operator": "exist"
 								},
 								{
 									"refer_type": "indirect",
-									"variable": "NODE_A.process.txt_path",
+									"variable": "tar_extractor.extract.txt_path",
 									"operator": "not_exist"
 								}
 							],
 							"actions": [
 								{
 									"action": "execution",
-									"value": "NODE_B.process"
+									"value": "aiv_doccls.doccls"
 								}
 							]
 						},
@@ -708,19 +100,19 @@
 							"rules": [
 								{
 									"refer_type": "indirect",
-									"variable": "NODE_A.process.tif_path",
+									"variable": "tar_extractor.extract.tif_path",
 									"operator": "not_exist"
 								},
 								{
 									"refer_type": "indirect",
-									"variable": "NODE_A.process.txt_path",
+									"variable": "tar_extractor.extract.txt_path",
 									"operator": "exist"
 								}
 							],
 							"actions": [
 								{
 									"action": "execution",
-									"value": "NODE_G.process"
+									"value": "nlp_lc.extr"
 								}
 							]
 						},
@@ -740,17 +132,73 @@
 			},
 			"env_info": [],
 			"asset_info": [],
+			"param_info": [],
+			"result_info": []
+		},
+		{
+			"edge_type": "sequence",
+			"source": "Conditional_Node.evaluate",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"target": "aiv_doccls.doccls",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [
+					{
+						"refer_key": "AIV_EX0019",
+						"node_id": "AIV_EX0019"
+					}
+				],
+				"environments": [],
+				"formatter": []
+			},
+			"env_info": [
+				{
+					"refer_type": "indirect",
+					"key": "TAG_PATH",
+					"value": "DLCCLS.TAG_PATH"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "POOL_PATH",
+					"value": "DLCCLS.POOL_PATH"
+				}
+			],
+			"asset_info": [
+				{
+					"refer_type": "indirect",
+					"key": "DOCCLS_MODEL_URL",
+					"value": "AIV_EX0019.base_url"
+				},
+				{
+					"refer_type": "direct",
+					"key": "DOCCLS_MODEL_STATE_NAME",
+					"value": "/share/tom/env/DOC_EXT/code_module/fe251q_master/api_module/MODEL/ex0038_ft1_continue/epoch1/base_lora_merged"
+				},
+				{
+					"refer_type": "direct",
+					"key": "DOCCLS_PROMPT_PATH",
+					"value": "/database/FE_BANK251Q/platform_model/ailand/inference/DATA/prompt/doccls_prompt.json"
+				}
+			],
 			"param_info": [
 				{
 					"refer_type": "indirect",
 					"key": "tif_path",
-					"value": "NODE_A.process.tif_path"
+					"value": "START_NODE.input.tif_path"
 				}
 			],
 			"result_info": []
 		},
 		{
-			"source": "NODE_B.process",
+			"edge_type": "sequence",
+			"source": "aiv_doccls.doccls",
 			"source_handler": {
 				"type": "sequence",
 				"conditions": [],
@@ -758,7 +206,73 @@
 				"environments": [],
 				"formatter": []
 			},
-			"target": "NODE_C.process",
+			"target": "aiv_extr.extr",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"env_info": [
+				{
+					"refer_type": "indirect",
+					"key": "EXTR",
+					"value": "EXTR.TAG_PATH"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "POOL_PATH",
+					"value": "EXTR.POOL_PATH"
+				}
+			],
+			"asset_info": [
+				{
+					"refer_type": "indirect",
+					"key": "EXTR_MODEL_URL",
+					"value": "AIV_EX0019.base_url"
+				},
+				{
+					"refer_type": "direct",
+					"key": "EXTR_MODEL_STATE_NAME",
+					"value": "/share/tom/env/DOC_EXT/code_module/fe251q_master/api_module/MODEL/ex0038_ft1_continue/epoch1/base_lora_merged"
+				},
+				{
+					"refer_type": "direct",
+					"key": "EXTR_PROMPT_PATH",
+					"value": "/database/FE_BANK251Q/platform_model/ailand/inference/DATA/prompt/doccls_prompt.json"
+				},
+				{
+					"refer_type": "direct",
+					"key": "EXTR_WT_POS",
+					"value": true
+				}
+			],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "img_path",
+					"value": "aiv_doccls.doccls.img_path"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "doccls_json_path",
+					"value": "aiv_doccls.doccls.doccls_json_path"
+				}
+			],
+			"result_info": []
+		},
+		{
+			"edge_type": "sequence",
+			"source": "aiv_extr.extr",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"target": "aiv_converter.etl",
 			"target_handler": {
 				"type": "sequence",
 				"conditions": [],
@@ -772,56 +286,24 @@
 				{
 					"refer_type": "indirect",
 					"key": "img_path",
-					"value": "NODE_B.process.img_path"
+					"value": "aiv_doccls.doccls.img_path"
 				},
 				{
 					"refer_type": "indirect",
 					"key": "doccls_json_path",
-					"value": "NODE_B.process.doccls_json_path"
-				}
-			],
-			"result_info": []
-		},
-		{
-			"source": "NODE_C.process",
-			"source_handler": {
-				"type": "sequence",
-				"conditions": [],
-				"references": [],
-				"environments": [],
-				"formatter": []
-			},
-			"target": "NODE_D.process",
-			"target_handler": {
-				"type": "sequence",
-				"conditions": [],
-				"references": [],
-				"environments": [],
-				"formatter": []
-			},
-			"env_info": [],
-			"asset_info": [],
-			"param_info": [
-				{
-					"refer_type": "indirect",
-					"key": "img_path",
-					"value": "NODE_B.process.img_path"
-				},
-				{
-					"refer_type": "indirect",
-					"key": "doccls_json_path",
-					"value": "NODE_B.process.doccls_json_path"
+					"value": "aiv_doccls.doccls.doccls_json_path"
 				},
 				{
 					"refer_type": "indirect",
 					"key": "extr_json_path",
-					"value": "NODE_C.process.extr_json_path"
+					"value": "aiv_extr.extr.extr_json_path"
 				}
 			],
 			"result_info": []
 		},
 		{
-			"source": "NODE_D.process",
+			"edge_type": "sequence",
+			"source": "aiv_doccls.doccls",
 			"source_handler": {
 				"type": "sequence",
 				"conditions": [],
@@ -829,7 +311,7 @@
 				"environments": [],
 				"formatter": []
 			},
-			"target": "NODE_H.process",
+			"target": "nlp_lc.nlp_extr",
 			"target_handler": {
 				"type": "sequence",
 				"conditions": [],
@@ -837,232 +319,67 @@
 				"environments": [],
 				"formatter": []
 			},
-			"env_info": [],
-			"asset_info": [],
-			"param_info": [
+			"env_info": [
 				{
 					"refer_type": "indirect",
-					"key": "nlp_img_lc_path",
-					"value": "NODE_F.process.result_path"
+					"key": "RESULT_FILE_NAME",
+					"value": "NLP_EXTR.RESULT_FILE_NAME"
 				},
 				{
 					"refer_type": "indirect",
-					"key": "nlp_text_lc_path",
-					"value": "NODE_G.process.result_path"
+					"key": "MAX_IMAGES",
+					"value": "NLP_EXTR.MAX_IMAGES"
 				},
 				{
 					"refer_type": "indirect",
-					"key": "aiv_img_path",
-					"value": "NODE_D.process.save_FEtype_path"
+					"key": "TRAIN_DATA_PATH",
+					"value": "NLP_EXTR.TRAIN_DATA_PATH"
 				}
 			],
-			"result_info": []
-		},
-		{
-			"source": "NODE_B.process",
-			"source_handler": {
-				"type": "sequence",
-				"conditions": [],
-				"references": [],
-				"environments": [],
-				"formatter": []
-			},
-			"target": "NODE_F.process",
-			"target_handler": {
-				"type": "sequence",
-				"conditions": [],
-				"references": [],
-				"environments": [],
-				"formatter": []
-			},
-			"env_info": [],
-			"asset_info": [],
-			"param_info": [
+			"asset_info": [
 				{
 					"refer_type": "indirect",
-					"key": "lc_img_list",
-					"value": "NODE_B.process.lc_img_list"
+					"key": "LLM_URL",
+					"value": "NLP_LLM.base_url"
+				},
+				{
+					"refer_type": "direct",
+					"key": "LLM_MODEL",
+					"value": "/models/gpt-oss-120b"
 				},
 				{
 					"refer_type": "indirect",
-					"key": "ocr_json_path_list",
-					"value": "NODE_E.process.ocr_json_path_list"
+					"key": "VLM_URL",
+					"value": "NLP_VLM.base_url"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "VLM_MODEL",
+					"value": "Qwen3-VL-30B-A3B-Instruct"
+				},
+				{
+					"refer_type": "direct",
+					"key": "EXTR_WT_POS",
+					"value": true
 				}
 			],
-			"result_info": []
-		},
-		{
-			"source": "NODE_F.process",
-			"source_handler": {
-				"type": "sequence",
-				"conditions": [],
-				"references": [],
-				"environments": [],
-				"formatter": []
-			},
-			"target": "NODE_H.process",
-			"target_handler": {
-				"type": "sequence",
-				"conditions": [],
-				"references": [],
-				"environments": [],
-				"formatter": []
-			},
-			"env_info": [],
-			"asset_info": [],
 			"param_info": [
 				{
 					"refer_type": "indirect",
-					"key": "nlp_img_lc_path",
-					"value": "NODE_F.process.result_path"
+					"key": "img_path_list",
+					"value": "aiv_doccls.doccls.lc_img_list"
 				},
-				{
-					"refer_type": "indirect",
-					"key": "nlp_text_lc_path",
-					"value": "NODE_G.process.result_path"
-				},
-				{
-					"refer_type": "indirect",
-					"key": "aiv_img_path",
-					"value": "NODE_D.process.save_FEtype_path"
-				}
-			],
-			"result_info": []
-		},
-		{
-			"source": "NODE_B.process",
-			"source_handler": {
-				"type": "sequence",
-				"conditions": [],
-				"references": [],
-				"environments": [],
-				"formatter": []
-			},
-			"target": "NODE_E.process",
-			"target_handler": {
-				"type": "sequence",
-				"conditions": [],
-				"references": [],
-				"environments": [],
-				"formatter": []
-			},
-			"env_info": [],
-			"asset_info": [],
-			"param_info": [
-				{
-					"refer_type": "indirect",
-					"key": "img_path",
-					"value": "NODE_B.process.img_path"
-				},
-				{
-					"refer_type": "indirect",
-					"key": "lc_img_list",
-					"value": "NODE_B.process.lc_img_list"
-				}
-			],
-			"result_info": []
-		},
-		{
-			"source": "NODE_E.process",
-			"source_handler": {
-				"type": "sequence",
-				"conditions": [],
-				"references": [],
-				"environments": [],
-				"formatter": []
-			},
-			"target": "NODE_F.process",
-			"target_handler": {
-				"type": "sequence",
-				"conditions": [],
-				"references": [],
-				"environments": [],
-				"formatter": []
-			},
-			"env_info": [],
-			"asset_info": [],
-			"param_info": [
-				{
-					"refer_type": "indirect",
-					"key": "lc_img_list",
-					"value": "NODE_B.process.lc_img_list"
-				},
-				{
-					"refer_type": "indirect",
-					"key": "ocr_json_path_list",
-					"value": "NODE_E.process.ocr_json_path_list"
-				}
-			],
-			"result_info": []
-		},
-		{
-			"source": "NODE_F.process",
-			"source_handler": {
-				"type": "sequence",
-				"conditions": [],
-				"references": [],
-				"environments": [],
-				"formatter": []
-			},
-			"target": "NODE_H.process",
-			"target_handler": {
-				"type": "sequence",
-				"conditions": [],
-				"references": [],
-				"environments": [],
-				"formatter": []
-			},
-			"env_info": [],
-			"asset_info": [],
-			"param_info": [
-				{
-					"refer_type": "indirect",
-					"key": "nlp_img_lc_path",
-					"value": "NODE_F.process.result_path"
-				},
-				{
-					"refer_type": "indirect",
-					"key": "nlp_text_lc_path",
-					"value": "NODE_G.process.result_path"
-				},
-				{
-					"refer_type": "indirect",
-					"key": "aiv_img_path",
-					"value": "NODE_D.process.save_FEtype_path"
-				}
-			],
-			"result_info": []
-		},
-		{
-			"source": "NODE_A.process",
-			"source_handler": {
-				"type": "sequence",
-				"conditions": [],
-				"references": [],
-				"environments": [],
-				"formatter": []
-			},
-			"target": "NODE_G.process",
-			"target_handler": {
-				"type": "sequence",
-				"conditions": [],
-				"references": [],
-				"environments": [],
-				"formatter": []
-			},
-			"env_info": [],
-			"asset_info": [],
-			"param_info": [
 				{
 					"refer_type": "indirect",
 					"key": "text_path",
-					"value": "NODE_A.process.txt_path"
+					"value": "tar_extractor.extract.txt_path"
 				}
 			],
 			"result_info": []
 		},
 		{
-			"source": "NODE_G.process",
+			"edge_type": "sequence",
+			"source": "Conditional_Node.evaluate",
 			"source_handler": {
 				"type": "sequence",
 				"conditions": [],
@@ -1070,7 +387,83 @@
 				"environments": [],
 				"formatter": []
 			},
-			"target": "NODE_H.process",
+			"target": "nlp_lc.nlp_extr",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"env_info": [
+				{
+					"refer_type": "indirect",
+					"key": "RESULT_FILE_NAME",
+					"value": "NLP_EXTR.RESULT_FILE_NAME"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "MAX_IMAGES",
+					"value": "NLP_EXTR.MAX_IMAGES"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "TRAIN_DATA_PATH",
+					"value": "NLP_EXTR.TRAIN_DATA_PATH"
+				}
+			],
+			"asset_info": [
+				{
+					"refer_type": "indirect",
+					"key": "LLM_URL",
+					"value": "NLP_LLM.base_url"
+				},
+				{
+					"refer_type": "direct",
+					"key": "LLM_MODEL",
+					"value": "/models/gpt-oss-120b"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "VLM_URL",
+					"value": "NLP_VLM.base_url"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "VLM_MODEL",
+					"value": "Qwen3-VL-30B-A3B-Instruct"
+				},
+				{
+					"refer_type": "direct",
+					"key": "EXTR_WT_POS",
+					"value": true
+				}
+			],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "img_path_list",
+					"value": "aiv_doccls.doccls.lc_img_list"
+				},
+				{
+					"refer_type": "indirect",
+					"key": "text_path",
+					"value": "tar_extractor.extract.txt_path"
+				}
+			],
+			"result_info": []
+		},
+		{
+			"edge_type": "sequence",
+			"source": "nlp_lc.nlp_extr",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"target": "nlp_aggregator.aggregator",
 			"target_handler": {
 				"type": "sequence",
 				"conditions": [],
@@ -1083,24 +476,20 @@
 			"param_info": [
 				{
 					"refer_type": "indirect",
-					"key": "nlp_img_lc_path",
-					"value": "NODE_F.process.result_path"
-				},
-				{
-					"refer_type": "indirect",
-					"key": "nlp_text_lc_path",
-					"value": "NODE_G.process.result_path"
+					"key": "nlp_lc_path",
+					"value": "nlp_lc.nlp_extr.result_path"
 				},
 				{
 					"refer_type": "indirect",
 					"key": "aiv_img_path",
-					"value": "NODE_D.process.save_FEtype_path"
+					"value": "aiv_converter.etl.save_FEtype_path"
 				}
 			],
 			"result_info": []
 		},
 		{
-			"source": "NODE_H.process",
+			"edge_type": "sequence",
+			"source": "nlp_aggregator.aggregator",
 			"source_handler": {
 				"type": "sequence",
 				"conditions": [],
@@ -1122,11 +511,54 @@
 				{
 					"refer_type": "indirect",
 					"key": "result",
-					"value": "NODE_H.process.result_path"
+					"value": "nlp_aggregator.aggregator.result_path"
 				}
 			],
 			"result_info": []
+		},
+		{
+			"edge_type": "reference",
+			"source": "aiv_doccls.doccls",
+			"source_handler": {},
+			"target": "AIV_EX0019.process",
+			"target_handler": {},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [],
+			"result_info": []
+		},
+		{
+			"edge_type": "reference",
+			"source": "aiv_extr.extr",
+			"source_handler": {},
+			"target": "AIV_EX0019.process",
+			"target_handler": {},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [],
+			"result_info": []
+		},
+		{
+			"edge_type": "reference",
+			"source": "nlp_lc.nlp_extr",
+			"source_handler": {},
+			"target": "NLP_LLM.process",
+			"target_handler": {},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [],
+			"result_info": []
+		},
+		{
+			"edge_type": "reference",
+			"source": "nlp_lc.nlp_extr",
+			"source_handler": {},
+			"target": "NLP_VLM.process",
+			"target_handler": {},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [],
+			"result_info": []
 		}
-	],
-	"resources": []
+	]
 }
