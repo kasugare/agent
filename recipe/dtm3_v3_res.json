@@ -91,22 +91,25 @@
 						{
 							"required": true,
 							"key": "tar_path",
-							"type": "list"
+							"type": "list",
+							"default": []
 						},
 						{
 							"required": true,
 							"key": "call_back_url",
-							"type": "str"
+							"type": "string",
+							"default": null
 						},
 						{
 							"required": true,
 							"key": "call_back_error_url",
-							"type": "str"
+							"type": "string",
+							"default": null
 						},
 						{
 							"required": true,
 							"key": "user_id",
-							"type": "str"
+							"type": "string"
 						}
 					],
 					"result": [
@@ -116,15 +119,15 @@
 						},
 						{
 							"key": "call_back_url",
-							"type": "str"
+							"type": "string"
 						},
 						{
 							"key": "call_back_error_url",
-							"type": "str"
+							"type": "string"
 						},
 						{
 							"key": "user_id",
-							"type": "str"
+							"type": "string"
 						}
 					]
 				}
@@ -167,17 +170,18 @@
 						{
 							"required": true,
 							"key": "tar_path",
-							"type": "list"
+							"type": "list",
+							"default": []
 						}
 					],
 					"result": [
 						{
 							"key": "tif_path",
-							"type": "str"
+							"type": "string"
 						},
 						{
 							"key": "txt_path",
-							"type": "str"
+							"type": "string"
 						}
 					]
 				}
@@ -318,17 +322,18 @@
 						{
 							"required": true,
 							"key": "tif_path",
-							"type": "string"
+							"type": "str",
+							"default": null
 						}
 					],
 					"result": [
 						{
 							"key": "img_path",
-							"type": "str"
+							"type": "string"
 						},
 						{
 							"key": "doccls_json_path",
-							"type": "str"
+							"type": "string"
 						},
 						{
 							"key": "lc_img_list",
@@ -380,13 +385,13 @@
 						{
 							"required": true,
 							"key": "doccls_json_path",
-							"type": "json"
+							"type": "string"
 						}
 					],
 					"result": [
 						{
 							"key": "extr_json_path",
-							"type": "str"
+							"type": "string"
 						}
 					]
 				}
@@ -445,7 +450,7 @@
 					"result": [
 						{
 							"key": "save_FEtype_path",
-							"type": "str"
+							"type": "string"
 						}
 					]
 				}
@@ -493,7 +498,8 @@
 						{
 							"required": true,
 							"key": "lc_img_list",
-							"type": "json"
+							"type": "list",
+							"default": []
 						}
 					],
 					"result": [
@@ -542,22 +548,24 @@
 						{
 							"required": true,
 							"key": "lc_img_list",
-							"type": "string"
+							"type": "list",
+							"default": []
 						},
 						{
 							"required": true,
 							"key": "ocr_json_path_list",
-							"type": "json"
+							"type": "list",
+							"default": []
 						}
 					],
 					"result": [
 						{
 							"key": "lc_number",
-							"type": "str"
+							"type": "string"
 						},
 						{
 							"key": "result_path",
-							"type": "str"
+							"type": "string"
 						}
 					]
 				}
@@ -597,26 +605,26 @@
 					"function": "/process/node_g",
 					"params": [
 						{
-							"required": true,
+							"required": false,
 							"key": "text_path",
 							"type": "string",
 							"default": null
 						},
 						{
 							"required": false,
-							"key": "img_path",
-							"type": "string",
-							"default": null
+							"key": "lc_img_list",
+							"type": "list",
+							"default": []
 						}
 					],
 					"result": [
 						{
 							"key": "lc_number",
-							"type": "str"
+							"type": "string"
 						},
 						{
 							"key": "result_path",
-							"type": "str"
+							"type": "string"
 						}
 					]
 				}
@@ -676,7 +684,7 @@
 					"result": [
 						{
 							"key": "result_path",
-							"type": "str"
+							"type": "string"
 						}
 					]
 				}
@@ -719,17 +727,17 @@
 						{
 							"required": true,
 							"key": "callback_url",
-							"type": "str"
+							"type": "string"
 						},
 						{
 							"required": true,
 							"key": "callback_error_url",
-							"type": "str"
+							"type": "string"
 						},
 						{
 							"required": true,
 							"key": "user_id",
-							"type": "str"
+							"type": "string"
 						},
 						{
 							"required": true,
@@ -739,7 +747,7 @@
 						{
 							"required": true,
 							"key": "result_path",
-							"type": "str"
+							"type": "string"
 						}
 					],
 					"result": [
@@ -789,7 +797,7 @@
 						{
 							"required": true,
 							"key": "result",
-							"type": "str"
+							"type": "string"
 						}
 					],
 					"result": [
@@ -851,11 +859,11 @@
 					"result": [
 						{
 							"key": "result_path",
-							"type": "str"
+							"type": "string"
 						},
 						{
 							"key": "timestamp",
-							"type": "str"
+							"type": "string"
 						}
 					]
 				}
@@ -911,11 +919,11 @@
 					"result": [
 						{
 							"key": "result_path",
-							"type": "str"
+							"type": "string"
 						},
 						{
 							"key": "timestamp",
-							"type": "str"
+							"type": "string"
 						}
 					]
 				}
@@ -1121,7 +1129,8 @@
 				{
 					"refer_type": "indirect",
 					"key": "tif_path",
-					"value": "NODE_A.process.tif_path"
+					"value": "NODE_A.process.tif_path",
+					"default": null
 				}
 			],
 			"result_info": []
@@ -1269,9 +1278,9 @@
 				},
 				{
 					"refer_type": "indirect",
-					"key": "img_path",
-					"value": "NODE_B.process.img_path",
-					"default": null
+					"key": "lc_img_list",
+					"value": "NODE_B.process.lc_img_list",
+					"default": []
 				}
 			],
 			"result_info": []
@@ -1488,8 +1497,9 @@
 				},
 				{
 					"refer_type": "indirect",
-					"key": "img_path",
-					"value": "NODE_B.process.img_path"
+					"key": "lc_img_list",
+					"value": "NODE_B.process.lc_img_list",
+					"default": []
 				}
 			],
 			"result_info": []

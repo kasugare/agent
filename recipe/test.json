@@ -1,564 +1,842 @@
-{
-	"edges": [
+	"nodes": [
 		{
-			"edge_type": "sequence",
-			"source": "START_NODE.input",
-			"source_handler": {
-				"type": "sequence",
-				"conditions": [],
-				"references": [],
-				"environments": [],
-				"formatter": []
+			"node_id": "START_NODE",
+			"node_type": "module",
+			"role": "start",
+			"location": "inner",
+			"containable": true,
+			"node_info": {
+				"type": "MODULE",
+				"ref_id": "START_NODE",
+				"ref_version": "v1.0.0",
+				"code": "Input",
+				"title": "파일 위치 입력",
+				"desc": ""
 			},
-			"target": "tar_extractor.extract",
-			"target_handler": {
-				"type": "sequence",
-				"conditions": [],
-				"references": [],
-				"environments": [],
-				"formatter": []
+			"required_nodes": [],
+			"api_info": {
+				"base_url": ""
 			},
-			"env_info": [
+			"module_info": {
+				"module_path": "app.dtm.input",
+				"class_name": "Input"
+			},
+			"environments": {
+				 "params": []
+			},
+			"asset_environments": {
+				 "params": []
+			},
+			"services": [
 				{
-					"refer_type": "indirect",
-					"key": "POOL_PATH",
-					"value": "TAR_EXTRACTOR.POOL_PATH"
-				}
-			],
-			"asset_info": [],
-			"param_info": [
-				{
-					"refer_type": "indirect",
-					"key": "tar_path",
-					"value": "START_NODE.input_node.tar_path"
-				}
-			],
-			"result_info": []
-		},
-		{
-			"edge_type": "sequence",
-			"source": "tar_extractor.extract",
-			"source_handler": {
-				"type": "sequence",
-				"conditions": [],
-				"references": [],
-				"environments": [],
-				"formatter": []
-			},
-			"target": "Conditional_Node.evaluate",
-			"target_handler": {
-				"type": "conditional",
-				"conditions": {
-					"branches": [
+					"service_name": "input_node",
+					"api_method": "",
+					"function": "input",
+					"params": [
 						{
-							"type": "if",
-							"logic": "AND",
-							"rules": [
-								{
-									"refer_type": "indirect",
-									"variable": "tar_extractor.extract.tif_path",
-									"operator": "exist"
-								},
-								{
-									"refer_type": "indirect",
-									"variable": "tar_extractor.extract.txt_path",
-									"operator": "exist"
-								}
-							],
-							"actions": [
-								{
-									"action": "execution",
-									"value": "aiv_doccls.doccls"
-								}
-							]
+							"required": true,
+							"key": "tar_path",
+							"type": "list",
+							"default": []
 						},
 						{
-							"type": "elif",
-							"logic": "AND",
-							"rules": [
-								{
-									"refer_type": "indirect",
-									"variable": "tar_extractor.extract.tif_path",
-									"operator": "exist"
-								},
-								{
-									"refer_type": "indirect",
-									"variable": "tar_extractor.extract.txt_path",
-									"operator": "not_exist"
-								}
-							],
-							"actions": [
-								{
-									"action": "execution",
-									"value": "aiv_doccls.doccls"
-								}
-							]
+							"required": true,
+							"key": "call_back_url",
+							"type": "string",
+							"default": null
 						},
 						{
-							"type": "elif",
-							"logic": "AND",
-							"rules": [
-								{
-									"refer_type": "indirect",
-									"variable": "tar_extractor.extract.tif_path",
-									"operator": "not_exist"
-								},
-								{
-									"refer_type": "indirect",
-									"variable": "tar_extractor.extract.txt_path",
-									"operator": "exist"
-								}
-							],
-							"actions": [
-								{
-									"action": "execution",
-									"value": "nlp_lc.extr"
-								}
-							]
+							"required": true,
+							"key": "call_back_error_url",
+							"type": "string",
+							"default": null
 						},
 						{
-							"type": "else",
-							"actions": [
-								{
-									"action": "stop"
-								}
-							]
+							"required": true,
+							"key": "user_id",
+							"type": "string"
+						}
+					],
+					"result": [
+						{
+							"key": "tar_path",
+							"type": "list"
+						},
+						{
+							"key": "call_back_url",
+							"type": "string"
+						},
+						{
+							"key": "call_back_error_url",
+							"type": "string"
+						},
+						{
+							"key": "user_id",
+							"type": "string"
 						}
 					]
-				},
-				"references": [],
-				"environments": [],
-				"formatter": []
-			},
-			"env_info": [],
-			"asset_info": [],
-			"param_info": [],
-			"result_info": []
+				}
+			]
 		},
 		{
-			"edge_type": "sequence",
-			"source": "Conditional_Node.evaluate",
-			"source_handler": {
-				"type": "sequence",
-				"conditions": [],
-				"references": [],
-				"environments": [],
-				"formatter": []
+			"node_id": "tar_extractor",
+			"node_type": "external",
+			"role": "process",
+			"location": "outter",
+			"containable": false,
+			"node_info": {
+				"type": "CODE",
+				"ref_id": "2eebcbdc09a94510",
+				"ref_version": "v1.0.0",
+				"code": "STEP1",
+				"title": "압축해제",
+				"desc": "DTM3"
 			},
-			"target": "aiv_doccls.doccls",
-			"target_handler": {
-				"type": "sequence",
-				"conditions": [],
-				"references": [
-					{
-						"refer_key": "AIV_EX0019",
-						"node_id": "AIV_EX0019"
+			"required_nodes": [],
+			"api_info": {
+				"base_url": ""
+			},
+			"module_info": {
+				"module_path": "",
+				"class_name": ""
+			},
+			"environments": {
+				 "params": [
+					 {
+						"required": true,
+						"key": "POOL_PATH",
+						"type": "string"
 					}
-				],
-				"environments": [],
-				"formatter": []
+				 ]
 			},
-			"env_info": [
+			"asset_environments": {
+				 "params": []
+			},
+			"services": [
 				{
-					"refer_type": "indirect",
-					"key": "TAG_PATH",
-					"value": "DLCCLS.TAG_PATH"
-				},
-				{
-					"refer_type": "indirect",
-					"key": "POOL_PATH",
-					"value": "DLCCLS.POOL_PATH"
+					"service_name": "extract",
+					"api_method": "post",
+					"function": "/api/v1/extract/get",
+					"params": [
+						{
+							"required": true,
+							"key": "tar_path",
+							"type": "list",
+							"default": ""
+						}
+					],
+					"result": [
+						{
+							"key": "tif_path",
+							"type": "string"
+						},
+						{
+							"key": "txt_path",
+							"type": "string"
+						}
+					]
 				}
-			],
-			"asset_info": [
-				{
-					"refer_type": "indirect",
-					"key": "DOCCLS_MODEL_URL",
-					"value": "AIV_EX0019.base_url"
-				},
-				{
-					"refer_type": "direct",
-					"key": "DOCCLS_MODEL_STATE_NAME",
-					"value": "/share/tom/env/DOC_EXT/code_module/fe251q_master/api_module/MODEL/ex0038_ft1_continue/epoch1/base_lora_merged"
-				},
-				{
-					"refer_type": "direct",
-					"key": "DOCCLS_PROMPT_PATH",
-					"value": "/database/FE_BANK251Q/platform_model/ailand/inference/DATA/prompt/doccls_prompt.json"
-				}
-			],
-			"param_info": [
-				{
-					"refer_type": "indirect",
-					"key": "tif_path",
-					"value": "START_NODE.input.tif_path"
-				}
-			],
-			"result_info": []
+			]
 		},
 		{
-			"edge_type": "sequence",
-			"source": "aiv_doccls.doccls",
-			"source_handler": {
-				"type": "sequence",
-				"conditions": [],
-				"references": [],
-				"environments": [],
-				"formatter": []
+		    "node_id": "Conditional_Node",
+		    "node_type": "module",
+		    "role": "condition",
+		    "location": "inner",
+		    "containable": false,
+		    "node_info": {
+			    "type": "MODULE",
+		        "ref_id": "Conditional_Node",
+		        "ref_version": "v1.0.0",
+			    "code": "COND1",
+			    "title": "해제된 압축파일의 종류 확인 후 분기 처리",
+		        "desc": "조건 분기 및 변수 조작 노드"
+		    },
+		    "condition_config": {
+		        "operators": {
+			        "comparison": [">", "<", ">=", "<=", "==", "!="],
+			        "existence": ["exist", "not_exist"],
+			        "logical": ["AND", "OR", "NOT"]
+			    },
+			    "action_types": {
+			        "variable": ["set_variable", "increment", "decrement", "copy_variable", "delete_variable"],
+			        "calculation": ["calculate"],
+			        "collection": ["append", "merge"],
+				    "execution": ["execute"]
+			    },
+			    "branch_types": ["if", "elif", "else"]
+		    },
+			"environments": {
+				 "params": []
 			},
-			"target": "aiv_extr.extr",
-			"target_handler": {
-				"type": "sequence",
-				"conditions": [],
-				"references": [],
-				"environments": [],
-				"formatter": []
+			"asset_environments": {
+				 "params": []
 			},
-			"env_info": [
-				{
-					"refer_type": "indirect",
-					"key": "EXTR",
-					"value": "EXTR.TAG_PATH"
-				},
-				{
-					"refer_type": "indirect",
-					"key": "POOL_PATH",
-					"value": "EXTR.POOL_PATH"
-				}
-			],
-			"asset_info": [
-				{
-					"refer_type": "indirect",
-					"key": "EXTR_MODEL_URL",
-					"value": "AIV_EX0019.base_url"
-				},
-				{
-					"refer_type": "direct",
-					"key": "EXTR_MODEL_STATE_NAME",
-					"value": "/share/tom/env/DOC_EXT/code_module/fe251q_master/api_module/MODEL/ex0038_ft1_continue/epoch1/base_lora_merged"
-				},
-				{
-					"refer_type": "direct",
-					"key": "EXTR_PROMPT_PATH",
-					"value": "/database/FE_BANK251Q/platform_model/ailand/inference/DATA/prompt/doccls_prompt.json"
-				},
-				{
-					"refer_type": "direct",
-					"key": "EXTR_WT_POS",
-					"value": true
-				}
-			],
-			"param_info": [
-				{
-					"refer_type": "indirect",
-					"key": "img_path",
-					"value": "aiv_doccls.doccls.img_path"
-				},
-				{
-					"refer_type": "indirect",
-					"key": "doccls_json_path",
-					"value": "aiv_doccls.doccls.doccls_json_path"
-				}
-			],
-			"result_info": []
+		    "services": [
+			    {
+				    "service_name": "evaluate",
+					"api_method": "",
+		            "function": "evaluate_condition",
+		            "params": [
+		                {
+		                    "required": true,
+		                    "key": "branches",
+		                    "type": "list"
+		                }
+		            ],
+		            "result": [
+		                {
+		                    "key": "actions",
+		                    "type": "string"
+		                }
+		            ]
+		        }
+		    ]
 		},
 		{
-			"edge_type": "sequence",
-			"source": "aiv_extr.extr",
-			"source_handler": {
-				"type": "sequence",
-				"conditions": [],
-				"references": [],
-				"environments": [],
-				"formatter": []
-			},
-			"target": "aiv_converter.etl",
-			"target_handler": {
-				"type": "sequence",
-				"conditions": [],
-				"references": [],
-				"environments": [],
-				"formatter": []
-			},
-			"env_info": [],
-			"asset_info": [],
-			"param_info": [
+			"node_id": "aiv_doccls",
+			"node_type": "external",
+			"role": "process",
+			"location": "outter",
+			"containable": false,
+			"required_nodes": [
 				{
-					"refer_type": "indirect",
-					"key": "img_path",
-					"value": "aiv_doccls.doccls.img_path"
-				},
-				{
-					"refer_type": "indirect",
-					"key": "doccls_json_path",
-					"value": "aiv_doccls.doccls.doccls_json_path"
-				},
-				{
-					"refer_type": "indirect",
-					"key": "extr_json_path",
-					"value": "aiv_extr.extr.extr_json_path"
+					"node_type": "MODEL",
+					"refer_key": "AIV_EX0019",
+					"req_value": "base_url"
 				}
 			],
-			"result_info": []
+			"node_info": {
+				"type": "CODE",
+				"ref_id": "8150d803673e4ebb",
+				"ref_version": "v1.0.0",
+				"code": "STEP2",
+				"title": "OCR-문서분류",
+				"desc": "DTM3"
+			},
+			"api_info": {
+				"base_url": ""
+			},
+			"module_info": {
+				"module_path": "",
+				"class_name": ""
+			},
+			"environments": {
+			    "params": [
+				    {
+					    "required": true,
+					    "key": "TAG_PATH",
+					    "type": "string"
+				    },
+				    {
+					    "required": true,
+					    "key": "POOL_PATH",
+					    "type": "string"
+				    }
+			    ]
+			},
+			"asset_environments": {
+				"params": [
+					{
+					    "required": true,
+					    "refer_key": "AIV_ex0019",
+					    "req_value": "base_url",
+					    "key": "DOCCLS_MODEL_URL",
+					    "type": "string"
+				    },
+					{
+						"required": true,
+					    "key": "DOCCLS_MODEL_STATE_NAME",
+					    "type": "string",
+						"default": "/model-repo/ex0019"
+					},
+					{
+						"required": true,
+					    "key": "DOCCLS_PROMPT_PATH",
+					    "type": "string",
+						"default": "/data/serving/dtm/prompt/doccls_prompt.json"
+					}
+				]
+			},
+			"services": [
+				{
+					"service_name": "doccls",
+					"api_method": "post",
+					"function": "/api/v1/doccls/get",
+					"params": [
+						{
+							"required": true,
+							"key": "tif_path",
+							"type": "string"
+						}
+					],
+					"result": [
+						{
+							"key": "img_path",
+							"type": "string"
+						},
+						{
+							"key": "doccls_json_path",
+							"type": "string"
+						},
+						{
+							"key": "lc_img_list",
+							"type": "list"
+						}
+					]
+				}
+			]
 		},
 		{
-			"edge_type": "sequence",
-			"source": "aiv_doccls.doccls",
-			"source_handler": {
-				"type": "sequence",
-				"conditions": [],
-				"references": [],
-				"environments": [],
-				"formatter": []
+			"node_id": "aiv_extr",
+			"node_type": "external",
+			"role": "process",
+			"location": "outter",
+			"containable": false,
+			"node_info": {
+				"type": "CODE",
+				"ref_id": "8affe1591bee4a03",
+				"ref_version": "v1.0.0",
+				"title": "Vision - 내용추출",
+				"desc": "DTM3"
 			},
-			"target": "nlp_lc.nlp_extr",
-			"target_handler": {
-				"type": "sequence",
-				"conditions": [],
-				"references": [],
-				"environments": [],
-				"formatter": []
+			"required_nodes": [
+				{
+					"node_type": "MODEL",
+					"refer_key": "AIV_EX0019",
+					"req_value": "base_url"
+				}
+			],
+			"api_info": {
+				"base_url": ""
 			},
-			"env_info": [
+			"module_info": {
+				"module_path": "",
+				"class_name": ""
+			},
+			"environments": {
+				"params": [
+				    {
+					    "required": true,
+					    "key": "TAG_PATH",
+					    "type": "string"
+				    },
+				    {
+					    "required": true,
+					    "key": "POOL_PATH",
+					    "type": "string"
+				    }
+			    ]
+			},
+			"asset_environments": {
+				"params": [
+					{
+						"required": true,
+					    "refer_key": "AIV_ex0019",
+					    "req_value": "base_url",
+					    "key": "EXTR_MODEL_URL",
+					    "type": "string"
+					},
+					{
+						"required": true,
+					    "key": "EXTR_MODEL_STATE_NAME",
+					    "type": "string",
+						"default": "/model-repo/ex0019"
+					},
+					{
+						"required": true,
+						"key": "EXTR_PROMPT_PATH",
+						"type": "string",
+						"default": "/data/serving/dtm/prompt/prompt_infer.json"
+					},
+					{
+						"required": true,
+						"key": "EXTR_WT_POS",
+						"type": "string",
+						"default": "true"
+					}
+				]
+			},
+			"services": [
 				{
-					"refer_type": "indirect",
-					"key": "RESULT_FILE_NAME",
-					"value": "NLP_EXTR.RESULT_FILE_NAME"
-				},
-				{
-					"refer_type": "indirect",
-					"key": "MAX_IMAGES",
-					"value": "NLP_EXTR.MAX_IMAGES"
-				},
-				{
-					"refer_type": "indirect",
-					"key": "TRAIN_DATA_PATH",
-					"value": "NLP_EXTR.TRAIN_DATA_PATH"
+					"service_name": "extr",
+					"api_method": "post",
+					"function": "/api/v1/extr/get",
+					"params": [
+						{
+							"required": true,
+							"key": "img_path",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "doccls_json_path",
+							"type": "string"
+						}
+					],
+					"result": [
+						{
+							"key": "extr_json_path",
+							"type": "string"
+						}
+					]
 				}
-			],
-			"asset_info": [
-				{
-					"refer_type": "indirect",
-					"key": "LLM_URL",
-					"value": "NLP_LLM.base_url"
-				},
-				{
-					"refer_type": "direct",
-					"key": "LLM_MODEL",
-					"value": "/models/gpt-oss-120b"
-				},
-				{
-					"refer_type": "indirect",
-					"key": "VLM_URL",
-					"value": "NLP_VLM.base_url"
-				},
-				{
-					"refer_type": "indirect",
-					"key": "VLM_MODEL",
-					"value": "Qwen3-VL-30B-A3B-Instruct"
-				},
-				{
-					"refer_type": "direct",
-					"key": "EXTR_WT_POS",
-					"value": true
-				}
-			],
-			"param_info": [
-				{
-					"refer_type": "indirect",
-					"key": "img_path_list",
-					"value": "aiv_doccls.doccls.lc_img_list"
-				},
-				{
-					"refer_type": "indirect",
-					"key": "text_path",
-					"value": "tar_extractor.extract.txt_path"
-				}
-			],
-			"result_info": []
+			]
 		},
 		{
-			"edge_type": "sequence",
-			"source": "Conditional_Node.evaluate",
-			"source_handler": {
-				"type": "sequence",
-				"conditions": [],
-				"references": [],
-				"environments": [],
-				"formatter": []
+			"node_id": "aiv_converter",
+			"node_type": "external",
+			"role": "process",
+			"location": "outter",
+			"containable": false,
+			"node_info": {
+				"type": "CODE",
+				"ref_id": "c677d402a35f44fe",
+				"ref_version": "v1.0.0",
+				"code": "STEP1",
+				"title": "문서변환기",
+				"desc": "DTM3"
 			},
-			"target": "nlp_lc.nlp_extr",
-			"target_handler": {
-				"type": "sequence",
-				"conditions": [],
-				"references": [],
-				"environments": [],
-				"formatter": []
+			"required_nodes": [],
+			"api_info": {
+				"base_url": ""
 			},
-			"env_info": [
+			"module_info": {
+				"module_path": "",
+				"class_name": ""
+			},
+			"environments": {
+				 "params": []
+			},
+			"asset_environments": {
+				 "params": []
+			},
+			"services": [
 				{
-					"refer_type": "indirect",
-					"key": "RESULT_FILE_NAME",
-					"value": "NLP_EXTR.RESULT_FILE_NAME"
+					"service_name": "etl",
+					"api_method": "post",
+					"function": "/api/v1/convert/get",
+					"params": [
+						{
+							"required": true,
+							"key": "img_path",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "doccls_json_path",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "extr_json_path",
+							"type": "string"
+						}
+					],
+					"result": [
+						{
+							"key": "save_FEtype_path",
+							"type": "string"
+						}
+					]
+				}
+			]
+		},
+		{
+			"node_id": "nlp_lc",
+			"node_type": "external",
+			"role": "process",
+			"location": "outter",
+			"containable": false,
+			"node_info": {
+				"type": "CODE",
+				"ref_id": "03c4a8408c844938",
+				"ref_version": "v1.0.0",
+				"code": "STEP1",
+				"title": "NLP 내용추출",
+				"desc": "DTM3"
+			},
+			"required_nodes": [
+				{
+					"node_type": "MODEL",
+					"refer_key": "llm_model_conn_env",
+					"req_value": "base_url"
 				},
 				{
-					"refer_type": "indirect",
-					"key": "MAX_IMAGES",
-					"value": "NLP_EXTR.MAX_IMAGES"
-				},
-				{
-					"refer_type": "indirect",
-					"key": "TRAIN_DATA_PATH",
-					"value": "NLP_EXTR.TRAIN_DATA_PATH"
+					"node_type": "MODEL",
+					"refer_key": "vlm_model_conn_env",
+					"req_value": "base_url"
 				}
 			],
-			"asset_info": [
-				{
-					"refer_type": "indirect",
-					"key": "LLM_URL",
-					"value": "NLP_LLM.base_url"
-				},
-				{
-					"refer_type": "direct",
-					"key": "LLM_MODEL",
-					"value": "/models/gpt-oss-120b"
-				},
-				{
-					"refer_type": "indirect",
-					"key": "VLM_URL",
-					"value": "NLP_VLM.base_url"
-				},
-				{
-					"refer_type": "indirect",
-					"key": "VLM_MODEL",
-					"value": "Qwen3-VL-30B-A3B-Instruct"
-				},
-				{
-					"refer_type": "direct",
-					"key": "EXTR_WT_POS",
-					"value": true
-				}
-			],
-			"param_info": [
-				{
-					"refer_type": "indirect",
-					"key": "img_path_list",
-					"value": "aiv_doccls.doccls.lc_img_list"
-				},
-				{
-					"refer_type": "indirect",
-					"key": "text_path",
-					"value": "tar_extractor.extract.txt_path"
-				}
-			],
-			"result_info": []
-		},
-		{
-			"edge_type": "sequence",
-			"source": "nlp_lc.nlp_extr",
-			"source_handler": {
-				"type": "sequence",
-				"conditions": [],
-				"references": [],
-				"environments": [],
-				"formatter": []
+			"api_info": {
+				"base_url": ""
 			},
-			"target": "nlp_aggregator.aggregator",
-			"target_handler": {
-				"type": "sequence",
-				"conditions": [],
-				"references": [],
-				"environments": [],
-				"formatter": []
+			"module_info": {
+				"module_path": "",
+				"class_name": ""
 			},
-			"env_info": [],
-			"asset_info": [],
-			"param_info": [
+			"environments": {
+				"params": [
+					{
+						"required": true,
+					    "key": "RESULT_FILE_NAME",
+					    "type": "string"
+					},
+					{
+					    "required": true,
+					    "key": "MAX_IMAGES",
+					    "type": "string"
+					},
+					{
+						"required": true,
+					    "key": "TRAIN_DATA_PATH",
+					    "type": "string"
+				    }
+			    ]
+			},
+			"asset_environments": {
+				"params": [
+					{
+						"required": true,
+					    "refer_key": "llm_model_conn_env",
+					    "req_value": "base_url",
+					    "key": "LLM_URL",
+					    "type": "string"
+					},
+					{
+						"required": true,
+					    "key": "LLM_MODEL",
+					    "type": "string",
+						"default": "/models/gpt-oss-120b"
+					},
+					{
+						"required": true,
+					    "refer_key": "vlm_model_conn_env",
+					    "req_value": "base_url",
+					    "key": "VLM_URL",
+					    "type": "string"
+					},
+					{
+						"required": true,
+						"key": "VLM_MODEL",
+						"type": "string",
+						"default": "Qwen3-VL-30B-A3B-Instruct"
+					}
+				]
+			},
+			"services": [
 				{
-					"refer_type": "indirect",
-					"key": "nlp_lc_path",
-					"value": "nlp_lc.nlp_extr.result_path"
-				},
-				{
-					"refer_type": "indirect",
-					"key": "aiv_img_path",
-					"value": "aiv_converter.etl.save_FEtype_path"
+					"service_name": "nlp_extr",
+					"api_method": "post",
+					"function": "/api/v1/nlp_lc",
+					"params": [
+						{
+							"required": false,
+							"key": "img_path_list",
+							"type": "list",
+							"default": []
+						},
+						{
+							"required": true,
+							"key": "text_path",
+							"type": "string",
+							"default": null
+						}
+					],
+					"result": [
+						{
+							"key": "lc_number",
+							"type": "string"
+						},
+						{
+							"key": "result_path",
+							"type": "string"
+						}
+					]
 				}
-			],
-			"result_info": []
+			]
 		},
 		{
-			"edge_type": "sequence",
-			"source": "nlp_aggregator.aggregator",
-			"source_handler": {
-				"type": "sequence",
-				"conditions": [],
-				"references": [],
-				"environments": [],
-				"formatter": []
+			"node_id": "nlp_aggregator",
+			"node_type": "external",
+			"role": "process",
+			"location": "outter",
+			"containable": false,
+			"node_info": {
+				"type": "CODE",
+				"ref_id": "e9b7b91249e548dc",
+				"ref_version": "v1.0.0",
+				"code": "STEP1",
+				"title": "VISION & NLP 결과 병합",
+				"desc": "DTM3"
 			},
-			"target": "END_NODE.output",
-			"target_handler": {
-				"type": "sequence",
-				"conditions": [],
-				"references": [],
-				"environments": [],
-				"formatter": []
+			"required_nodes": [],
+			"api_info": {
+				"base_url": ""
 			},
-			"env_info": [],
-			"asset_info": [],
-			"param_info": [
+			"module_info": {
+				"module_path": "",
+				"class_name": ""
+			},
+			"environments": {
+			},
+			"asset_environments": {
+			},
+			"services": [
 				{
-					"refer_type": "indirect",
-					"key": "result",
-					"value": "nlp_aggregator.aggregator.result_path"
+					"service_name": "aggregator",
+					"api_method": "post",
+					"function": "/api/v1/aggregator",
+					"params": [
+						{
+							"required": false,
+							"key": "nlp_lc_path",
+							"type": "string"
+						},
+						{
+							"required": false,
+							"key": "aiv_img_path",
+							"type": "string"
+						}
+					],
+					"result": [
+						{
+							"key": "result_path",
+							"type": "string"
+						}
+					]
 				}
-			],
-			"result_info": []
+			]
 		},
 		{
-			"edge_type": "reference",
-			"source": "aiv_doccls.doccls",
-			"source_handler": {},
-			"target": "AIV_EX0019.process",
-			"target_handler": {},
-			"env_info": [],
-			"asset_info": [],
-			"param_info": [],
-			"result_info": []
+			"node_id": "DTM_CALLBACK",
+			"node_type": "module",
+			"role": "custom",
+			"location": "inner",
+			"containable": true,
+			"node_info": {
+				"type": "MODULE",
+				"ref_id": "CUSTOM_NODE",
+				"ref_version": "v1.0.0",
+				"code": "DTM_CALLBACK",
+				"title": "DTM_CallBack",
+				"desc": "Result CallBack Node"
+			},
+			"required_nodes": [],
+			"api_info": {
+				"base_url": ""
+			},
+			"module_info": {
+				"module_path": "app.dtm.external_api_requester",
+				"class_name": "ExternalApiRequester"
+			},
+			"environments": {
+				 "params": []
+			},
+			"asset_environments": {
+				 "params": []
+			},
+			"services": [
+				{
+					"service_name": "callback",
+					"api_method": "",
+					"function": "call_external_api",
+					"params": [
+						{
+							"required": true,
+							"key": "callback_url",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "callback_error_url",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "user_id",
+							"type": "string"
+						},
+						{
+							"required": true,
+							"key": "file_path_list",
+							"type": "list"
+						},
+						{
+							"required": true,
+							"key": "result_path",
+							"type": "string"
+						}
+					],
+					"result": [
+						{
+							"required": true,
+							"key": "result",
+							"type": "string"
+						}
+					]
+				}
+			]
 		},
 		{
-			"edge_type": "reference",
-			"source": "aiv_extr.extr",
-			"source_handler": {},
-			"target": "AIV_EX0019.process",
-			"target_handler": {},
-			"env_info": [],
-			"asset_info": [],
-			"param_info": [],
-			"result_info": []
+			"node_id": "END_NODE",
+			"node_type": "module",
+			"role": "output",
+			"location": "inner",
+			"containable": true,
+			"node_info": {
+				"type": "MODULE",
+				"ref_id": "END_NODE",
+				"ref_version": "v1.0.0",
+				"code": "DTM_OUTPUT",
+				"title": "Output",
+				"desc": "Output Node"
+			},
+			"required_nodes": [],
+			"api_info": {
+				"base_url": ""
+			},
+			"module_info": {
+				"module_path": "app.dtm.output",
+				"class_name": "Output"
+			},
+			"environments": {
+				 "params": []
+			},
+			"asset_environments": {
+				 "params": []
+			},
+			"services": [
+				{
+					"service_name": "output",
+					"api_method": "",
+					"function": "output",
+					"params": [
+						{
+							"required": true,
+							"key": "result",
+							"type": "string"
+						}
+					],
+					"result": [
+						{
+							"required": true,
+							"key": "result",
+							"type": "string"
+						}
+					]
+				}
+			]
 		},
 		{
-			"edge_type": "reference",
-			"source": "nlp_lc.nlp_extr",
-			"source_handler": {},
-			"target": "NLP_LLM.process",
-			"target_handler": {},
-			"env_info": [],
-			"asset_info": [],
-			"param_info": [],
-			"result_info": []
+			"node_id": "AIV_EX0019",
+			"node_type": "external",
+			"role": "process",
+			"location": "outter",
+			"containable": false,
+			"required_nodes": [],
+			"node_info": {
+				"type": "MODEL",
+				"ref_id": "OCR_MODEL_ID",
+				"ref_version": "1.0.0",
+				"title": "AIV_EX0019",
+				"desc": "hidden model 1"
+			},
+			"api_info": {
+				"base_url": ""
+			},
+			"module_info": {
+				"module_path": "",
+				"class_name": ""
+			},
+			"environments": {
+				 "params": []
+			},
+			"asset_environments": {
+				 "params": []
+			},
+			"services": [
+				{
+					"service_name": "process",
+					"function": "/process/model",
+					"api_method": "post",
+					"params": [],
+					"result": []
+				}
+			]
 		},
 		{
-			"edge_type": "reference",
-			"source": "nlp_lc.nlp_extr",
-			"source_handler": {},
-			"target": "NLP_VLM.process",
-			"target_handler": {},
-			"env_info": [],
-			"asset_info": [],
-			"param_info": [],
-			"result_info": []
+			"node_id": "NLP_LLM",
+			"node_type": "external",
+			"role": "process",
+			"location": "outter",
+			"containable": false,
+			"required_nodes": [],
+			"node_info": {
+				"type": "MODEL",
+				"ref_id": "LLM_ID",
+				"ref_version": "1.0.0",
+				"title": "gpt-oss-120b",
+				"desc": "hidden model 2"
+			},
+			"api_info": {
+				"base_url": ""
+			},
+			"module_info": {
+				"module_path": "",
+				"class_name": ""
+			},
+			"environments": {
+				 "params": []
+			},
+			"asset_environments": {
+				 "params": []
+			},
+			"services": [
+				{
+					"service_name": "process",
+					"function": "/process/model",
+					"api_method": "post",
+					"params": [],
+					"result": []
+				}
+			]
+		},
+		{
+			"node_id": "NLP_VLM",
+			"node_type": "external",
+			"role": "process",
+			"location": "outter",
+			"containable": false,
+			"required_nodes": [],
+			"node_info": {
+				"type": "MODEL",
+				"ref_id": "VLM_ID",
+				"ref_version": "1.0.0",
+				"title": "Qwen3-VL-8B-Instruct",
+				"desc": "hidden model 3"
+			},
+			"api_info": {
+				"base_url": ""
+			},
+			"module_info": {
+				"module_path": "",
+				"class_name": ""
+			},
+			"environments": {
+				 "params": []
+			},
+			"asset_environments": {
+				 "params": []
+			},
+			"services": [
+				{
+					"service_name": "process",
+					"function": "/process/model",
+					"api_method": "post",
+					"params": [],
+					"result": []
+				}
+			]
 		}
-	]
-}
+	],

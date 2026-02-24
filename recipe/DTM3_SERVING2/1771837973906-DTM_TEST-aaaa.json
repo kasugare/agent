@@ -1,0 +1,4227 @@
+{
+  "name": "API Workflow for DTM 3",
+  "description": "API based workflow with parallel processing support",
+  "metadata": {
+    "version": "1.1",
+    "project_id": "DTM3_SERVING2",
+    "workflow_id": "DTM_TEST",
+    "type": "SERVING"
+  },
+  "environments": [
+    {
+      "env_code": "doccls_env",
+      "env_name": "DOCCLS ENV",
+      "env_params": [
+        {
+          "key": "DOCCLS_MODEL_STATE_NAME",
+          "value": "/share/tom/env/DOC_EXT/code_module/fe251q_master/api_module/MODEL/ex0034_ft/2026_01_14/base_lora_merged"
+        },
+        {
+          "key": "DOCCLS_PROMPT_PATH",
+          "value": "/database/FE_BANK251Q/platform_model/ailand/inference/DATA/prompt/doccls_prompt.json"
+        },
+        {
+          "key": "TAG_PATH",
+          "value": "/database/FE_BANK251Q/platform_model/vLLM_model/inference/DATA/tag/"
+        },
+        {
+          "key": "POOL_PATH",
+          "value": "/database/FE_BANK251Q/platform_model/output_sample/260115_run_data/"
+        }
+      ]
+    },
+    {
+      "env_code": "extr_env",
+      "env_name": "EXTR_MODEL ENV",
+      "env_params": [
+        {
+          "key": "EXTR_MODEL_STATE_NAME",
+          "value": "/share/tom/env/DOC_EXT/code_module/fe251q_master/api_module/MODEL/ex0034_ft/2026_01_14/base_lora_merged"
+        },
+        {
+          "key": "EXTR_PROMPT_PATH",
+          "value": "/database/FE_BANK251Q/platform_model/ailand/inference/DATA/prompt/prompt_infer.json"
+        },
+        {
+          "key": "TAG_PATH",
+          "value": "/database/FE_BANK251Q/platform_model/vLLM_model/inference/DATA/tag/"
+        },
+        {
+          "key": "POOL_PATH",
+          "value": "/database/FE_BANK251Q/platform_model/output_sample/260115_run_data/"
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "node_id": "START_NODE",
+      "node_type": "module",
+      "role": "start",
+      "location": "inner",
+      "containable": true,
+      "node_info": {
+        "type": "MODULE",
+        "ref_id": "START_NODE",
+        "ref_version": "1.0.0",
+        "code": "Input",
+        "title": "1. \ud30c\uc77c \uc704\uce58 \uc785\ub825",
+        "desc": ""
+      },
+      "required_nodes": [],
+      "api_info": {
+        "base_url": ""
+      },
+      "module_info": {
+        "module_path": "app.dtm.input",
+        "class_name": "Input",
+        "sys_environments": {
+          "params": []
+        },
+        "asset_environments": {
+          "params": []
+        }
+      },
+      "services": [
+        {
+          "service_name": "input_node",
+          "api_method": "",
+          "function": "input",
+          "params": [
+            {
+              "required": true,
+              "key": "tar_path",
+              "type": "list",
+              "default": []
+            },
+            {
+              "required": true,
+              "key": "call_back_url",
+              "type": "string",
+              "default": null
+            },
+            {
+              "required": true,
+              "key": "call_back_error_url",
+              "type": "string",
+              "default": null
+            },
+            {
+              "required": true,
+              "key": "user_id",
+              "type": "string"
+            }
+          ],
+          "result": [
+            {
+              "key": "tar_path",
+              "type": "list"
+            },
+            {
+              "key": "call_back_url",
+              "type": "string"
+            },
+            {
+              "key": "call_back_error_url",
+              "type": "string"
+            },
+            {
+              "key": "user_id",
+              "type": "string"
+            }
+          ],
+          "node_id": "START_NODE",
+          "node_type": "module",
+          "role": "start",
+          "location": "inner",
+          "containable": true,
+          "required_nodes": [],
+          "api_info": {
+            "base_url": ""
+          },
+          "module_info": {
+            "module_path": "app.dtm.input",
+            "class_name": "Input",
+            "sys_environments": {
+              "params": []
+            },
+            "asset_environments": {
+              "params": []
+            }
+          },
+          "environments": {},
+          "asset_environments": {}
+        }
+      ]
+    },
+    {
+      "node_id": "NODE_A",
+      "node_type": "external",
+      "role": "process",
+      "location": "outter",
+      "containable": false,
+      "node_info": {
+        "type": "CODE",
+        "ref_id": "code_repo_node_a",
+        "ref_version": "1.0.0",
+        "code": "STEP1",
+        "title": "2. \uc555\ucd95 \ud574\uc81c",
+        "desc": "DTM3"
+      },
+      "required_nodes": [],
+      "api_info": {
+        "base_url": "http://127.0.0.1:8001"
+      },
+      "module_info": {
+        "module_path": "",
+        "class_name": "",
+        "sys_environments": {
+          "params": []
+        },
+        "asset_environments": {
+          "params": []
+        }
+      },
+      "services": [
+        {
+          "service_name": "process",
+          "api_method": "post",
+          "function": "/process/node_a",
+          "params": [
+            {
+              "required": true,
+              "key": "tar_path",
+              "type": "list",
+              "default": []
+            }
+          ],
+          "result": [
+            {
+              "key": "tif_path",
+              "type": "string"
+            },
+            {
+              "key": "txt_path",
+              "type": "string"
+            }
+          ],
+          "node_id": "NODE_A",
+          "node_type": "external",
+          "role": "process",
+          "location": "outter",
+          "containable": false,
+          "required_nodes": [],
+          "api_info": {
+            "base_url": "http://127.0.0.1:8001"
+          },
+          "module_info": {
+            "module_path": "",
+            "class_name": "",
+            "sys_environments": {
+              "params": []
+            },
+            "asset_environments": {
+              "params": []
+            }
+          },
+          "environments": {},
+          "asset_environments": {}
+        }
+      ]
+    },
+    {
+      "node_id": "Conditional_Node",
+      "node_type": "module",
+      "role": "condition",
+      "location": "inner",
+      "containable": false,
+      "node_info": {
+        "type": "MODULE",
+        "ref_id": "Conditional_Node",
+        "ref_version": "1.0.0",
+        "code": "COND1",
+        "title": "3. \ud574\uc81c\ub41c \uc555\ucd95\ud30c\uc77c\uc758 \uc885\ub958 \ud655\uc778 \ud6c4 \ubd84\uae30 \ucc98\ub9ac",
+        "desc": "\uc870\uac74 \ubd84\uae30 \ubc0f \ubcc0\uc218 \uc870\uc791 \ub178\ub4dc"
+      },
+      "condition_config": {
+        "operators": {
+          "comparison": [
+            ">",
+            "<",
+            ">=",
+            "<=",
+            "==",
+            "!="
+          ],
+          "existence": [
+            "exist",
+            "not_exist"
+          ],
+          "logical": [
+            "AND",
+            "OR",
+            "NOT"
+          ]
+        },
+        "action_types": {
+          "variable": [
+            "set_variable",
+            "increment",
+            "decrement",
+            "copy_variable",
+            "delete_variable"
+          ],
+          "calculation": [
+            "calculate"
+          ],
+          "collection": [
+            "append",
+            "merge"
+          ],
+          "execution": [
+            "execute"
+          ]
+        },
+        "branch_types": [
+          "if",
+          "elif",
+          "else"
+        ]
+      },
+      "services": [
+        {
+          "service_name": "evaluate",
+          "api_method": "",
+          "function": "evaluate_condition",
+          "params": [
+            {
+              "required": true,
+              "key": "branches",
+              "type": "list"
+            }
+          ],
+          "result": [
+            {
+              "key": "actions",
+              "type": "string"
+            }
+          ],
+          "node_id": "Conditional_Node",
+          "node_type": "module",
+          "role": "condition",
+          "location": "inner",
+          "containable": false,
+          "required_nodes": {},
+          "api_info": {},
+          "module_info": {},
+          "environments": {},
+          "asset_environments": {}
+        }
+      ]
+    },
+    {
+      "node_id": "NODE_B",
+      "node_type": "external",
+      "role": "process",
+      "location": "outter",
+      "containable": false,
+      "required_nodes": [
+        {
+          "node_type": "MODEL",
+          "refer_key": "llm_model_conn_env",
+          "req_value": "base_url"
+        },
+        {
+          "node_type": "MODEL",
+          "refer_key": "ocr_model_conn_env",
+          "req_value": "base_url"
+        }
+      ],
+      "node_info": {
+        "type": "CODE",
+        "ref_id": "code_repo_node_b",
+        "ref_version": "1.0.0",
+        "code": "STEP2",
+        "title": "4. \uc774\ubbf8\uc9c0 \ub370\uc774\ud130\uc5d0 \ub300\ud55c \ubb38\uc11c \ubd84\ub958 \uc218\ud589 --> vLLM \ubb38\uc11c \ubaa8\ub378 \uc5f0\uacc4",
+        "desc": "DTM3"
+      },
+      "api_info": {
+        "base_url": "http://127.0.0.1:8002"
+      },
+      "module_info": {
+        "module_path": "",
+        "class_name": ""
+      },
+      "environments": {
+        "params": [
+          {
+            "required": true,
+            "key": "tag_path",
+            "type": "string"
+          },
+          {
+            "required": true,
+            "key": "pool_path",
+            "type": "string"
+          }
+        ]
+      },
+      "asset_environments": {
+        "params": [
+          {
+            "required": true,
+            "refer_key": "llm_model_conn_env",
+            "req_value": "base_url",
+            "key": "llm_url",
+            "type": "string"
+          },
+          {
+            "required": true,
+            "key": "llm_model_name",
+            "type": "string",
+            "default": "TEST_LLM"
+          },
+          {
+            "required": true,
+            "refer_key": "ocr_model_conn_env",
+            "req_value": "base_url",
+            "key": "ocr_url",
+            "type": "string"
+          },
+          {
+            "required": true,
+            "key": "ocr_model_name",
+            "type": "string",
+            "default": "TEST_OCR"
+          }
+        ]
+      },
+      "services": [
+        {
+          "service_name": "process",
+          "api_method": "post",
+          "function": "/process/node_b",
+          "params": [
+            {
+              "required": true,
+              "key": "tif_path",
+              "type": "str",
+              "default": null
+            }
+          ],
+          "result": [
+            {
+              "key": "img_path",
+              "type": "string"
+            },
+            {
+              "key": "doccls_json_path",
+              "type": "string"
+            },
+            {
+              "key": "lc_img_list",
+              "type": "list"
+            }
+          ],
+          "node_id": "NODE_B",
+          "node_type": "external",
+          "role": "process",
+          "location": "outter",
+          "containable": false,
+          "required_nodes": [
+            {
+              "node_type": "MODEL",
+              "refer_key": "llm_model_conn_env",
+              "req_value": "base_url"
+            },
+            {
+              "node_type": "MODEL",
+              "refer_key": "ocr_model_conn_env",
+              "req_value": "base_url"
+            }
+          ],
+          "api_info": {
+            "base_url": "http://127.0.0.1:8002"
+          },
+          "module_info": {
+            "module_path": "",
+            "class_name": ""
+          },
+          "environments": {
+            "params": [
+              {
+                "required": true,
+                "key": "tag_path",
+                "type": "string"
+              },
+              {
+                "required": true,
+                "key": "pool_path",
+                "type": "string"
+              }
+            ]
+          },
+          "asset_environments": {
+            "params": [
+              {
+                "required": true,
+                "refer_key": "llm_model_conn_env",
+                "req_value": "base_url",
+                "key": "llm_url",
+                "type": "string"
+              },
+              {
+                "required": true,
+                "key": "llm_model_name",
+                "type": "string",
+                "default": "TEST_LLM"
+              },
+              {
+                "required": true,
+                "refer_key": "ocr_model_conn_env",
+                "req_value": "base_url",
+                "key": "ocr_url",
+                "type": "string"
+              },
+              {
+                "required": true,
+                "key": "ocr_model_name",
+                "type": "string",
+                "default": "TEST_OCR"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "node_id": "NODE_C",
+      "node_type": "external",
+      "role": "process",
+      "location": "outter",
+      "containable": false,
+      "node_info": {
+        "type": "CODE",
+        "ref_id": "code_repo_node_c",
+        "ref_version": "1.0.0",
+        "code": "STEP3",
+        "title": "5. OCR \uc218\ud589 --> OCR \ubaa8\ub378 \uc5f0\uacc4",
+        "desc": "DTM3"
+      },
+      "required_nodes": [],
+      "api_info": {
+        "base_url": "http://127.0.0.1:8003"
+      },
+      "module_info": {
+        "module_path": "",
+        "class_name": "",
+        "sys_environments": {
+          "params": []
+        },
+        "asset_environments": {
+          "params": []
+        }
+      },
+      "services": [
+        {
+          "service_name": "process",
+          "api_method": "post",
+          "function": "/process/node_c",
+          "params": [
+            {
+              "required": true,
+              "key": "img_path",
+              "type": "string"
+            },
+            {
+              "required": true,
+              "key": "doccls_json_path",
+              "type": "string"
+            }
+          ],
+          "result": [
+            {
+              "key": "extr_json_path",
+              "type": "string"
+            }
+          ],
+          "node_id": "NODE_C",
+          "node_type": "external",
+          "role": "process",
+          "location": "outter",
+          "containable": false,
+          "required_nodes": [],
+          "api_info": {
+            "base_url": "http://127.0.0.1:8003"
+          },
+          "module_info": {
+            "module_path": "",
+            "class_name": "",
+            "sys_environments": {
+              "params": []
+            },
+            "asset_environments": {
+              "params": []
+            }
+          },
+          "environments": {},
+          "asset_environments": {}
+        }
+      ]
+    },
+    {
+      "node_id": "NODE_D",
+      "node_type": "external",
+      "role": "process",
+      "location": "outter",
+      "containable": false,
+      "node_info": {
+        "type": "CODE",
+        "ref_id": "code_repo_node_d",
+        "ref_version": "1.0.0",
+        "code": "STEP1",
+        "title": "input",
+        "desc": "DTM3"
+      },
+      "required_nodes": [],
+      "api_info": {
+        "base_url": "http://127.0.0.1:8004"
+      },
+      "module_info": {
+        "module_path": "",
+        "class_name": "",
+        "sys_environments": {
+          "params": []
+        },
+        "asset_environments": {
+          "params": []
+        }
+      },
+      "services": [
+        {
+          "service_name": "process",
+          "api_method": "post",
+          "function": "/process/node_d",
+          "params": [
+            {
+              "required": true,
+              "key": "img_path",
+              "type": "string"
+            },
+            {
+              "required": true,
+              "key": "doccls_json_path",
+              "type": "string"
+            },
+            {
+              "required": true,
+              "key": "extr_json_path",
+              "type": "string"
+            }
+          ],
+          "result": [
+            {
+              "key": "save_FEtype_path",
+              "type": "string"
+            }
+          ],
+          "node_id": "NODE_D",
+          "node_type": "external",
+          "role": "process",
+          "location": "outter",
+          "containable": false,
+          "required_nodes": [],
+          "api_info": {
+            "base_url": "http://127.0.0.1:8004"
+          },
+          "module_info": {
+            "module_path": "",
+            "class_name": "",
+            "sys_environments": {
+              "params": []
+            },
+            "asset_environments": {
+              "params": []
+            }
+          },
+          "environments": {},
+          "asset_environments": {}
+        }
+      ]
+    },
+    {
+      "node_id": "NODE_E",
+      "node_type": "external",
+      "role": "process",
+      "location": "outter",
+      "containable": false,
+      "node_info": {
+        "type": "CODE",
+        "ref_id": "code_repo_node_e",
+        "ref_version": "1.0.0",
+        "code": "STEP1",
+        "title": "input",
+        "desc": "DTM3"
+      },
+      "required_nodes": [],
+      "api_info": {
+        "base_url": "http://127.0.0.1:8005"
+      },
+      "module_info": {
+        "module_path": "",
+        "class_name": "",
+        "sys_environments": {
+          "params": []
+        },
+        "asset_environments": {
+          "params": []
+        }
+      },
+      "services": [
+        {
+          "service_name": "process",
+          "api_method": "post",
+          "function": "/process/node_e",
+          "params": [
+            {
+              "required": true,
+              "key": "img_path",
+              "type": "string"
+            },
+            {
+              "required": true,
+              "key": "lc_img_list",
+              "type": "list",
+              "default": []
+            }
+          ],
+          "result": [
+            {
+              "key": "ocr_json_path_list",
+              "type": "list"
+            }
+          ],
+          "node_id": "NODE_E",
+          "node_type": "external",
+          "role": "process",
+          "location": "outter",
+          "containable": false,
+          "required_nodes": [],
+          "api_info": {
+            "base_url": "http://127.0.0.1:8005"
+          },
+          "module_info": {
+            "module_path": "",
+            "class_name": "",
+            "sys_environments": {
+              "params": []
+            },
+            "asset_environments": {
+              "params": []
+            }
+          },
+          "environments": {},
+          "asset_environments": {}
+        }
+      ]
+    },
+    {
+      "node_id": "NODE_F",
+      "node_type": "external",
+      "role": "process",
+      "location": "outter",
+      "containable": false,
+      "node_info": {
+        "type": "CODE",
+        "ref_id": "code_repo_node_f",
+        "ref_version": "1.0.0",
+        "code": "STEP1",
+        "title": "input",
+        "desc": "DTM3"
+      },
+      "required_nodes": [],
+      "api_info": {
+        "base_url": "http://127.0.0.1:8006"
+      },
+      "module_info": {
+        "module_path": "",
+        "class_name": "",
+        "sys_environments": {
+          "params": []
+        },
+        "asset_environments": {
+          "params": []
+        }
+      },
+      "services": [
+        {
+          "service_name": "process",
+          "api_method": "post",
+          "function": "/process/node_f",
+          "params": [
+            {
+              "required": true,
+              "key": "lc_img_list",
+              "type": "list",
+              "default": []
+            },
+            {
+              "required": true,
+              "key": "ocr_json_path_list",
+              "type": "list",
+              "default": []
+            }
+          ],
+          "result": [
+            {
+              "key": "lc_number",
+              "type": "string"
+            },
+            {
+              "key": "result_path",
+              "type": "string"
+            }
+          ],
+          "node_id": "NODE_F",
+          "node_type": "external",
+          "role": "process",
+          "location": "outter",
+          "containable": false,
+          "required_nodes": [],
+          "api_info": {
+            "base_url": "http://127.0.0.1:8006"
+          },
+          "module_info": {
+            "module_path": "",
+            "class_name": "",
+            "sys_environments": {
+              "params": []
+            },
+            "asset_environments": {
+              "params": []
+            }
+          },
+          "environments": {},
+          "asset_environments": {}
+        }
+      ]
+    },
+    {
+      "node_id": "NODE_G",
+      "node_type": "external",
+      "role": "process",
+      "location": "outter",
+      "containable": false,
+      "node_info": {
+        "ref_id": "code_repo_node_g",
+        "ref_version": "1.0.0",
+        "code": "STEP1",
+        "title": "input",
+        "desc": "DTM3"
+      },
+      "required_nodes": [],
+      "api_info": {
+        "base_url": "http://127.0.0.1:8007"
+      },
+      "module_info": {
+        "module_path": "",
+        "class_name": "",
+        "sys_environments": {
+          "params": []
+        },
+        "asset_environments": {
+          "params": []
+        }
+      },
+      "services": [
+        {
+          "service_name": "process",
+          "api_method": "post",
+          "function": "/process/node_g",
+          "params": [
+            {
+              "required": false,
+              "key": "text_path",
+              "type": "string",
+              "default": null
+            },
+            {
+              "required": false,
+              "key": "lc_img_list",
+              "type": "list",
+              "default": []
+            }
+          ],
+          "result": [
+            {
+              "key": "lc_number",
+              "type": "string"
+            },
+            {
+              "key": "result_path",
+              "type": "string"
+            }
+          ],
+          "node_id": "NODE_G",
+          "node_type": "external",
+          "role": "process",
+          "location": "outter",
+          "containable": false,
+          "required_nodes": [],
+          "api_info": {
+            "base_url": "http://127.0.0.1:8007"
+          },
+          "module_info": {
+            "module_path": "",
+            "class_name": "",
+            "sys_environments": {
+              "params": []
+            },
+            "asset_environments": {
+              "params": []
+            }
+          },
+          "environments": {},
+          "asset_environments": {}
+        }
+      ]
+    },
+    {
+      "node_id": "NODE_H",
+      "node_type": "external",
+      "role": "process",
+      "location": "outter",
+      "containable": false,
+      "node_info": {
+        "ref_id": "code_repo_node_h",
+        "ref_version": "1.0.0",
+        "code": "STEP1",
+        "title": "input",
+        "desc": "DTM3"
+      },
+      "required_nodes": [],
+      "api_info": {
+        "base_url": "http://127.0.0.1:8008"
+      },
+      "module_info": {
+        "module_path": "",
+        "class_name": "",
+        "sys_environments": {
+          "params": []
+        },
+        "asset_environments": {
+          "params": []
+        }
+      },
+      "services": [
+        {
+          "service_name": "process",
+          "api_method": "post",
+          "function": "/process/node_h",
+          "params": [
+            {
+              "required": false,
+              "key": "nlp_img_lc_path",
+              "type": "string",
+              "default": null
+            },
+            {
+              "required": true,
+              "key": "nlp_text_lc_path",
+              "type": "string"
+            },
+            {
+              "required": false,
+              "key": "aiv_img_path",
+              "type": "string",
+              "default": null
+            }
+          ],
+          "result": [
+            {
+              "key": "result_path",
+              "type": "string"
+            }
+          ],
+          "node_id": "NODE_H",
+          "node_type": "external",
+          "role": "process",
+          "location": "outter",
+          "containable": false,
+          "required_nodes": [],
+          "api_info": {
+            "base_url": "http://127.0.0.1:8008"
+          },
+          "module_info": {
+            "module_path": "",
+            "class_name": "",
+            "sys_environments": {
+              "params": []
+            },
+            "asset_environments": {
+              "params": []
+            }
+          },
+          "environments": {},
+          "asset_environments": {}
+        }
+      ]
+    },
+    {
+      "node_id": "EXTERNAL_CALLBACK",
+      "node_type": "module",
+      "role": "external",
+      "location": "inner",
+      "containable": true,
+      "node_info": {
+        "type": "MODULE",
+        "ref_id": "EXTERNAL_CALLBACK",
+        "ref_version": "1.0.0",
+        "code": "external_callback",
+        "title": "External output callback",
+        "desc": "External output callback"
+      },
+      "required_nodes": [],
+      "api_info": {
+        "base_url": ""
+      },
+      "module_info": {
+        "module_path": "app.dtm.external_api_requester",
+        "class_name": "ExternalApiRequester",
+        "sys_environments": {
+          "params": []
+        },
+        "asset_environments": {
+          "params": []
+        }
+      },
+      "services": [
+        {
+          "service_name": "callback",
+          "api_method": "",
+          "function": "call_external_api",
+          "params": [
+            {
+              "required": true,
+              "key": "callback_url",
+              "type": "string"
+            },
+            {
+              "required": true,
+              "key": "callback_error_url",
+              "type": "string"
+            },
+            {
+              "required": true,
+              "key": "user_id",
+              "type": "string"
+            },
+            {
+              "required": true,
+              "key": "file_path_list",
+              "type": "list"
+            },
+            {
+              "required": true,
+              "key": "result_path",
+              "type": "string"
+            }
+          ],
+          "result": [
+            {
+              "required": true,
+              "key": "result",
+              "type": "string"
+            }
+          ],
+          "node_id": "EXTERNAL_CALLBACK",
+          "node_type": "module",
+          "role": "external",
+          "location": "inner",
+          "containable": true,
+          "required_nodes": [],
+          "api_info": {
+            "base_url": ""
+          },
+          "module_info": {
+            "module_path": "app.dtm.external_api_requester",
+            "class_name": "ExternalApiRequester",
+            "sys_environments": {
+              "params": []
+            },
+            "asset_environments": {
+              "params": []
+            }
+          },
+          "environments": {},
+          "asset_environments": {}
+        }
+      ]
+    },
+    {
+      "node_id": "END_NODE",
+      "node_type": "module",
+      "role": "output",
+      "location": "inner",
+      "containable": true,
+      "node_info": {
+        "type": "MODULE",
+        "ref_id": "END_NODE",
+        "ref_version": "1.0.0",
+        "code": "DTM_OUTPUT",
+        "title": "Output",
+        "desc": "Output Node"
+      },
+      "required_nodes": [],
+      "api_info": {
+        "base_url": ""
+      },
+      "module_info": {
+        "module_path": "app.dtm.output",
+        "class_name": "Output",
+        "sys_environments": {
+          "params": []
+        },
+        "asset_environments": {
+          "params": []
+        }
+      },
+      "services": [
+        {
+          "service_name": "output",
+          "api_method": "",
+          "function": "output",
+          "params": [
+            {
+              "required": true,
+              "key": "result",
+              "type": "string"
+            }
+          ],
+          "result": [
+            {
+              "required": true,
+              "key": "result",
+              "type": "string"
+            }
+          ],
+          "node_id": "END_NODE",
+          "node_type": "module",
+          "role": "output",
+          "location": "inner",
+          "containable": true,
+          "required_nodes": [],
+          "api_info": {
+            "base_url": ""
+          },
+          "module_info": {
+            "module_path": "app.dtm.output",
+            "class_name": "Output",
+            "sys_environments": {
+              "params": []
+            },
+            "asset_environments": {
+              "params": []
+            }
+          },
+          "environments": {},
+          "asset_environments": {}
+        }
+      ]
+    },
+    {
+      "node_id": "LLM_Model",
+      "node_type": "external",
+      "role": "process",
+      "location": "outter",
+      "containable": false,
+      "required_nodes": [],
+      "node_info": {
+        "type": "MODEL",
+        "ref_id": "LLM_MODEL_test-1",
+        "ref_version": "1.0.0",
+        "title": "hidden model 1",
+        "desc": "DTM3"
+      },
+      "api_info": {
+        "base_url": "http://127.0.0.1:8008"
+      },
+      "module_info": {
+        "module_path": "",
+        "class_name": ""
+      },
+      "services": [
+        {
+          "service_name": "process",
+          "function": "/process/node_h",
+          "api_method": "post",
+          "params": [
+            {
+              "required": false,
+              "key": "nlp_img_lc_path",
+              "type": "string",
+              "default": "None"
+            },
+            {
+              "required": false,
+              "key": "nlp_text_lc_path",
+              "type": "string",
+              "default": "None"
+            },
+            {
+              "required": false,
+              "key": "aiv_img_path",
+              "type": "string",
+              "default": "None"
+            }
+          ],
+          "result": [
+            {
+              "key": "result_path",
+              "type": "string"
+            },
+            {
+              "key": "timestamp",
+              "type": "string"
+            }
+          ],
+          "node_id": "LLM_Model",
+          "node_type": "external",
+          "role": "process",
+          "location": "outter",
+          "containable": false,
+          "required_nodes": [],
+          "api_info": {
+            "base_url": "http://127.0.0.1:8008"
+          },
+          "module_info": {
+            "module_path": "",
+            "class_name": ""
+          },
+          "environments": {},
+          "asset_environments": {}
+        }
+      ]
+    },
+    {
+      "node_id": "OCR_Model",
+      "node_type": "external",
+      "role": "process",
+      "location": "outter",
+      "containable": false,
+      "required_nodes": [],
+      "node_info": {
+        "type": "MODEL",
+        "ref_id": "OCR_MODEL-test-1",
+        "ref_version": "1.0.0",
+        "code": "ocr-model",
+        "title": "hidden model 2",
+        "desc": "DTM3"
+      },
+      "api_info": {
+        "base_url": "http://127.0.0.1:8008"
+      },
+      "module_info": {
+        "module_path": "",
+        "class_name": ""
+      },
+      "services": [
+        {
+          "service_name": "process",
+          "function": "/process/node_h",
+          "api_method": "post",
+          "params": [
+            {
+              "required": false,
+              "key": "nlp_img_lc_path",
+              "type": "string",
+              "default": "None"
+            },
+            {
+              "required": false,
+              "key": "nlp_text_lc_path",
+              "type": "string",
+              "default": "None"
+            },
+            {
+              "required": false,
+              "key": "aiv_img_path",
+              "type": "string",
+              "default": "None"
+            }
+          ],
+          "result": [
+            {
+              "key": "result_path",
+              "type": "string"
+            },
+            {
+              "key": "timestamp",
+              "type": "string"
+            }
+          ],
+          "node_id": "OCR_Model",
+          "node_type": "external",
+          "role": "process",
+          "location": "outter",
+          "containable": false,
+          "required_nodes": [],
+          "api_info": {
+            "base_url": "http://127.0.0.1:8008"
+          },
+          "module_info": {
+            "module_path": "",
+            "class_name": ""
+          },
+          "environments": {},
+          "asset_environments": {}
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "edge_type": "sequence",
+      "source": "START_NODE.input_node",
+      "source_handler": {
+        "type": "sequence",
+        "conditions": [],
+        "references": [],
+        "environments": [],
+        "formatter": []
+      },
+      "target": "NODE_A.process",
+      "target_handler": {
+        "type": "sequence",
+        "conditions": [],
+        "references": [],
+        "environments": [],
+        "formatter": []
+      },
+      "env_info": [],
+      "asset_info": [],
+      "param_info": [
+        {
+          "refer_type": "indirect",
+          "key": "tar_path",
+          "value": "START_NODE.input_node.tar_path",
+          "key_data_type": "list",
+          "key_required": true,
+          "value_data_type": "list"
+        }
+      ],
+      "result_info": [],
+      "source_info": {
+        "service_name": "input_node",
+        "api_method": "",
+        "function": "input",
+        "params": [
+          {
+            "required": true,
+            "key": "tar_path",
+            "type": "list",
+            "default": []
+          },
+          {
+            "required": true,
+            "key": "call_back_url",
+            "type": "string",
+            "default": null
+          },
+          {
+            "required": true,
+            "key": "call_back_error_url",
+            "type": "string",
+            "default": null
+          },
+          {
+            "required": true,
+            "key": "user_id",
+            "type": "string"
+          }
+        ],
+        "result": [
+          {
+            "key": "tar_path",
+            "type": "list"
+          },
+          {
+            "key": "call_back_url",
+            "type": "string"
+          },
+          {
+            "key": "call_back_error_url",
+            "type": "string"
+          },
+          {
+            "key": "user_id",
+            "type": "string"
+          }
+        ],
+        "node_id": "START_NODE",
+        "node_type": "module",
+        "role": "start",
+        "location": "inner",
+        "containable": true,
+        "required_nodes": [],
+        "api_info": {
+          "base_url": ""
+        },
+        "module_info": {
+          "module_path": "app.dtm.input",
+          "class_name": "Input",
+          "sys_environments": {
+            "params": []
+          },
+          "asset_environments": {
+            "params": []
+          }
+        },
+        "environments": {},
+        "asset_environments": {}
+      },
+      "target_info": {
+        "service_name": "process",
+        "api_method": "post",
+        "function": "/process/node_a",
+        "params": [
+          {
+            "required": true,
+            "key": "tar_path",
+            "type": "list",
+            "default": []
+          }
+        ],
+        "result": [
+          {
+            "key": "tif_path",
+            "type": "string"
+          },
+          {
+            "key": "txt_path",
+            "type": "string"
+          }
+        ],
+        "node_id": "NODE_A",
+        "node_type": "external",
+        "role": "process",
+        "location": "outter",
+        "containable": false,
+        "required_nodes": [],
+        "api_info": {
+          "base_url": "http://127.0.0.1:8001"
+        },
+        "module_info": {
+          "module_path": "",
+          "class_name": "",
+          "sys_environments": {
+            "params": []
+          },
+          "asset_environments": {
+            "params": []
+          }
+        },
+        "environments": {},
+        "asset_environments": {}
+      }
+    },
+    {
+      "edge_type": "sequence",
+      "source": "NODE_A.process",
+      "source_handler": {
+        "type": "sequence",
+        "conditions": [],
+        "references": [],
+        "environments": [],
+        "formatter": []
+      },
+      "target": "Conditional_Node.evaluate",
+      "target_handler": {
+        "type": "conditional",
+        "conditions": {
+          "branches": [
+            {
+              "type": "if",
+              "logic": "AND",
+              "rules": [
+                {
+                  "refer_type": "indirect",
+                  "variable": "NODE_A.process.tif_path",
+                  "operator": "exist"
+                },
+                {
+                  "refer_type": "indirect",
+                  "variable": "NODE_A.process.txt_path",
+                  "operator": "exist"
+                }
+              ],
+              "actions": [
+                {
+                  "action": "execution",
+                  "value": "NODE_B.process"
+                },
+                {
+                  "action": "execution",
+                  "value": "NODE_G.process"
+                }
+              ]
+            },
+            {
+              "type": "elif",
+              "logic": "AND",
+              "rules": [
+                {
+                  "refer_type": "indirect",
+                  "variable": "NODE_A.process.tif_path",
+                  "operator": "exist"
+                },
+                {
+                  "refer_type": "indirect",
+                  "variable": "NODE_A.process.txt_path",
+                  "operator": "not_exist"
+                }
+              ],
+              "actions": [
+                {
+                  "action": "execution",
+                  "value": "NODE_B.process"
+                }
+              ]
+            },
+            {
+              "type": "elif",
+              "logic": "AND",
+              "rules": [
+                {
+                  "refer_type": "indirect",
+                  "variable": "NODE_A.process.tif_path",
+                  "operator": "not_exist"
+                },
+                {
+                  "refer_type": "indirect",
+                  "variable": "NODE_A.process.txt_path",
+                  "operator": "exist"
+                }
+              ],
+              "actions": [
+                {
+                  "action": "execution",
+                  "value": "NODE_G.process"
+                }
+              ]
+            },
+            {
+              "type": "else",
+              "actions": [
+                {
+                  "action": "stop"
+                }
+              ]
+            }
+          ]
+        },
+        "references": [],
+        "environments": [],
+        "formatter": []
+      },
+      "env_info": [],
+      "asset_info": [],
+      "param_info": [],
+      "result_info": [],
+      "source_info": {
+        "service_name": "process",
+        "api_method": "post",
+        "function": "/process/node_a",
+        "params": [
+          {
+            "required": true,
+            "key": "tar_path",
+            "type": "list",
+            "default": []
+          }
+        ],
+        "result": [
+          {
+            "key": "tif_path",
+            "type": "string"
+          },
+          {
+            "key": "txt_path",
+            "type": "string"
+          }
+        ],
+        "node_id": "NODE_A",
+        "node_type": "external",
+        "role": "process",
+        "location": "outter",
+        "containable": false,
+        "required_nodes": [],
+        "api_info": {
+          "base_url": "http://127.0.0.1:8001"
+        },
+        "module_info": {
+          "module_path": "",
+          "class_name": "",
+          "sys_environments": {
+            "params": []
+          },
+          "asset_environments": {
+            "params": []
+          }
+        },
+        "environments": {},
+        "asset_environments": {}
+      },
+      "target_info": {
+        "service_name": "evaluate",
+        "api_method": "",
+        "function": "evaluate_condition",
+        "params": [
+          {
+            "required": true,
+            "key": "branches",
+            "type": "list"
+          }
+        ],
+        "result": [
+          {
+            "key": "actions",
+            "type": "string"
+          }
+        ],
+        "node_id": "Conditional_Node",
+        "node_type": "module",
+        "role": "condition",
+        "location": "inner",
+        "containable": false,
+        "required_nodes": {},
+        "api_info": {},
+        "module_info": {},
+        "environments": {},
+        "asset_environments": {}
+      }
+    },
+    {
+      "edge_type": "sequence",
+      "source": "Conditional_Node.evaluate",
+      "source_handler": {
+        "type": "sequence",
+        "conditions": [],
+        "references": [],
+        "environments": [],
+        "formatter": []
+      },
+      "target": "NODE_B.process",
+      "target_handler": {
+        "type": "sequence",
+        "conditions": [],
+        "references": [
+          {
+            "refer_key": "llm_model_conn_env",
+            "node_id": "LLM_Model"
+          },
+          {
+            "refer_key": "ocr_model_conn_env",
+            "node_id": "OCR_Model"
+          }
+        ],
+        "environments": [],
+        "formatter": []
+      },
+      "env_info": [
+        {
+          "refer_type": "indirect",
+          "value": "doccls_env.TAG_PATH"
+        },
+        {
+          "refer_type": "indirect",
+          "value": "doccls_env.POOL_PATH"
+        }
+      ],
+      "asset_info": [
+        {
+          "refer_type": "indirect",
+          "value": "llm_model_conn_env.base_url"
+        },
+        {
+          "refer_type": "direct",
+          "value": "LLM MODEL NAME"
+        },
+        {
+          "refer_type": "indirect",
+          "value": "ocr_model_conn_env.base_url"
+        },
+        {
+          "refer_type": "direct",
+          "value": "OCR Model"
+        }
+      ],
+      "param_info": [
+        {
+          "refer_type": "indirect",
+          "key": "tif_path",
+          "value": "NODE_A.process.tif_path",
+          "default": null,
+          "key_data_type": "str",
+          "key_required": true,
+          "value_data_type": "str"
+        }
+      ],
+      "result_info": [],
+      "source_info": {
+        "service_name": "evaluate",
+        "api_method": "",
+        "function": "evaluate_condition",
+        "params": [
+          {
+            "required": true,
+            "key": "branches",
+            "type": "list"
+          }
+        ],
+        "result": [
+          {
+            "key": "actions",
+            "type": "string"
+          }
+        ],
+        "node_id": "Conditional_Node",
+        "node_type": "module",
+        "role": "condition",
+        "location": "inner",
+        "containable": false,
+        "required_nodes": {},
+        "api_info": {},
+        "module_info": {},
+        "environments": {},
+        "asset_environments": {}
+      },
+      "target_info": {
+        "service_name": "process",
+        "api_method": "post",
+        "function": "/process/node_b",
+        "params": [
+          {
+            "required": true,
+            "key": "tif_path",
+            "type": "str",
+            "default": null
+          }
+        ],
+        "result": [
+          {
+            "key": "img_path",
+            "type": "string"
+          },
+          {
+            "key": "doccls_json_path",
+            "type": "string"
+          },
+          {
+            "key": "lc_img_list",
+            "type": "list"
+          }
+        ],
+        "node_id": "NODE_B",
+        "node_type": "external",
+        "role": "process",
+        "location": "outter",
+        "containable": false,
+        "required_nodes": [
+          {
+            "node_type": "MODEL",
+            "refer_key": "llm_model_conn_env",
+            "req_value": "base_url"
+          },
+          {
+            "node_type": "MODEL",
+            "refer_key": "ocr_model_conn_env",
+            "req_value": "base_url"
+          }
+        ],
+        "api_info": {
+          "base_url": "http://127.0.0.1:8002"
+        },
+        "module_info": {
+          "module_path": "",
+          "class_name": ""
+        },
+        "environments": {
+          "params": [
+            {
+              "required": true,
+              "key": "tag_path",
+              "type": "string"
+            },
+            {
+              "required": true,
+              "key": "pool_path",
+              "type": "string"
+            }
+          ]
+        },
+        "asset_environments": {
+          "params": [
+            {
+              "required": true,
+              "refer_key": "llm_model_conn_env",
+              "req_value": "base_url",
+              "key": "llm_url",
+              "type": "string"
+            },
+            {
+              "required": true,
+              "key": "llm_model_name",
+              "type": "string",
+              "default": "TEST_LLM"
+            },
+            {
+              "required": true,
+              "refer_key": "ocr_model_conn_env",
+              "req_value": "base_url",
+              "key": "ocr_url",
+              "type": "string"
+            },
+            {
+              "required": true,
+              "key": "ocr_model_name",
+              "type": "string",
+              "default": "TEST_OCR"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "edge_type": "sequence",
+      "source": "NODE_B.process",
+      "source_handler": {
+        "type": "sequence",
+        "conditions": [],
+        "references": [],
+        "environments": [],
+        "formatter": []
+      },
+      "target": "NODE_C.process",
+      "target_handler": {
+        "type": "sequence",
+        "conditions": [],
+        "references": [],
+        "environments": [],
+        "formatter": []
+      },
+      "env_info": [],
+      "asset_info": [],
+      "param_info": [
+        {
+          "refer_type": "indirect",
+          "key": "img_path",
+          "value": "NODE_B.process.img_path",
+          "key_data_type": "string",
+          "key_required": true,
+          "value_data_type": "string"
+        },
+        {
+          "refer_type": "indirect",
+          "key": "doccls_json_path",
+          "value": "NODE_B.process.doccls_json_path",
+          "key_data_type": "string",
+          "key_required": true,
+          "value_data_type": "string"
+        }
+      ],
+      "result_info": [],
+      "source_info": {
+        "service_name": "process",
+        "api_method": "post",
+        "function": "/process/node_b",
+        "params": [
+          {
+            "required": true,
+            "key": "tif_path",
+            "type": "str",
+            "default": null
+          }
+        ],
+        "result": [
+          {
+            "key": "img_path",
+            "type": "string"
+          },
+          {
+            "key": "doccls_json_path",
+            "type": "string"
+          },
+          {
+            "key": "lc_img_list",
+            "type": "list"
+          }
+        ],
+        "node_id": "NODE_B",
+        "node_type": "external",
+        "role": "process",
+        "location": "outter",
+        "containable": false,
+        "required_nodes": [
+          {
+            "node_type": "MODEL",
+            "refer_key": "llm_model_conn_env",
+            "req_value": "base_url"
+          },
+          {
+            "node_type": "MODEL",
+            "refer_key": "ocr_model_conn_env",
+            "req_value": "base_url"
+          }
+        ],
+        "api_info": {
+          "base_url": "http://127.0.0.1:8002"
+        },
+        "module_info": {
+          "module_path": "",
+          "class_name": ""
+        },
+        "environments": {
+          "params": [
+            {
+              "required": true,
+              "key": "tag_path",
+              "type": "string"
+            },
+            {
+              "required": true,
+              "key": "pool_path",
+              "type": "string"
+            }
+          ]
+        },
+        "asset_environments": {
+          "params": [
+            {
+              "required": true,
+              "refer_key": "llm_model_conn_env",
+              "req_value": "base_url",
+              "key": "llm_url",
+              "type": "string"
+            },
+            {
+              "required": true,
+              "key": "llm_model_name",
+              "type": "string",
+              "default": "TEST_LLM"
+            },
+            {
+              "required": true,
+              "refer_key": "ocr_model_conn_env",
+              "req_value": "base_url",
+              "key": "ocr_url",
+              "type": "string"
+            },
+            {
+              "required": true,
+              "key": "ocr_model_name",
+              "type": "string",
+              "default": "TEST_OCR"
+            }
+          ]
+        }
+      },
+      "target_info": {
+        "service_name": "process",
+        "api_method": "post",
+        "function": "/process/node_c",
+        "params": [
+          {
+            "required": true,
+            "key": "img_path",
+            "type": "string"
+          },
+          {
+            "required": true,
+            "key": "doccls_json_path",
+            "type": "string"
+          }
+        ],
+        "result": [
+          {
+            "key": "extr_json_path",
+            "type": "string"
+          }
+        ],
+        "node_id": "NODE_C",
+        "node_type": "external",
+        "role": "process",
+        "location": "outter",
+        "containable": false,
+        "required_nodes": [],
+        "api_info": {
+          "base_url": "http://127.0.0.1:8003"
+        },
+        "module_info": {
+          "module_path": "",
+          "class_name": "",
+          "sys_environments": {
+            "params": []
+          },
+          "asset_environments": {
+            "params": []
+          }
+        },
+        "environments": {},
+        "asset_environments": {}
+      }
+    },
+    {
+      "edge_type": "sequence",
+      "source": "NODE_C.process",
+      "source_handler": {
+        "type": "sequence",
+        "conditions": [],
+        "references": [],
+        "environments": [],
+        "formatter": []
+      },
+      "target": "NODE_D.process",
+      "target_handler": {
+        "type": "sequence",
+        "conditions": [],
+        "references": [],
+        "environments": [],
+        "formatter": []
+      },
+      "env_info": [],
+      "asset_info": [],
+      "param_info": [
+        {
+          "refer_type": "indirect",
+          "key": "img_path",
+          "value": "NODE_B.process.img_path",
+          "key_data_type": "string",
+          "key_required": true,
+          "value_data_type": "string"
+        },
+        {
+          "refer_type": "indirect",
+          "key": "doccls_json_path",
+          "value": "NODE_B.process.doccls_json_path",
+          "key_data_type": "string",
+          "key_required": true,
+          "value_data_type": "string"
+        },
+        {
+          "refer_type": "indirect",
+          "key": "extr_json_path",
+          "value": "NODE_C.process.extr_json_path",
+          "key_data_type": "string",
+          "key_required": true,
+          "value_data_type": "string"
+        }
+      ],
+      "result_info": [],
+      "source_info": {
+        "service_name": "process",
+        "api_method": "post",
+        "function": "/process/node_c",
+        "params": [
+          {
+            "required": true,
+            "key": "img_path",
+            "type": "string"
+          },
+          {
+            "required": true,
+            "key": "doccls_json_path",
+            "type": "string"
+          }
+        ],
+        "result": [
+          {
+            "key": "extr_json_path",
+            "type": "string"
+          }
+        ],
+        "node_id": "NODE_C",
+        "node_type": "external",
+        "role": "process",
+        "location": "outter",
+        "containable": false,
+        "required_nodes": [],
+        "api_info": {
+          "base_url": "http://127.0.0.1:8003"
+        },
+        "module_info": {
+          "module_path": "",
+          "class_name": "",
+          "sys_environments": {
+            "params": []
+          },
+          "asset_environments": {
+            "params": []
+          }
+        },
+        "environments": {},
+        "asset_environments": {}
+      },
+      "target_info": {
+        "service_name": "process",
+        "api_method": "post",
+        "function": "/process/node_d",
+        "params": [
+          {
+            "required": true,
+            "key": "img_path",
+            "type": "string"
+          },
+          {
+            "required": true,
+            "key": "doccls_json_path",
+            "type": "string"
+          },
+          {
+            "required": true,
+            "key": "extr_json_path",
+            "type": "string"
+          }
+        ],
+        "result": [
+          {
+            "key": "save_FEtype_path",
+            "type": "string"
+          }
+        ],
+        "node_id": "NODE_D",
+        "node_type": "external",
+        "role": "process",
+        "location": "outter",
+        "containable": false,
+        "required_nodes": [],
+        "api_info": {
+          "base_url": "http://127.0.0.1:8004"
+        },
+        "module_info": {
+          "module_path": "",
+          "class_name": "",
+          "sys_environments": {
+            "params": []
+          },
+          "asset_environments": {
+            "params": []
+          }
+        },
+        "environments": {},
+        "asset_environments": {}
+      }
+    },
+    {
+      "edge_type": "sequence",
+      "source": "NODE_D.process",
+      "source_handler": {
+        "type": "sequence",
+        "conditions": [],
+        "references": [],
+        "environments": [],
+        "formatter": []
+      },
+      "target": "NODE_H.process",
+      "target_handler": {
+        "type": "sequence",
+        "conditions": [],
+        "references": [],
+        "environments": [],
+        "formatter": []
+      },
+      "env_info": [],
+      "asset_info": [],
+      "param_info": [
+        {
+          "refer_type": "indirect",
+          "key": "nlp_img_lc_path",
+          "value": "NODE_F.process.result_path",
+          "default": null,
+          "key_data_type": "string",
+          "key_required": false,
+          "value_data_type": "string"
+        },
+        {
+          "refer_type": "indirect",
+          "key": "nlp_text_lc_path",
+          "value": "NODE_G.process.result_path",
+          "key_data_type": "string",
+          "key_required": true,
+          "value_data_type": "string"
+        },
+        {
+          "refer_type": "indirect",
+          "key": "aiv_img_path",
+          "value": "NODE_D.process.save_FEtype_path",
+          "default": null,
+          "key_data_type": "string",
+          "key_required": false,
+          "value_data_type": "string"
+        }
+      ],
+      "result_info": [],
+      "source_info": {
+        "service_name": "process",
+        "api_method": "post",
+        "function": "/process/node_d",
+        "params": [
+          {
+            "required": true,
+            "key": "img_path",
+            "type": "string"
+          },
+          {
+            "required": true,
+            "key": "doccls_json_path",
+            "type": "string"
+          },
+          {
+            "required": true,
+            "key": "extr_json_path",
+            "type": "string"
+          }
+        ],
+        "result": [
+          {
+            "key": "save_FEtype_path",
+            "type": "string"
+          }
+        ],
+        "node_id": "NODE_D",
+        "node_type": "external",
+        "role": "process",
+        "location": "outter",
+        "containable": false,
+        "required_nodes": [],
+        "api_info": {
+          "base_url": "http://127.0.0.1:8004"
+        },
+        "module_info": {
+          "module_path": "",
+          "class_name": "",
+          "sys_environments": {
+            "params": []
+          },
+          "asset_environments": {
+            "params": []
+          }
+        },
+        "environments": {},
+        "asset_environments": {}
+      },
+      "target_info": {
+        "service_name": "process",
+        "api_method": "post",
+        "function": "/process/node_h",
+        "params": [
+          {
+            "required": false,
+            "key": "nlp_img_lc_path",
+            "type": "string",
+            "default": null
+          },
+          {
+            "required": true,
+            "key": "nlp_text_lc_path",
+            "type": "string"
+          },
+          {
+            "required": false,
+            "key": "aiv_img_path",
+            "type": "string",
+            "default": null
+          }
+        ],
+        "result": [
+          {
+            "key": "result_path",
+            "type": "string"
+          }
+        ],
+        "node_id": "NODE_H",
+        "node_type": "external",
+        "role": "process",
+        "location": "outter",
+        "containable": false,
+        "required_nodes": [],
+        "api_info": {
+          "base_url": "http://127.0.0.1:8008"
+        },
+        "module_info": {
+          "module_path": "",
+          "class_name": "",
+          "sys_environments": {
+            "params": []
+          },
+          "asset_environments": {
+            "params": []
+          }
+        },
+        "environments": {},
+        "asset_environments": {}
+      }
+    },
+    {
+      "edge_type": "sequence",
+      "source": "NODE_B.process",
+      "source_handler": {
+        "type": "sequence",
+        "conditions": [],
+        "references": [],
+        "environments": [],
+        "formatter": []
+      },
+      "target": "NODE_G.process",
+      "target_handler": {
+        "type": "first_come",
+        "conditions": [],
+        "references": [],
+        "environments": [],
+        "formatter": []
+      },
+      "env_info": [],
+      "asset_info": [],
+      "param_info": [
+        {
+          "refer_type": "indirect",
+          "key": "text_path",
+          "value": "NODE_A.process.txt_path",
+          "default": null,
+          "key_data_type": "string",
+          "key_required": false,
+          "value_data_type": "string"
+        },
+        {
+          "refer_type": "indirect",
+          "key": "lc_img_list",
+          "value": "NODE_B.process.lc_img_list",
+          "default": [],
+          "key_data_type": "list",
+          "key_required": false,
+          "value_data_type": "list"
+        }
+      ],
+      "result_info": [],
+      "source_info": {
+        "service_name": "process",
+        "api_method": "post",
+        "function": "/process/node_b",
+        "params": [
+          {
+            "required": true,
+            "key": "tif_path",
+            "type": "str",
+            "default": null
+          }
+        ],
+        "result": [
+          {
+            "key": "img_path",
+            "type": "string"
+          },
+          {
+            "key": "doccls_json_path",
+            "type": "string"
+          },
+          {
+            "key": "lc_img_list",
+            "type": "list"
+          }
+        ],
+        "node_id": "NODE_B",
+        "node_type": "external",
+        "role": "process",
+        "location": "outter",
+        "containable": false,
+        "required_nodes": [
+          {
+            "node_type": "MODEL",
+            "refer_key": "llm_model_conn_env",
+            "req_value": "base_url"
+          },
+          {
+            "node_type": "MODEL",
+            "refer_key": "ocr_model_conn_env",
+            "req_value": "base_url"
+          }
+        ],
+        "api_info": {
+          "base_url": "http://127.0.0.1:8002"
+        },
+        "module_info": {
+          "module_path": "",
+          "class_name": ""
+        },
+        "environments": {
+          "params": [
+            {
+              "required": true,
+              "key": "tag_path",
+              "type": "string"
+            },
+            {
+              "required": true,
+              "key": "pool_path",
+              "type": "string"
+            }
+          ]
+        },
+        "asset_environments": {
+          "params": [
+            {
+              "required": true,
+              "refer_key": "llm_model_conn_env",
+              "req_value": "base_url",
+              "key": "llm_url",
+              "type": "string"
+            },
+            {
+              "required": true,
+              "key": "llm_model_name",
+              "type": "string",
+              "default": "TEST_LLM"
+            },
+            {
+              "required": true,
+              "refer_key": "ocr_model_conn_env",
+              "req_value": "base_url",
+              "key": "ocr_url",
+              "type": "string"
+            },
+            {
+              "required": true,
+              "key": "ocr_model_name",
+              "type": "string",
+              "default": "TEST_OCR"
+            }
+          ]
+        }
+      },
+      "target_info": {
+        "service_name": "process",
+        "api_method": "post",
+        "function": "/process/node_g",
+        "params": [
+          {
+            "required": false,
+            "key": "text_path",
+            "type": "string",
+            "default": null
+          },
+          {
+            "required": false,
+            "key": "lc_img_list",
+            "type": "list",
+            "default": []
+          }
+        ],
+        "result": [
+          {
+            "key": "lc_number",
+            "type": "string"
+          },
+          {
+            "key": "result_path",
+            "type": "string"
+          }
+        ],
+        "node_id": "NODE_G",
+        "node_type": "external",
+        "role": "process",
+        "location": "outter",
+        "containable": false,
+        "required_nodes": [],
+        "api_info": {
+          "base_url": "http://127.0.0.1:8007"
+        },
+        "module_info": {
+          "module_path": "",
+          "class_name": "",
+          "sys_environments": {
+            "params": []
+          },
+          "asset_environments": {
+            "params": []
+          }
+        },
+        "environments": {},
+        "asset_environments": {}
+      }
+    },
+    {
+      "edge_type": "sequence",
+      "source": "NODE_B.process",
+      "source_handler": {
+        "type": "sequence",
+        "conditions": [],
+        "references": [],
+        "environments": [],
+        "formatter": []
+      },
+      "target": "NODE_F.process",
+      "target_handler": {
+        "type": "sequence",
+        "conditions": [],
+        "references": [],
+        "environments": [],
+        "formatter": []
+      },
+      "env_info": [],
+      "asset_info": [],
+      "param_info": [
+        {
+          "refer_type": "indirect",
+          "key": "lc_img_list",
+          "value": "NODE_B.process.lc_img_list",
+          "key_data_type": "list",
+          "key_required": true,
+          "value_data_type": "list"
+        },
+        {
+          "refer_type": "indirect",
+          "key": "ocr_json_path_list",
+          "value": "NODE_E.process.ocr_json_path_list",
+          "key_data_type": "list",
+          "key_required": true,
+          "value_data_type": "list"
+        }
+      ],
+      "result_info": [],
+      "source_info": {
+        "service_name": "process",
+        "api_method": "post",
+        "function": "/process/node_b",
+        "params": [
+          {
+            "required": true,
+            "key": "tif_path",
+            "type": "str",
+            "default": null
+          }
+        ],
+        "result": [
+          {
+            "key": "img_path",
+            "type": "string"
+          },
+          {
+            "key": "doccls_json_path",
+            "type": "string"
+          },
+          {
+            "key": "lc_img_list",
+            "type": "list"
+          }
+        ],
+        "node_id": "NODE_B",
+        "node_type": "external",
+        "role": "process",
+        "location": "outter",
+        "containable": false,
+        "required_nodes": [
+          {
+            "node_type": "MODEL",
+            "refer_key": "llm_model_conn_env",
+            "req_value": "base_url"
+          },
+          {
+            "node_type": "MODEL",
+            "refer_key": "ocr_model_conn_env",
+            "req_value": "base_url"
+          }
+        ],
+        "api_info": {
+          "base_url": "http://127.0.0.1:8002"
+        },
+        "module_info": {
+          "module_path": "",
+          "class_name": ""
+        },
+        "environments": {
+          "params": [
+            {
+              "required": true,
+              "key": "tag_path",
+              "type": "string"
+            },
+            {
+              "required": true,
+              "key": "pool_path",
+              "type": "string"
+            }
+          ]
+        },
+        "asset_environments": {
+          "params": [
+            {
+              "required": true,
+              "refer_key": "llm_model_conn_env",
+              "req_value": "base_url",
+              "key": "llm_url",
+              "type": "string"
+            },
+            {
+              "required": true,
+              "key": "llm_model_name",
+              "type": "string",
+              "default": "TEST_LLM"
+            },
+            {
+              "required": true,
+              "refer_key": "ocr_model_conn_env",
+              "req_value": "base_url",
+              "key": "ocr_url",
+              "type": "string"
+            },
+            {
+              "required": true,
+              "key": "ocr_model_name",
+              "type": "string",
+              "default": "TEST_OCR"
+            }
+          ]
+        }
+      },
+      "target_info": {
+        "service_name": "process",
+        "api_method": "post",
+        "function": "/process/node_f",
+        "params": [
+          {
+            "required": true,
+            "key": "lc_img_list",
+            "type": "list",
+            "default": []
+          },
+          {
+            "required": true,
+            "key": "ocr_json_path_list",
+            "type": "list",
+            "default": []
+          }
+        ],
+        "result": [
+          {
+            "key": "lc_number",
+            "type": "string"
+          },
+          {
+            "key": "result_path",
+            "type": "string"
+          }
+        ],
+        "node_id": "NODE_F",
+        "node_type": "external",
+        "role": "process",
+        "location": "outter",
+        "containable": false,
+        "required_nodes": [],
+        "api_info": {
+          "base_url": "http://127.0.0.1:8006"
+        },
+        "module_info": {
+          "module_path": "",
+          "class_name": "",
+          "sys_environments": {
+            "params": []
+          },
+          "asset_environments": {
+            "params": []
+          }
+        },
+        "environments": {},
+        "asset_environments": {}
+      }
+    },
+    {
+      "edge_type": "sequence",
+      "source": "NODE_F.process",
+      "source_handler": {
+        "type": "sequence",
+        "conditions": [],
+        "references": [],
+        "environments": [],
+        "formatter": []
+      },
+      "target": "NODE_H.process",
+      "target_handler": {
+        "type": "sequence",
+        "conditions": [],
+        "references": [],
+        "environments": [],
+        "formatter": []
+      },
+      "env_info": [],
+      "asset_info": [],
+      "param_info": [
+        {
+          "refer_type": "indirect",
+          "key": "nlp_img_lc_path",
+          "value": "NODE_F.process.result_path",
+          "default": null,
+          "key_data_type": "string",
+          "key_required": false,
+          "value_data_type": "string"
+        },
+        {
+          "refer_type": "indirect",
+          "key": "nlp_text_lc_path",
+          "value": "NODE_G.process.result_path",
+          "key_data_type": "string",
+          "key_required": true,
+          "value_data_type": "string"
+        },
+        {
+          "refer_type": "indirect",
+          "key": "aiv_img_path",
+          "value": "NODE_D.process.save_FEtype_path",
+          "default": null,
+          "key_data_type": "string",
+          "key_required": false,
+          "value_data_type": "string"
+        }
+      ],
+      "result_info": [],
+      "source_info": {
+        "service_name": "process",
+        "api_method": "post",
+        "function": "/process/node_f",
+        "params": [
+          {
+            "required": true,
+            "key": "lc_img_list",
+            "type": "list",
+            "default": []
+          },
+          {
+            "required": true,
+            "key": "ocr_json_path_list",
+            "type": "list",
+            "default": []
+          }
+        ],
+        "result": [
+          {
+            "key": "lc_number",
+            "type": "string"
+          },
+          {
+            "key": "result_path",
+            "type": "string"
+          }
+        ],
+        "node_id": "NODE_F",
+        "node_type": "external",
+        "role": "process",
+        "location": "outter",
+        "containable": false,
+        "required_nodes": [],
+        "api_info": {
+          "base_url": "http://127.0.0.1:8006"
+        },
+        "module_info": {
+          "module_path": "",
+          "class_name": "",
+          "sys_environments": {
+            "params": []
+          },
+          "asset_environments": {
+            "params": []
+          }
+        },
+        "environments": {},
+        "asset_environments": {}
+      },
+      "target_info": {
+        "service_name": "process",
+        "api_method": "post",
+        "function": "/process/node_h",
+        "params": [
+          {
+            "required": false,
+            "key": "nlp_img_lc_path",
+            "type": "string",
+            "default": null
+          },
+          {
+            "required": true,
+            "key": "nlp_text_lc_path",
+            "type": "string"
+          },
+          {
+            "required": false,
+            "key": "aiv_img_path",
+            "type": "string",
+            "default": null
+          }
+        ],
+        "result": [
+          {
+            "key": "result_path",
+            "type": "string"
+          }
+        ],
+        "node_id": "NODE_H",
+        "node_type": "external",
+        "role": "process",
+        "location": "outter",
+        "containable": false,
+        "required_nodes": [],
+        "api_info": {
+          "base_url": "http://127.0.0.1:8008"
+        },
+        "module_info": {
+          "module_path": "",
+          "class_name": "",
+          "sys_environments": {
+            "params": []
+          },
+          "asset_environments": {
+            "params": []
+          }
+        },
+        "environments": {},
+        "asset_environments": {}
+      }
+    },
+    {
+      "edge_type": "sequence",
+      "source": "NODE_B.process",
+      "source_handler": {
+        "type": "sequence",
+        "conditions": [],
+        "references": [],
+        "environments": [],
+        "formatter": []
+      },
+      "target": "NODE_E.process",
+      "target_handler": {
+        "type": "sequence",
+        "conditions": [],
+        "references": [],
+        "environments": [],
+        "formatter": []
+      },
+      "env_info": [],
+      "asset_info": [],
+      "param_info": [
+        {
+          "refer_type": "indirect",
+          "key": "img_path",
+          "value": "NODE_B.process.img_path",
+          "key_data_type": "string",
+          "key_required": true,
+          "value_data_type": "string"
+        },
+        {
+          "refer_type": "indirect",
+          "key": "lc_img_list",
+          "value": "NODE_B.process.lc_img_list",
+          "key_data_type": "list",
+          "key_required": true,
+          "value_data_type": "list"
+        }
+      ],
+      "result_info": [],
+      "source_info": {
+        "service_name": "process",
+        "api_method": "post",
+        "function": "/process/node_b",
+        "params": [
+          {
+            "required": true,
+            "key": "tif_path",
+            "type": "str",
+            "default": null
+          }
+        ],
+        "result": [
+          {
+            "key": "img_path",
+            "type": "string"
+          },
+          {
+            "key": "doccls_json_path",
+            "type": "string"
+          },
+          {
+            "key": "lc_img_list",
+            "type": "list"
+          }
+        ],
+        "node_id": "NODE_B",
+        "node_type": "external",
+        "role": "process",
+        "location": "outter",
+        "containable": false,
+        "required_nodes": [
+          {
+            "node_type": "MODEL",
+            "refer_key": "llm_model_conn_env",
+            "req_value": "base_url"
+          },
+          {
+            "node_type": "MODEL",
+            "refer_key": "ocr_model_conn_env",
+            "req_value": "base_url"
+          }
+        ],
+        "api_info": {
+          "base_url": "http://127.0.0.1:8002"
+        },
+        "module_info": {
+          "module_path": "",
+          "class_name": ""
+        },
+        "environments": {
+          "params": [
+            {
+              "required": true,
+              "key": "tag_path",
+              "type": "string"
+            },
+            {
+              "required": true,
+              "key": "pool_path",
+              "type": "string"
+            }
+          ]
+        },
+        "asset_environments": {
+          "params": [
+            {
+              "required": true,
+              "refer_key": "llm_model_conn_env",
+              "req_value": "base_url",
+              "key": "llm_url",
+              "type": "string"
+            },
+            {
+              "required": true,
+              "key": "llm_model_name",
+              "type": "string",
+              "default": "TEST_LLM"
+            },
+            {
+              "required": true,
+              "refer_key": "ocr_model_conn_env",
+              "req_value": "base_url",
+              "key": "ocr_url",
+              "type": "string"
+            },
+            {
+              "required": true,
+              "key": "ocr_model_name",
+              "type": "string",
+              "default": "TEST_OCR"
+            }
+          ]
+        }
+      },
+      "target_info": {
+        "service_name": "process",
+        "api_method": "post",
+        "function": "/process/node_e",
+        "params": [
+          {
+            "required": true,
+            "key": "img_path",
+            "type": "string"
+          },
+          {
+            "required": true,
+            "key": "lc_img_list",
+            "type": "list",
+            "default": []
+          }
+        ],
+        "result": [
+          {
+            "key": "ocr_json_path_list",
+            "type": "list"
+          }
+        ],
+        "node_id": "NODE_E",
+        "node_type": "external",
+        "role": "process",
+        "location": "outter",
+        "containable": false,
+        "required_nodes": [],
+        "api_info": {
+          "base_url": "http://127.0.0.1:8005"
+        },
+        "module_info": {
+          "module_path": "",
+          "class_name": "",
+          "sys_environments": {
+            "params": []
+          },
+          "asset_environments": {
+            "params": []
+          }
+        },
+        "environments": {},
+        "asset_environments": {}
+      }
+    },
+    {
+      "edge_type": "sequence",
+      "source": "NODE_E.process",
+      "source_handler": {
+        "type": "sequence",
+        "conditions": [],
+        "references": [],
+        "environments": [],
+        "formatter": []
+      },
+      "target": "NODE_F.process",
+      "target_handler": {
+        "type": "sequence",
+        "conditions": [],
+        "references": [],
+        "environments": [],
+        "formatter": []
+      },
+      "env_info": [],
+      "asset_info": [],
+      "param_info": [
+        {
+          "refer_type": "indirect",
+          "key": "lc_img_list",
+          "value": "NODE_B.process.lc_img_list",
+          "key_data_type": "list",
+          "key_required": true,
+          "value_data_type": "list"
+        },
+        {
+          "refer_type": "indirect",
+          "key": "ocr_json_path_list",
+          "value": "NODE_E.process.ocr_json_path_list",
+          "key_data_type": "list",
+          "key_required": true,
+          "value_data_type": "list"
+        }
+      ],
+      "result_info": [],
+      "source_info": {
+        "service_name": "process",
+        "api_method": "post",
+        "function": "/process/node_e",
+        "params": [
+          {
+            "required": true,
+            "key": "img_path",
+            "type": "string"
+          },
+          {
+            "required": true,
+            "key": "lc_img_list",
+            "type": "list",
+            "default": []
+          }
+        ],
+        "result": [
+          {
+            "key": "ocr_json_path_list",
+            "type": "list"
+          }
+        ],
+        "node_id": "NODE_E",
+        "node_type": "external",
+        "role": "process",
+        "location": "outter",
+        "containable": false,
+        "required_nodes": [],
+        "api_info": {
+          "base_url": "http://127.0.0.1:8005"
+        },
+        "module_info": {
+          "module_path": "",
+          "class_name": "",
+          "sys_environments": {
+            "params": []
+          },
+          "asset_environments": {
+            "params": []
+          }
+        },
+        "environments": {},
+        "asset_environments": {}
+      },
+      "target_info": {
+        "service_name": "process",
+        "api_method": "post",
+        "function": "/process/node_f",
+        "params": [
+          {
+            "required": true,
+            "key": "lc_img_list",
+            "type": "list",
+            "default": []
+          },
+          {
+            "required": true,
+            "key": "ocr_json_path_list",
+            "type": "list",
+            "default": []
+          }
+        ],
+        "result": [
+          {
+            "key": "lc_number",
+            "type": "string"
+          },
+          {
+            "key": "result_path",
+            "type": "string"
+          }
+        ],
+        "node_id": "NODE_F",
+        "node_type": "external",
+        "role": "process",
+        "location": "outter",
+        "containable": false,
+        "required_nodes": [],
+        "api_info": {
+          "base_url": "http://127.0.0.1:8006"
+        },
+        "module_info": {
+          "module_path": "",
+          "class_name": "",
+          "sys_environments": {
+            "params": []
+          },
+          "asset_environments": {
+            "params": []
+          }
+        },
+        "environments": {},
+        "asset_environments": {}
+      }
+    },
+    {
+      "edge_type": "sequence",
+      "source": "NODE_F.process",
+      "source_handler": {
+        "type": "sequence",
+        "conditions": [],
+        "references": [],
+        "environments": [],
+        "formatter": []
+      },
+      "target": "NODE_H.process",
+      "target_handler": {
+        "type": "sequence",
+        "conditions": [],
+        "references": [],
+        "environments": [],
+        "formatter": []
+      },
+      "env_info": [],
+      "asset_info": [],
+      "param_info": [
+        {
+          "refer_type": "indirect",
+          "key": "nlp_img_lc_path",
+          "value": "NODE_F.process.result_path",
+          "default": null,
+          "key_data_type": "string",
+          "key_required": false,
+          "value_data_type": "string"
+        },
+        {
+          "refer_type": "indirect",
+          "key": "nlp_text_lc_path",
+          "value": "NODE_G.process.result_path",
+          "key_data_type": "string",
+          "key_required": true,
+          "value_data_type": "string"
+        },
+        {
+          "refer_type": "indirect",
+          "key": "aiv_img_path",
+          "value": "NODE_D.process.save_FEtype_path",
+          "default": null,
+          "key_data_type": "string",
+          "key_required": false,
+          "value_data_type": "string"
+        }
+      ],
+      "result_info": [],
+      "source_info": {
+        "service_name": "process",
+        "api_method": "post",
+        "function": "/process/node_f",
+        "params": [
+          {
+            "required": true,
+            "key": "lc_img_list",
+            "type": "list",
+            "default": []
+          },
+          {
+            "required": true,
+            "key": "ocr_json_path_list",
+            "type": "list",
+            "default": []
+          }
+        ],
+        "result": [
+          {
+            "key": "lc_number",
+            "type": "string"
+          },
+          {
+            "key": "result_path",
+            "type": "string"
+          }
+        ],
+        "node_id": "NODE_F",
+        "node_type": "external",
+        "role": "process",
+        "location": "outter",
+        "containable": false,
+        "required_nodes": [],
+        "api_info": {
+          "base_url": "http://127.0.0.1:8006"
+        },
+        "module_info": {
+          "module_path": "",
+          "class_name": "",
+          "sys_environments": {
+            "params": []
+          },
+          "asset_environments": {
+            "params": []
+          }
+        },
+        "environments": {},
+        "asset_environments": {}
+      },
+      "target_info": {
+        "service_name": "process",
+        "api_method": "post",
+        "function": "/process/node_h",
+        "params": [
+          {
+            "required": false,
+            "key": "nlp_img_lc_path",
+            "type": "string",
+            "default": null
+          },
+          {
+            "required": true,
+            "key": "nlp_text_lc_path",
+            "type": "string"
+          },
+          {
+            "required": false,
+            "key": "aiv_img_path",
+            "type": "string",
+            "default": null
+          }
+        ],
+        "result": [
+          {
+            "key": "result_path",
+            "type": "string"
+          }
+        ],
+        "node_id": "NODE_H",
+        "node_type": "external",
+        "role": "process",
+        "location": "outter",
+        "containable": false,
+        "required_nodes": [],
+        "api_info": {
+          "base_url": "http://127.0.0.1:8008"
+        },
+        "module_info": {
+          "module_path": "",
+          "class_name": "",
+          "sys_environments": {
+            "params": []
+          },
+          "asset_environments": {
+            "params": []
+          }
+        },
+        "environments": {},
+        "asset_environments": {}
+      }
+    },
+    {
+      "edge_type": "sequence",
+      "source": "Conditional_Node.evaluate",
+      "source_handler": {
+        "type": "sequence",
+        "conditions": [],
+        "references": [],
+        "environments": [],
+        "formatter": []
+      },
+      "target": "NODE_G.process",
+      "target_handler": {
+        "type": "first_come",
+        "conditions": [],
+        "references": [],
+        "environments": [],
+        "formatter": []
+      },
+      "env_info": [],
+      "asset_info": [],
+      "param_info": [
+        {
+          "refer_type": "indirect",
+          "key": "text_path",
+          "value": "NODE_A.process.txt_path",
+          "key_data_type": "string",
+          "key_required": false,
+          "value_data_type": "string"
+        },
+        {
+          "refer_type": "indirect",
+          "key": "lc_img_list",
+          "value": "NODE_B.process.lc_img_list",
+          "default": [],
+          "key_data_type": "list",
+          "key_required": false,
+          "value_data_type": "list"
+        }
+      ],
+      "result_info": [],
+      "source_info": {
+        "service_name": "evaluate",
+        "api_method": "",
+        "function": "evaluate_condition",
+        "params": [
+          {
+            "required": true,
+            "key": "branches",
+            "type": "list"
+          }
+        ],
+        "result": [
+          {
+            "key": "actions",
+            "type": "string"
+          }
+        ],
+        "node_id": "Conditional_Node",
+        "node_type": "module",
+        "role": "condition",
+        "location": "inner",
+        "containable": false,
+        "required_nodes": {},
+        "api_info": {},
+        "module_info": {},
+        "environments": {},
+        "asset_environments": {}
+      },
+      "target_info": {
+        "service_name": "process",
+        "api_method": "post",
+        "function": "/process/node_g",
+        "params": [
+          {
+            "required": false,
+            "key": "text_path",
+            "type": "string",
+            "default": null
+          },
+          {
+            "required": false,
+            "key": "lc_img_list",
+            "type": "list",
+            "default": []
+          }
+        ],
+        "result": [
+          {
+            "key": "lc_number",
+            "type": "string"
+          },
+          {
+            "key": "result_path",
+            "type": "string"
+          }
+        ],
+        "node_id": "NODE_G",
+        "node_type": "external",
+        "role": "process",
+        "location": "outter",
+        "containable": false,
+        "required_nodes": [],
+        "api_info": {
+          "base_url": "http://127.0.0.1:8007"
+        },
+        "module_info": {
+          "module_path": "",
+          "class_name": "",
+          "sys_environments": {
+            "params": []
+          },
+          "asset_environments": {
+            "params": []
+          }
+        },
+        "environments": {},
+        "asset_environments": {}
+      }
+    },
+    {
+      "edge_type": "sequence",
+      "source": "NODE_G.process",
+      "source_handler": {
+        "type": "sequence",
+        "conditions": [],
+        "references": [],
+        "environments": [],
+        "formatter": []
+      },
+      "target": "NODE_H.process",
+      "target_handler": {
+        "type": "sequence",
+        "conditions": [],
+        "references": [],
+        "environments": [],
+        "formatter": []
+      },
+      "env_info": [],
+      "asset_info": [],
+      "param_info": [
+        {
+          "refer_type": "indirect",
+          "key": "nlp_img_lc_path",
+          "value": "NODE_F.process.result_path",
+          "default": null,
+          "key_data_type": "string",
+          "key_required": false,
+          "value_data_type": "string"
+        },
+        {
+          "refer_type": "indirect",
+          "key": "nlp_text_lc_path",
+          "value": "NODE_G.process.result_path",
+          "key_data_type": "string",
+          "key_required": true,
+          "value_data_type": "string"
+        },
+        {
+          "refer_type": "indirect",
+          "key": "aiv_img_path",
+          "value": "NODE_D.process.save_FEtype_path",
+          "default": null,
+          "key_data_type": "string",
+          "key_required": false,
+          "value_data_type": "string"
+        }
+      ],
+      "result_info": [],
+      "source_info": {
+        "service_name": "process",
+        "api_method": "post",
+        "function": "/process/node_g",
+        "params": [
+          {
+            "required": false,
+            "key": "text_path",
+            "type": "string",
+            "default": null
+          },
+          {
+            "required": false,
+            "key": "lc_img_list",
+            "type": "list",
+            "default": []
+          }
+        ],
+        "result": [
+          {
+            "key": "lc_number",
+            "type": "string"
+          },
+          {
+            "key": "result_path",
+            "type": "string"
+          }
+        ],
+        "node_id": "NODE_G",
+        "node_type": "external",
+        "role": "process",
+        "location": "outter",
+        "containable": false,
+        "required_nodes": [],
+        "api_info": {
+          "base_url": "http://127.0.0.1:8007"
+        },
+        "module_info": {
+          "module_path": "",
+          "class_name": "",
+          "sys_environments": {
+            "params": []
+          },
+          "asset_environments": {
+            "params": []
+          }
+        },
+        "environments": {},
+        "asset_environments": {}
+      },
+      "target_info": {
+        "service_name": "process",
+        "api_method": "post",
+        "function": "/process/node_h",
+        "params": [
+          {
+            "required": false,
+            "key": "nlp_img_lc_path",
+            "type": "string",
+            "default": null
+          },
+          {
+            "required": true,
+            "key": "nlp_text_lc_path",
+            "type": "string"
+          },
+          {
+            "required": false,
+            "key": "aiv_img_path",
+            "type": "string",
+            "default": null
+          }
+        ],
+        "result": [
+          {
+            "key": "result_path",
+            "type": "string"
+          }
+        ],
+        "node_id": "NODE_H",
+        "node_type": "external",
+        "role": "process",
+        "location": "outter",
+        "containable": false,
+        "required_nodes": [],
+        "api_info": {
+          "base_url": "http://127.0.0.1:8008"
+        },
+        "module_info": {
+          "module_path": "",
+          "class_name": "",
+          "sys_environments": {
+            "params": []
+          },
+          "asset_environments": {
+            "params": []
+          }
+        },
+        "environments": {},
+        "asset_environments": {}
+      }
+    },
+    {
+      "edge_type": "sequence",
+      "source": "NODE_H.process",
+      "source_handler": {
+        "type": "sequence",
+        "conditions": [],
+        "references": [],
+        "environments": [],
+        "formatter": []
+      },
+      "target": "EXTERNAL_CALLBACK.callback",
+      "target_handler": {
+        "type": "sequence",
+        "conditions": [],
+        "references": [],
+        "environments": [],
+        "formatter": []
+      },
+      "env_info": [],
+      "asset_info": [],
+      "param_info": [
+        {
+          "refer_type": "indirect",
+          "key": "callback_url",
+          "value": "START_NODE.input_node.call_back_url",
+          "key_data_type": "string",
+          "key_required": true,
+          "value_data_type": "string"
+        },
+        {
+          "refer_type": "indirect",
+          "key": "callback_error_url",
+          "value": "START_NODE.input_node.call_back_error_url",
+          "key_data_type": "string",
+          "key_required": true,
+          "value_data_type": "string"
+        },
+        {
+          "refer_type": "indirect",
+          "key": "user_id",
+          "value": "START_NODE.input_node.user_id",
+          "key_data_type": "string",
+          "key_required": true,
+          "value_data_type": "string"
+        },
+        {
+          "refer_type": "indirect",
+          "key": "file_path_list",
+          "value": "START_NODE.input_node.tar_path",
+          "key_data_type": "list",
+          "key_required": true,
+          "value_data_type": "list"
+        },
+        {
+          "refer_type": "indirect",
+          "key": "result_path",
+          "value": "NODE_H.process.result_path",
+          "default": null,
+          "key_data_type": "string",
+          "key_required": true,
+          "value_data_type": "string"
+        }
+      ],
+      "result_info": [],
+      "source_info": {
+        "service_name": "process",
+        "api_method": "post",
+        "function": "/process/node_h",
+        "params": [
+          {
+            "required": false,
+            "key": "nlp_img_lc_path",
+            "type": "string",
+            "default": null
+          },
+          {
+            "required": true,
+            "key": "nlp_text_lc_path",
+            "type": "string"
+          },
+          {
+            "required": false,
+            "key": "aiv_img_path",
+            "type": "string",
+            "default": null
+          }
+        ],
+        "result": [
+          {
+            "key": "result_path",
+            "type": "string"
+          }
+        ],
+        "node_id": "NODE_H",
+        "node_type": "external",
+        "role": "process",
+        "location": "outter",
+        "containable": false,
+        "required_nodes": [],
+        "api_info": {
+          "base_url": "http://127.0.0.1:8008"
+        },
+        "module_info": {
+          "module_path": "",
+          "class_name": "",
+          "sys_environments": {
+            "params": []
+          },
+          "asset_environments": {
+            "params": []
+          }
+        },
+        "environments": {},
+        "asset_environments": {}
+      },
+      "target_info": {
+        "service_name": "callback",
+        "api_method": "",
+        "function": "call_external_api",
+        "params": [
+          {
+            "required": true,
+            "key": "callback_url",
+            "type": "string"
+          },
+          {
+            "required": true,
+            "key": "callback_error_url",
+            "type": "string"
+          },
+          {
+            "required": true,
+            "key": "user_id",
+            "type": "string"
+          },
+          {
+            "required": true,
+            "key": "file_path_list",
+            "type": "list"
+          },
+          {
+            "required": true,
+            "key": "result_path",
+            "type": "string"
+          }
+        ],
+        "result": [
+          {
+            "required": true,
+            "key": "result",
+            "type": "string"
+          }
+        ],
+        "node_id": "EXTERNAL_CALLBACK",
+        "node_type": "module",
+        "role": "external",
+        "location": "inner",
+        "containable": true,
+        "required_nodes": [],
+        "api_info": {
+          "base_url": ""
+        },
+        "module_info": {
+          "module_path": "app.dtm.external_api_requester",
+          "class_name": "ExternalApiRequester",
+          "sys_environments": {
+            "params": []
+          },
+          "asset_environments": {
+            "params": []
+          }
+        },
+        "environments": {},
+        "asset_environments": {}
+      }
+    },
+    {
+      "edge_type": "sequence",
+      "source": "EXTERNAL_CALLBACK.callback",
+      "source_handler": {
+        "type": "sequence",
+        "conditions": [],
+        "references": [],
+        "environments": [],
+        "formatter": []
+      },
+      "target": "END_NODE.output",
+      "target_handler": {
+        "type": "sequence",
+        "conditions": [],
+        "references": [],
+        "environments": [],
+        "formatter": []
+      },
+      "env_info": [],
+      "asset_info": [],
+      "param_info": [
+        {
+          "refer_type": "indirect",
+          "key": "result",
+          "value": "EXTERNAL_CALLBACK.callback.result",
+          "key_data_type": "string",
+          "key_required": true,
+          "value_data_type": "string"
+        }
+      ],
+      "result_info": [],
+      "source_info": {
+        "service_name": "callback",
+        "api_method": "",
+        "function": "call_external_api",
+        "params": [
+          {
+            "required": true,
+            "key": "callback_url",
+            "type": "string"
+          },
+          {
+            "required": true,
+            "key": "callback_error_url",
+            "type": "string"
+          },
+          {
+            "required": true,
+            "key": "user_id",
+            "type": "string"
+          },
+          {
+            "required": true,
+            "key": "file_path_list",
+            "type": "list"
+          },
+          {
+            "required": true,
+            "key": "result_path",
+            "type": "string"
+          }
+        ],
+        "result": [
+          {
+            "required": true,
+            "key": "result",
+            "type": "string"
+          }
+        ],
+        "node_id": "EXTERNAL_CALLBACK",
+        "node_type": "module",
+        "role": "external",
+        "location": "inner",
+        "containable": true,
+        "required_nodes": [],
+        "api_info": {
+          "base_url": ""
+        },
+        "module_info": {
+          "module_path": "app.dtm.external_api_requester",
+          "class_name": "ExternalApiRequester",
+          "sys_environments": {
+            "params": []
+          },
+          "asset_environments": {
+            "params": []
+          }
+        },
+        "environments": {},
+        "asset_environments": {}
+      },
+      "target_info": {
+        "service_name": "output",
+        "api_method": "",
+        "function": "output",
+        "params": [
+          {
+            "required": true,
+            "key": "result",
+            "type": "string"
+          }
+        ],
+        "result": [
+          {
+            "required": true,
+            "key": "result",
+            "type": "string"
+          }
+        ],
+        "node_id": "END_NODE",
+        "node_type": "module",
+        "role": "output",
+        "location": "inner",
+        "containable": true,
+        "required_nodes": [],
+        "api_info": {
+          "base_url": ""
+        },
+        "module_info": {
+          "module_path": "app.dtm.output",
+          "class_name": "Output",
+          "sys_environments": {
+            "params": []
+          },
+          "asset_environments": {
+            "params": []
+          }
+        },
+        "environments": {},
+        "asset_environments": {}
+      }
+    },
+    {
+      "edge_type": "reference",
+      "source": "NODE_B.process",
+      "source_handler": {},
+      "target": "OCR_Model.process",
+      "target_handler": {},
+      "env_info": [],
+      "asset_info": [],
+      "param_info": [],
+      "result_info": [],
+      "source_info": {
+        "service_name": "process",
+        "api_method": "post",
+        "function": "/process/node_b",
+        "params": [
+          {
+            "required": true,
+            "key": "tif_path",
+            "type": "str",
+            "default": null
+          }
+        ],
+        "result": [
+          {
+            "key": "img_path",
+            "type": "string"
+          },
+          {
+            "key": "doccls_json_path",
+            "type": "string"
+          },
+          {
+            "key": "lc_img_list",
+            "type": "list"
+          }
+        ],
+        "node_id": "NODE_B",
+        "node_type": "external",
+        "role": "process",
+        "location": "outter",
+        "containable": false,
+        "required_nodes": [
+          {
+            "node_type": "MODEL",
+            "refer_key": "llm_model_conn_env",
+            "req_value": "base_url"
+          },
+          {
+            "node_type": "MODEL",
+            "refer_key": "ocr_model_conn_env",
+            "req_value": "base_url"
+          }
+        ],
+        "api_info": {
+          "base_url": "http://127.0.0.1:8002"
+        },
+        "module_info": {
+          "module_path": "",
+          "class_name": ""
+        },
+        "environments": {
+          "params": [
+            {
+              "required": true,
+              "key": "tag_path",
+              "type": "string"
+            },
+            {
+              "required": true,
+              "key": "pool_path",
+              "type": "string"
+            }
+          ]
+        },
+        "asset_environments": {
+          "params": [
+            {
+              "required": true,
+              "refer_key": "llm_model_conn_env",
+              "req_value": "base_url",
+              "key": "llm_url",
+              "type": "string"
+            },
+            {
+              "required": true,
+              "key": "llm_model_name",
+              "type": "string",
+              "default": "TEST_LLM"
+            },
+            {
+              "required": true,
+              "refer_key": "ocr_model_conn_env",
+              "req_value": "base_url",
+              "key": "ocr_url",
+              "type": "string"
+            },
+            {
+              "required": true,
+              "key": "ocr_model_name",
+              "type": "string",
+              "default": "TEST_OCR"
+            }
+          ]
+        }
+      },
+      "target_info": {
+        "service_name": "process",
+        "function": "/process/node_h",
+        "api_method": "post",
+        "params": [
+          {
+            "required": false,
+            "key": "nlp_img_lc_path",
+            "type": "string",
+            "default": "None"
+          },
+          {
+            "required": false,
+            "key": "nlp_text_lc_path",
+            "type": "string",
+            "default": "None"
+          },
+          {
+            "required": false,
+            "key": "aiv_img_path",
+            "type": "string",
+            "default": "None"
+          }
+        ],
+        "result": [
+          {
+            "key": "result_path",
+            "type": "string"
+          },
+          {
+            "key": "timestamp",
+            "type": "string"
+          }
+        ],
+        "node_id": "OCR_Model",
+        "node_type": "external",
+        "role": "process",
+        "location": "outter",
+        "containable": false,
+        "required_nodes": [],
+        "api_info": {
+          "base_url": "http://127.0.0.1:8008"
+        },
+        "module_info": {
+          "module_path": "",
+          "class_name": ""
+        },
+        "environments": {},
+        "asset_environments": {}
+      }
+    },
+    {
+      "edge_type": "reference",
+      "source": "NODE_B.process",
+      "source_handler": {},
+      "target": "LLM_Model.process",
+      "target_handler": {},
+      "env_info": [],
+      "asset_info": [],
+      "param_info": [],
+      "result_info": [],
+      "source_info": {
+        "service_name": "process",
+        "api_method": "post",
+        "function": "/process/node_b",
+        "params": [
+          {
+            "required": true,
+            "key": "tif_path",
+            "type": "str",
+            "default": null
+          }
+        ],
+        "result": [
+          {
+            "key": "img_path",
+            "type": "string"
+          },
+          {
+            "key": "doccls_json_path",
+            "type": "string"
+          },
+          {
+            "key": "lc_img_list",
+            "type": "list"
+          }
+        ],
+        "node_id": "NODE_B",
+        "node_type": "external",
+        "role": "process",
+        "location": "outter",
+        "containable": false,
+        "required_nodes": [
+          {
+            "node_type": "MODEL",
+            "refer_key": "llm_model_conn_env",
+            "req_value": "base_url"
+          },
+          {
+            "node_type": "MODEL",
+            "refer_key": "ocr_model_conn_env",
+            "req_value": "base_url"
+          }
+        ],
+        "api_info": {
+          "base_url": "http://127.0.0.1:8002"
+        },
+        "module_info": {
+          "module_path": "",
+          "class_name": ""
+        },
+        "environments": {
+          "params": [
+            {
+              "required": true,
+              "key": "tag_path",
+              "type": "string"
+            },
+            {
+              "required": true,
+              "key": "pool_path",
+              "type": "string"
+            }
+          ]
+        },
+        "asset_environments": {
+          "params": [
+            {
+              "required": true,
+              "refer_key": "llm_model_conn_env",
+              "req_value": "base_url",
+              "key": "llm_url",
+              "type": "string"
+            },
+            {
+              "required": true,
+              "key": "llm_model_name",
+              "type": "string",
+              "default": "TEST_LLM"
+            },
+            {
+              "required": true,
+              "refer_key": "ocr_model_conn_env",
+              "req_value": "base_url",
+              "key": "ocr_url",
+              "type": "string"
+            },
+            {
+              "required": true,
+              "key": "ocr_model_name",
+              "type": "string",
+              "default": "TEST_OCR"
+            }
+          ]
+        }
+      },
+      "target_info": {
+        "service_name": "process",
+        "function": "/process/node_h",
+        "api_method": "post",
+        "params": [
+          {
+            "required": false,
+            "key": "nlp_img_lc_path",
+            "type": "string",
+            "default": "None"
+          },
+          {
+            "required": false,
+            "key": "nlp_text_lc_path",
+            "type": "string",
+            "default": "None"
+          },
+          {
+            "required": false,
+            "key": "aiv_img_path",
+            "type": "string",
+            "default": "None"
+          }
+        ],
+        "result": [
+          {
+            "key": "result_path",
+            "type": "string"
+          },
+          {
+            "key": "timestamp",
+            "type": "string"
+          }
+        ],
+        "node_id": "LLM_Model",
+        "node_type": "external",
+        "role": "process",
+        "location": "outter",
+        "containable": false,
+        "required_nodes": [],
+        "api_info": {
+          "base_url": "http://127.0.0.1:8008"
+        },
+        "module_info": {
+          "module_path": "",
+          "class_name": ""
+        },
+        "environments": {},
+        "asset_environments": {}
+      }
+    }
+  ],
+  "resources": [
+    {
+      "node_id": "RAG_PROM_913D15_node",
+      "resource": {
+        "cpu_requests": "200m",
+        "cpu_limits": "1",
+        "mem_requests": "500Mi",
+        "mem_limits": "1Gi"
+      },
+      "replicas": "1",
+      "profile": {
+        "serv_type": "code",
+        "ref_id": "\ucf54\ub4dcID",
+        "ref_ver": "\ucf54\ub4dc\ubc84\uc804",
+        "serv_engine_type": "wfnode"
+      }
+    },
+    {
+      "node_id": "RAG_GEN_97E683_node",
+      "resource": {
+        "cpu_requests": "4",
+        "cpu_limits": "8",
+        "mem_requests": "16Gi",
+        "mem_limits": "32Gi",
+        "gpu_limits": "1"
+      },
+      "profile": {
+        "serv_type": "model",
+        "ref_id": "\ubaa8\ub378ID",
+        "ref_ver": "\ubaa8\ub378\ubc84\uc804ID",
+        "serv_engine_type": "vllm-v0.8.4-cuda124",
+        "gpu_type": "A100"
+      },
+      "replicas": "1",
+      "parameter": {
+        "args": [
+          {
+            "key": "--max-model-len",
+            "val": "10240"
+          },
+          {
+            "key": "--enable-reasonin",
+            "val": null
+          }
+        ],
+        "envs": [
+          {
+            "key": "VLLM_USE_FLASH_ATTN",
+            "val": "0"
+          }
+        ]
+      }
+    },
+    {
+      "node_id": "RAG_RETR_CB7865_node",
+      "resource": {
+        "cpu_requests": "200m",
+        "cpu_limits": "1",
+        "mem_requests": "500Mi",
+        "mem_limits": "1Gi"
+      },
+      "replicas": "1",
+      "profile": {
+        "serv_type": "workflow",
+        "serv_engine_type": "wfnode"
+      }
+    },
+    {
+      "node_id": "WF_ENG_node",
+      "resource": {
+        "cpu_requests": "200m",
+        "cpu_limits": "1",
+        "mem_requests": "500Mi",
+        "mem_limits": "1Gi"
+      },
+      "replicas": "1",
+      "profile": {
+        "serv_type": "workflow",
+        "serv_engine_type": "wfeng"
+      }
+    }
+  ]
+}

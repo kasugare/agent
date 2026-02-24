@@ -138,21 +138,20 @@ class MetricService:
         metastore = MetaStoreService(self._logger, wf_id)
         nodes_meta = metastore.get_nodes_meta_service()
         status_map = {}
-        for node_id, node_map in nodes_meta.items():
-            node_type = node_map.get('node_type')
-            if node_type == 'external':
-                api_info = node_map.get('api_info', {})
-                base_url = api_info.get('base_url')
-                gateway_info = external_api.call_api_sync(base_url=base_url, method='get', route_path='/_gateway/metrics')
-                servers_stat = gateway_info.get('backend_servers')
-                status_map[node_id] = servers_stat
-                self._logger.debug(f" - {node_id}: {servers_stat}")
+        try:
+            for node_id, node_map in nodes_meta.items():
+                node_type = node_map.get('node_type')
+                if node_type == 'external':
+                    api_info = node_map.get('api_info', {})
+                    base_url = api_info.get('base_url')
+                    gateway_info = external_api.call_api_sync(base_url=base_url, method='get', route_path='/_gateway/metrics')
+                    servers_stat = gateway_info.get('backend_servers')
+                    status_map[node_id] = servers_stat
+                    self._logger.debug(f" - {node_id}: {servers_stat}")
+        except Exception as e:
+            raise
         is_working = (lambda x: not x)(all(is_available(queue_info) for queue_info in status_map.values()))
         result = {
             "is_working": is_working
         }
         return result
-
-
-
-

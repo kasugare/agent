@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from common.conf_serving import getRecipeDir
+from common.conf_serving import getRecipeDir, setWorkflowId
 from api.workflow.control.meta.metastore_controller import MetastoreController
 from typing import Dict
 import time
@@ -137,8 +137,8 @@ class MetaStoreService:
         return wf_meta
 
     def _gen_dag_file_path(self, wf_comm_meta, request_id):
-        proj_id = wf_comm_meta.get('proj_id')
-        wf_id = wf_comm_meta.get('wf_id')
+        proj_id = wf_comm_meta.get('project_id')
+        wf_id = wf_comm_meta.get('workflow_id')
         dirpath = os.path.join(getRecipeDir(), proj_id)
         filename = f"{int(time.time() * 1000)}-{wf_id}-{request_id}.json"
         return dirpath, filename
@@ -158,10 +158,13 @@ class MetaStoreService:
     def set_wf_meta(self, meta_pack, request_id):
         wf_meta = meta_pack.get('wf_meta')
         self._logger.debug("# New Meta Update")
-        wf_comm = wf_meta.get('common')
+        wf_comm = wf_meta.get('metadata')
+        wf_id = wf_comm.get('workflow_id')
+        setWorkflowId(opt_value=wf_id)
         dirpath, filename = self._gen_dag_file_path(wf_comm, request_id)
         self.set_wf_meta_file_service(wf_meta, dirpath=dirpath, filename=filename)
         self.set_wf_meta_service(wf_meta)
+
         return meta_pack
 
     def get_meta_pack_service(self) -> Dict:

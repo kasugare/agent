@@ -205,10 +205,25 @@ class WorkflowHelper:
         return extract_param_value
 
     def _extract_param_value(self, service_id, param_map_list) -> dict:
+        def get_default_value(param_map):
+            default_value = None
+            default = param_map.get(default_value)
+            self._logger.critical(f" - {service_id} : {default}")
+            if default:
+                default_value = default
+            else:
+                data_type = param_map.get('value_data_type')
+                if data_type == 'list':
+                    default_value = []
+                elif data_type == 'dict' or data_type == 'json':
+                    default_value = {}
+                else:
+                    default_value = None
+            return default_value
+
         params = {}
         if not isinstance(param_map_list, list):
             return params
-
         for param_map in param_map_list:
             param_name = param_map.get('key')
             if 'value' in param_map.keys():
@@ -218,6 +233,8 @@ class WorkflowHelper:
                 else:
                     addr_value = param_map.get('value')
                     extract_params_value = self._datastore.get_output_value(addr_value)
+                    if not extract_params_value:
+                        extract_params_value = get_default_value(param_map)
                 params[param_name] = extract_params_value
             elif 'values' in param_map.keys():
                 value_param_map_list = param_map.get('values')

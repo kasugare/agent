@@ -65,14 +65,14 @@ async def process_node(request: NodeA_Model):
 
 # Node B - Business Logic 1
 class NodeB_Model(BaseModel):
-    tif_path: str
+    tif_path: Optional[str] = None
 
 app_node_b = FastAPI(title="Node B - Business Logic 1")
 @app_node_b.post("/process/node_b")#, response_model=WorkflowResponse)
 async def process_node(request: NodeB_Model):
     print(f"< Node B >")
     print(f"  L PARAMS: {request.tif_path}")
-    time.sleep(1)
+    time.sleep(0.5)
     await asyncio.sleep(random.randrange(1, 5)*0.1)
 
     response = {
@@ -176,15 +176,15 @@ async def process_node(request: NodeF_Model):
 
 # Node G - Business Logic 3
 class NodeG_Model(BaseModel):
-    text_path: str
-    img_path: str
+    text_path: Optional[str] = None
+    lc_img_list: Optional[list] = []
 
 app_node_g = FastAPI(title="Node G - Business Logic 6")
 @app_node_g.post("/process/node_g")#, response_model=WorkflowResponse)
 async def process_node(request: NodeG_Model):
     print(f"< Node G >")
     print(f"  L PARAMS: {request.text_path}")
-    print(f"  L PARAMS: {request.img_path}")
+    print(f"  L PARAMS: {request.lc_img_list}")
     await asyncio.sleep(random.randrange(1, 5) * 0.1)
 
     response = {

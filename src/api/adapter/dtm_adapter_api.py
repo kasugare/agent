@@ -184,7 +184,7 @@ class EngineAdapter(BaseRouter):
             # self._logger.info("################################################################")
             # self._logger.info("#                       < Is Working >                         #")
             # self._logger.info("################################################################")
-            is_working = True
+            result = {}
             try:
                 result = await asyncio.create_task(self._call_workflow_api(
                         base_url=str(request.base_url),
@@ -195,23 +195,17 @@ class EngineAdapter(BaseRouter):
                         }
                     )
                 )
-
-                if not result:
-                    is_working = False
-                else:
-                    is_working = result.get('is_working')
             except Exception as e:
                 self._logger.error(e)
 
-
             response = {
                 "data": {
-                    "isworking": is_working,
+                    "isworking": result.get('is_working', False),
                     "async_queue_count": 0,
                     "job_list": []
                 },
-                "status": 0,
-                "statusText": "success"
+                "status": result.get('state'),
+                "statusText": result.get('message')
             }
 
             return response

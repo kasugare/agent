@@ -72,7 +72,7 @@ class WorkflowEngine(BaseRouter):
             params.update(dict(body))
         self._logger.debug("Input Params")
         for k, v in params.items():
-            self._logger.warn(f" - {k}: {v}")
+            self._logger.debug(f" - {k}: {v}")
         return params
 
     def _gen_store_pack(self, wf_id, job_id):
@@ -87,16 +87,16 @@ class WorkflowEngine(BaseRouter):
 
 
     def setup_routes(self):
-        @self.router.post(path='/workflow/meta', response_model=BaseResponse[schema.ResCreateWorkflow])
-        async def create_workflow(headers: HeaderModel = Depends(get_headers), request: schema.ReqCreateWorkflow = ...):
+        @self.router.post(path='/workflow/meta')#, response_model=BaseResponse[schema.ResCreateWorkflow])
+        # async def create_workflow(headers: HeaderModel = Depends(get_headers), request: schema.ReqCreateWorkflow = ...):
+        async def create_workflow(request: Request, body: dict):
+
             self._logger.info("################################################################")
             self._logger.info("#                         < Set Meta >                         #")
             self._logger.info("################################################################")
-            request_id = headers.request_id
-            new_wf_meta = request.meta
-
-            if not request_id:
-                request_id = format(int(time.time() * 100000), "X")
+            headers = request.headers
+            request_id = headers.get('request-id', format(int(time.time() * 100000), "X"))
+            new_wf_meta = body
 
             if not new_wf_meta:
                 self._logger.warn("InvalidInputException: invalid workflow meta")
@@ -108,17 +108,17 @@ class WorkflowEngine(BaseRouter):
                 wf_id = meta_pack.get('workflow_id')
                 metastore = MetaStoreService(self._logger, wf_id)
                 metastore.set_wf_meta(meta_pack, request_id)
-                state = "success"
+                status_code = 200
                 message = "success"
             except MetaTypeError as e:
-                state = "fail"
+                status_code = 401
                 message = str(e)
             except Exception as e:
-                state = "fail"
+                status_code = 401
                 message = str(e)
 
             result_state = {
-                "state": state,
+                "status_code": status_code,
                 "message": message
             }
             return result_state
@@ -220,20 +220,6 @@ class WorkflowEngine(BaseRouter):
                 self._logger.error(e)
             return response
 
-        @self.router.get(path='/workflow/meta')
-        async def call_meta(wf_id=None):
-            self._logger.info("################################################################")
-            self._logger.info("#                         < Meta Pack >                        #")
-            self._logger.info("################################################################")
-            if not wf_id:
-                wf_id = getWorkflowId()
-            metastore = MetaStoreService(self._logger, wf_id)
-            meta_pack = metastore.get_meta_pack_service()
-            wf_meta = meta_pack.get('wf_meta', {})
-            for k, v in wf_meta.items():
-                self._logger.debug(f" - {k} : \t{v}")
-            return wf_meta
-
         @self.router.get(path='/workflow/metapack')
         async def call_meta_pack(wf_id=None):
             self._logger.info("################################################################")
@@ -304,8 +290,21 @@ class WorkflowEngine(BaseRouter):
             self._logger.info("#                      < Working State >                       #")
             self._logger.info("################################################################")
             wf_id = getWorkflowId()
-            is_working = self._metric_service.check_working_state(wf_id)
-            return is_working
+            state = 0
+            message = 'success'
+            try:
+                is_working = self._metric_service.check_working_state(wf_id)
+            except Exception as e:
+                self._logger.error(e)
+                is_working = False
+                state = 401
+                message = str(e)
+            result = {
+                'is_workfing': is_working,
+                'state': state,
+                'message': message
+            }
+            return result
 
         @self.router.websocket("/workflow/chat")
         async def websocket_endpoint(websocket: WebSocket):

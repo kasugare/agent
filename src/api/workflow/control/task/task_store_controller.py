@@ -161,10 +161,11 @@ class TaskStoreController:
     def get_task_status_ctl(self):
         service_ids = self._task_service_access.get_data_access("services")
         task_status_map = {}
-        for service_id in service_ids:
-            key = self._gen_service_key(service_id)
-            status = self._task_store_access.get_state_access(key)
-            task_status_map[service_id] = status
+        if service_ids and isinstance(service_ids, list):
+            for service_id in service_ids:
+                key = self._gen_service_key(service_id)
+                status = self._task_store_access.get_state_access(key)
+                task_status_map[service_id] = status
         return task_status_map
 
     def get_processing_time_ctl(self):

@@ -4,9 +4,11 @@
 import configparser
 import sys
 import os
+import traceback
 
 CONF_FILENAME = "../conf/"
 CONF_NAME = "serving.conf"
+
 
 def getConfig():
     src_path = os.path.dirname(CONF_FILENAME)
@@ -20,6 +22,15 @@ def getConfig():
     conf.read(ini_path)
     return conf
 
+def setConfig(conf):
+    src_path = os.path.dirname(CONF_FILENAME)
+    ini_path = os.path.join(src_path, CONF_NAME)
+    try:
+        with open(ini_path, 'w') as f:
+            conf.write(f)
+    except Exception as e:
+        print(traceback.format_exc(e))
+
 
 def getOperMode(section='OPERATION'):
     conf = getConfig()
@@ -30,7 +41,15 @@ def getOperMode(section='OPERATION'):
 def getWorkflowId(section='WORKFLOW'):
     conf = getConfig()
     workflow_id = conf.get(section, 'workflow_id')
+
     return workflow_id
+
+
+def setWorkflowId(section='WORKFLOW', opt_value=None):
+    if opt_value:
+        conf = getConfig()
+        conf.set(section, option='workflow_id', value=opt_value)
+        setConfig(conf)
 
 
 def getRecipeDir(section='DAG'):

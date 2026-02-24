@@ -4,7 +4,7 @@
 	"metadata": {
 		"version": "0.1.0",
 		"project_id": "DTM3_SERVING",
-		"workflow_id": "DTM3_WF_003_RES",
+		"workflow_id": "dtm3_dev_v1",
 		"type": "SERVING"
 	},
 	"environments": [
@@ -14,7 +14,7 @@
 			"env_params": [
 				{
 					"key": "POOL_PATH",
-					"value": "database/FE_BANK251Q/platform_model/output_sample/260115_run_data"
+					"value": "/data/serving/dtm/"
 				}
 			]
 		},
@@ -24,11 +24,11 @@
 			"env_params": [
 				{
 					"key": "TAG_PATH",
-					"value": "/database/FE_BANK251Q/platform_model/vLLM_model/inference/DATA/tag/FE.json"
+					"value": "/data/serving/dtm/tag/FE.json"
 				},
 				{
 					"key": "POOL_PATH",
-					"value": "/database/FE_BANK251Q/platform_model/output_sample/260115_run_data"
+					"value": "/data/serving/dtm/"
 				}
 			]
 		},
@@ -38,11 +38,11 @@
 			"env_params": [
 				{
 					"key": "TAG_PATH",
-					"value": "/database/FE_BANK251Q/platform_model/vLLM_model/inference/DATA/tag/FE.json"
+					"value": "/data/serving/dtm/tag/FE.json"
 				},
 				{
 					"key": "POOL_PATH",
-					"value": "/database/FE_BANK251Q/platform_model/output_sample/260115_run_data"
+					"value": "/data/serving/dtm/"
 				}
 			]
 		},
@@ -52,11 +52,11 @@
 			"env_params": [
 				{
 					"key": "RESULT_FILE_NAME",
-					"value": "/share/tom/env/DOC_EXT/code_module/fe251q_master/api_module/MODEL/ex0034_ft/2026_01_14/base_lora_merged"
+					"value": "lc_meta.json"
 				},
 				{
-					"key": "MAX_IMAGES",
-					"value": 10
+					"key": "MAX_IMMAGES",
+					"value": "10"
 				},
 				{
 					"key": "TRAIN_DATA_PATH",
@@ -70,7 +70,7 @@
 			"env_params": [
 				{
 					"key": "RESULT_FILE_NAME",
-					"value": "/share/tom/env/DOC_EXT/code_module/fe251q_master/api_module/MODEL/ex0034_ft/2026_01_14/base_lora_merged"
+					"value": "dtm_result.json"
 				}
 			]
 		}
@@ -85,7 +85,7 @@
 			"node_info": {
 				"type": "MODULE",
 				"ref_id": "START_NODE",
-				"ref_version": "1.0.0",
+				"ref_version": "v1.0.0",
 				"code": "Input",
 				"title": "파일 위치 입력",
 				"desc": ""
@@ -106,29 +106,32 @@
 			},
 			"services": [
 				{
-					"service_name": "input_node",
+					"service_name": "input",
 					"api_method": "",
 					"function": "input",
 					"params": [
 						{
 							"required": true,
 							"key": "tar_path",
-							"type": "list"
+							"type": "list",
+							"default": []
 						},
 						{
 							"required": true,
 							"key": "call_back_url",
-							"type": "str"
+							"type": "string",
+							"default": null
 						},
 						{
 							"required": true,
 							"key": "call_back_error_url",
-							"type": "str"
+							"type": "string",
+							"default": null
 						},
 						{
 							"required": true,
 							"key": "user_id",
-							"type": "str"
+							"type": "string"
 						}
 					],
 					"result": [
@@ -138,15 +141,15 @@
 						},
 						{
 							"key": "call_back_url",
-							"type": "str"
+							"type": "string"
 						},
 						{
 							"key": "call_back_error_url",
-							"type": "str"
+							"type": "string"
 						},
 						{
 							"key": "user_id",
-							"type": "str"
+							"type": "string"
 						}
 					]
 				}
@@ -161,7 +164,7 @@
 			"node_info": {
 				"type": "CODE",
 				"ref_id": "2eebcbdc09a94510",
-				"ref_version": "1.0.0",
+				"ref_version": "v1.0.0",
 				"code": "STEP1",
 				"title": "압축해제",
 				"desc": "DTM3"
@@ -195,17 +198,18 @@
 						{
 							"required": true,
 							"key": "tar_path",
-							"type": "string"
+							"type": "list",
+							"default": []
 						}
 					],
 					"result": [
 						{
 							"key": "tif_path",
-							"type": "str"
+							"type": "string"
 						},
 						{
 							"key": "txt_path",
-							"type": "str"
+							"type": "string"
 						}
 					]
 				}
@@ -220,7 +224,7 @@
 		    "node_info": {
 			    "type": "MODULE",
 		        "ref_id": "Conditional_Node",
-		        "ref_version": "1.0.0",
+		        "ref_version": "v1.0.0",
 			    "code": "COND1",
 			    "title": "해제된 압축파일의 종류 확인 후 분기 처리",
 		        "desc": "조건 분기 및 변수 조작 노드"
@@ -269,7 +273,7 @@
 		{
 			"node_id": "aiv_doccls",
 			"node_type": "external",
-			"role": "processing",
+			"role": "process",
 			"location": "outter",
 			"containable": false,
 			"required_nodes": [
@@ -282,7 +286,7 @@
 			"node_info": {
 				"type": "CODE",
 				"ref_id": "8150d803673e4ebb",
-				"ref_version": "1.0.0",
+				"ref_version": "v1.0.0",
 				"code": "STEP2",
 				"title": "OCR-문서분류",
 				"desc": "DTM3"
@@ -321,13 +325,13 @@
 						"required": true,
 					    "key": "DOCCLS_MODEL_STATE_NAME",
 					    "type": "string",
-						"default": "/share/tom/env/DOC_EXT/code_module/fe251q_master/api_module/MODEL/ex0038_ft1_continue/epoch1/base_lora_merged"
+						"default": "/model-repo/ex0019"
 					},
 					{
 						"required": true,
 					    "key": "DOCCLS_PROMPT_PATH",
 					    "type": "string",
-						"default": "/database/FE_BANK251Q/platform_model/ailand/inference/DATA/prompt/doccls_prompt.json"
+						"default": "/data/serving/dtm/prompt/doccls_prompt.json"
 					}
 				]
 			},
@@ -346,11 +350,11 @@
 					"result": [
 						{
 							"key": "img_path",
-							"type": "str"
+							"type": "string"
 						},
 						{
 							"key": "doccls_json_path",
-							"type": "str"
+							"type": "string"
 						},
 						{
 							"key": "lc_img_list",
@@ -363,13 +367,13 @@
 		{
 			"node_id": "aiv_extr",
 			"node_type": "external",
-			"role": "processing",
+			"role": "process",
 			"location": "outter",
 			"containable": false,
 			"node_info": {
 				"type": "CODE",
 				"ref_id": "8affe1591bee4a03",
-				"ref_version": "1.0.0",
+				"ref_version": "v1.0.0",
 				"title": "Vision - 내용추출",
 				"desc": "DTM3"
 			},
@@ -414,19 +418,19 @@
 						"required": true,
 					    "key": "EXTR_MODEL_STATE_NAME",
 					    "type": "string",
-						"default": "/share/tom/env/DOC_EXT/code_module/fe251q_master/api_module/MODEL/ex0038_ft1_continue/epoch1/base_lora_merged"
+						"default": "/model-repo/ex0019"
 					},
 					{
 						"required": true,
 						"key": "EXTR_PROMPT_PATH",
 						"type": "string",
-						"default": "/database/FE_BANK251Q/platform_model/ailand/inference/DATA/prompt/doccls_prompt.json"
+						"default": "/data/serving/dtm/prompt/prompt_infer.json"
 					},
 					{
 						"required": true,
 						"key": "EXTR_WT_POS",
-						"type": "bool",
-						"default": true
+						"type": "string",
+						"default": "true"
 					}
 				]
 			},
@@ -444,7 +448,7 @@
 						{
 							"required": true,
 							"key": "doccls_json_path",
-							"type": "json"
+							"type": "string"
 						}
 					],
 					"result": [
@@ -459,13 +463,13 @@
 		{
 			"node_id": "aiv_converter",
 			"node_type": "external",
-			"role": "processing",
+			"role": "process",
 			"location": "outter",
 			"containable": false,
 			"node_info": {
 				"type": "CODE",
 				"ref_id": "c677d402a35f44fe",
-				"ref_version": "1.0.0",
+				"ref_version": "v1.0.0",
 				"code": "STEP1",
 				"title": "문서변환기",
 				"desc": "DTM3"
@@ -509,7 +513,7 @@
 					"result": [
 						{
 							"key": "save_FEtype_path",
-							"type": "str"
+							"type": "string"
 						}
 					]
 				}
@@ -518,13 +522,13 @@
 		{
 			"node_id": "nlp_lc",
 			"node_type": "external",
-			"role": "processing",
+			"role": "process",
 			"location": "outter",
 			"containable": false,
 			"node_info": {
 				"type": "CODE",
 				"ref_id": "03c4a8408c844938",
-				"ref_version": "1.0.0",
+				"ref_version": "v1.0.0",
 				"code": "STEP1",
 				"title": "NLP 내용추출",
 				"desc": "DTM3"
@@ -558,7 +562,7 @@
 					{
 					    "required": true,
 					    "key": "MAX_IMAGES",
-					    "type": "int"
+					    "type": "string"
 					},
 					{
 						"required": true,
@@ -594,12 +598,6 @@
 						"key": "VLM_MODEL",
 						"type": "string",
 						"default": "Qwen3-VL-30B-A3B-Instruct"
-					},
-					{
-						"required": true,
-						"key": "EXTR_WT_POS",
-						"type": "bool",
-						"default": true
 					}
 				]
 			},
@@ -610,26 +608,26 @@
 					"function": "/api/v1/nlp_lc",
 					"params": [
 						{
-							"required": true,
+							"required": false,
 							"key": "img_path_list",
 							"type": "list",
-							"default": null
+							"default": []
 						},
 						{
 							"required": true,
 							"key": "text_path",
-							"type": "list",
+							"type": "string",
 							"default": null
 						}
 					],
 					"result": [
 						{
 							"key": "lc_number",
-							"type": "str"
+							"type": "string"
 						},
 						{
 							"key": "result_path",
-							"type": "str"
+							"type": "string"
 						}
 					]
 				}
@@ -638,13 +636,13 @@
 		{
 			"node_id": "nlp_aggregator",
 			"node_type": "external",
-			"role": "processing",
+			"role": "process",
 			"location": "outter",
 			"containable": false,
 			"node_info": {
 				"type": "CODE",
 				"ref_id": "e9b7b91249e548dc",
-				"ref_version": "1.0.0",
+				"ref_version": "v1.0.0",
 				"code": "STEP1",
 				"title": "VISION & NLP 결과 병합",
 				"desc": "DTM3"
@@ -668,20 +666,20 @@
 					"function": "/api/v1/aggregator",
 					"params": [
 						{
-							"required": true,
+							"required": false,
 							"key": "nlp_lc_path",
-							"type": "str"
+							"type": "string"
 						},
 						{
-							"required": true,
+							"required": false,
 							"key": "aiv_img_path",
-							"type": "str"
+							"type": "string"
 						}
 					],
 					"result": [
 						{
 							"key": "result_path",
-							"type": "str"
+							"type": "string"
 						}
 					]
 				}
@@ -696,7 +694,7 @@
 			"node_info": {
 				"type": "MODULE",
 				"ref_id": "CUSTOM_NODE",
-				"ref_version": "1.0.0",
+				"ref_version": "v1.0.0",
 				"code": "DTM_CALLBACK",
 				"title": "DTM_CallBack",
 				"desc": "Result CallBack Node"
@@ -724,17 +722,17 @@
 						{
 							"required": true,
 							"key": "callback_url",
-							"type": "str"
+							"type": "string"
 						},
 						{
 							"required": true,
 							"key": "callback_error_url",
-							"type": "str"
+							"type": "string"
 						},
 						{
 							"required": true,
 							"key": "user_id",
-							"type": "str"
+							"type": "string"
 						},
 						{
 							"required": true,
@@ -744,7 +742,7 @@
 						{
 							"required": true,
 							"key": "result_path",
-							"type": "str"
+							"type": "string"
 						}
 					],
 					"result": [
@@ -766,7 +764,7 @@
 			"node_info": {
 				"type": "MODULE",
 				"ref_id": "END_NODE",
-				"ref_version": "1.0.0",
+				"ref_version": "v1.0.0",
 				"code": "DTM_OUTPUT",
 				"title": "Output",
 				"desc": "Output Node"
@@ -794,7 +792,7 @@
 						{
 							"required": true,
 							"key": "result",
-							"type": "str"
+							"type": "string"
 						}
 					],
 					"result": [
@@ -810,7 +808,7 @@
 		{
 			"node_id": "AIV_EX0019",
 			"node_type": "external",
-			"role": "processing",
+			"role": "process",
 			"location": "outter",
 			"containable": false,
 			"required_nodes": [],
@@ -822,7 +820,7 @@
 				"desc": "hidden model 1"
 			},
 			"api_info": {
-				"base_url": "http://10.0.0.1:80001"
+				"base_url": ""
 			},
 			"module_info": {
 				"module_path": "",
@@ -847,7 +845,7 @@
 		{
 			"node_id": "NLP_LLM",
 			"node_type": "external",
-			"role": "processing",
+			"role": "process",
 			"location": "outter",
 			"containable": false,
 			"required_nodes": [],
@@ -859,7 +857,7 @@
 				"desc": "hidden model 2"
 			},
 			"api_info": {
-				"base_url": "http://10.0.0.1:80002"
+				"base_url": ""
 			},
 			"module_info": {
 				"module_path": "",
@@ -884,7 +882,7 @@
 		{
 			"node_id": "NLP_VLM",
 			"node_type": "external",
-			"role": "processing",
+			"role": "process",
 			"location": "outter",
 			"containable": false,
 			"required_nodes": [],
@@ -896,7 +894,7 @@
 				"desc": "hidden model 3"
 			},
 			"api_info": {
-				"base_url": "http://10.0.0.1:80003"
+				"base_url": ""
 			},
 			"module_info": {
 				"module_path": "",
@@ -950,7 +948,8 @@
 				{
 					"refer_type": "indirect",
 					"key": "tar_path",
-					"value": "START_NODE.input_node.tar_path"
+					"value": "START_NODE.input.tar_path",
+					"default": []
 				}
 			],
 			"result_info": []
@@ -1103,19 +1102,20 @@
 				{
 					"refer_type": "direct",
 					"key": "DOCCLS_MODEL_STATE_NAME",
-					"value": "/share/tom/env/DOC_EXT/code_module/fe251q_master/api_module/MODEL/ex0038_ft1_continue/epoch1/base_lora_merged"
+					"value": "/model-repo/ex0019"
 				},
 				{
 					"refer_type": "direct",
 					"key": "DOCCLS_PROMPT_PATH",
-					"value": "/database/FE_BANK251Q/platform_model/ailand/inference/DATA/prompt/doccls_prompt.json"
+					"value": "/data/serving/dtm/prompt/doccls_prompt.json"
 				}
 			],
 			"param_info": [
 				{
 					"refer_type": "indirect",
 					"key": "tif_path",
-					"value": "START_NODE.input.tif_path"
+					"value": "tar_extractor.extract.tif_path",
+					"default": null
 				}
 			],
 			"result_info": []
@@ -1141,7 +1141,7 @@
 			"env_info": [
 				{
 					"refer_type": "indirect",
-					"key": "EXTR",
+					"key": "TAG_PATH",
 					"value": "EXTR.TAG_PATH"
 				},
 				{
@@ -1159,17 +1159,17 @@
 				{
 					"refer_type": "direct",
 					"key": "EXTR_MODEL_STATE_NAME",
-					"value": "/share/tom/env/DOC_EXT/code_module/fe251q_master/api_module/MODEL/ex0038_ft1_continue/epoch1/base_lora_merged"
+					"value": "/model-repo/ex0019"
 				},
 				{
 					"refer_type": "direct",
 					"key": "EXTR_PROMPT_PATH",
-					"value": "/database/FE_BANK251Q/platform_model/ailand/inference/DATA/prompt/doccls_prompt.json"
+					"value": "/data/serving/dtm/prompt/prompt_infer.json"
 				},
 				{
 					"refer_type": "direct",
 					"key": "EXTR_WT_POS",
-					"value": true
+					"value": "true"
 				}
 			],
 			"param_info": [
@@ -1227,6 +1227,42 @@
 		},
 		{
 			"edge_type": "sequence",
+			"source": "aiv_converter.etl",
+			"source_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"target": "nlp_aggregator.aggregator",
+			"target_handler": {
+				"type": "sequence",
+				"conditions": [],
+				"references": [],
+				"environments": [],
+				"formatter": []
+			},
+			"env_info": [],
+			"asset_info": [],
+			"param_info": [
+				{
+					"refer_type": "indirect",
+					"key": "nlp_lc_path",
+					"value": "nlp_lc.nlp_extr.result_path",
+					"default": null
+				},
+				{
+					"refer_type": "indirect",
+					"key": "aiv_img_path",
+					"value": "aiv_converter.etl.save_FEtype_path",
+					"default": null
+				}
+			],
+			"result_info": []
+		},
+		{
+			"edge_type": "sequence",
 			"source": "aiv_doccls.doccls",
 			"source_handler": {
 				"type": "sequence",
@@ -1262,19 +1298,14 @@
 			],
 			"asset_info": [
 				{
+					"refer_type": "direct",
+					"key": "LLM_MODEL",
+					"value": "gpt-oss-120b"
+				},
+				{
 					"refer_type": "indirect",
 					"key": "LLM_URL",
 					"value": "NLP_LLM.base_url"
-				},
-				{
-					"refer_type": "direct",
-					"key": "LLM_MODEL",
-					"value": "/models/gpt-oss-120b"
-				},
-				{
-					"refer_type": "indirect",
-					"key": "VLM_URL",
-					"value": "NLP_VLM.base_url"
 				},
 				{
 					"refer_type": "indirect",
@@ -1282,9 +1313,9 @@
 					"value": "Qwen3-VL-30B-A3B-Instruct"
 				},
 				{
-					"refer_type": "direct",
-					"key": "EXTR_WT_POS",
-					"value": true
+					"refer_type": "indirect",
+					"key": "VLM_URL",
+					"value": "NLP_VLM.base_url"
 				}
 			],
 			"param_info": [
@@ -1292,7 +1323,7 @@
 					"refer_type": "indirect",
 					"key": "img_path_list",
 					"value": "aiv_doccls.doccls.lc_img_list",
-					"default": null
+					"default": []
 				},
 				{
 					"refer_type": "indirect",
@@ -1340,19 +1371,14 @@
 			],
 			"asset_info": [
 				{
+					"refer_type": "direct",
+					"key": "LLM_MODEL",
+					"value": "gpt-oss-120b"
+				},
+				{
 					"refer_type": "indirect",
 					"key": "LLM_URL",
 					"value": "NLP_LLM.base_url"
-				},
-				{
-					"refer_type": "direct",
-					"key": "LLM_MODEL",
-					"value": "/models/gpt-oss-120b"
-				},
-				{
-					"refer_type": "indirect",
-					"key": "VLM_URL",
-					"value": "NLP_VLM.base_url"
 				},
 				{
 					"refer_type": "indirect",
@@ -1360,9 +1386,9 @@
 					"value": "Qwen3-VL-30B-A3B-Instruct"
 				},
 				{
-					"refer_type": "direct",
-					"key": "EXTR_WT_POS",
-					"value": true
+					"refer_type": "indirect",
+					"key": "VLM_URL",
+					"value": "NLP_VLM.base_url"
 				}
 			],
 			"param_info": [
@@ -1370,7 +1396,7 @@
 					"refer_type": "indirect",
 					"key": "img_path_list",
 					"value": "aiv_doccls.doccls.lc_img_list",
-					"default": null
+					"default": []
 				},
 				{
 					"refer_type": "indirect",
@@ -1541,9 +1567,9 @@
 			"result_info": []
 		}
 	],
-	"resources": [
+    "resources": [
         {
-            "node_id": "RAG_PROM_913D15_node",
+            "node_id": "tar_extractor",
             "resource": {
                 "cpu_requests": "200m",
                 "cpu_limits": "1",
@@ -1552,74 +1578,299 @@
             },
             "replicas": "1",
             "profile": {
-                "serv_type": "code",
-                "ref_id": "코드ID",
-                "ref_ver": "코드버전",
-                "serv_engine_type": "wfnode"
+                "serv_engine_type": "wfcode"
             }
         },
         {
-            "node_id": "RAG_GEN_97E683_node",
+            "node_id": "aiv_doccls",
             "resource": {
-                "cpu_requests": "4",
-                "cpu_limits": "8",
-                "mem_requests": "16Gi",
-                "mem_limits": "32Gi",
-                "gpu_limits": "1"
-            },
-            "profile": {
-                "serv_type": "model",
-                "ref_id": "모델ID",
-                "ref_ver": "모델버전ID",
-                "serv_engine_type": "vllm-v0.8.4-cuda124",
-                "gpu_type": "A100"
+                "cpu_requests": "200m",
+                "cpu_limits": "1",
+                "mem_requests": "500Mi",
+                "mem_limits": "1Gi"
             },
             "replicas": "1",
+            "profile": {
+                "serv_engine_type": "wfcode"
+            }
+        },
+        {
+            "node_id": "aiv_extr",
+            "resource": {
+                "cpu_requests": "200m",
+                "cpu_limits": "1",
+                "mem_requests": "500Mi",
+                "mem_limits": "1Gi"
+            },
+            "replicas": "1",
+            "profile": {
+                "serv_engine_type": "wfcode"
+            }
+        },
+        {
+            "node_id": "aiv_converter",
+            "resource": {
+                "cpu_requests": "200m",
+                "cpu_limits": "1",
+                "mem_requests": "500Mi",
+                "mem_limits": "1Gi"
+            },
+            "replicas": "1",
+            "profile": {
+                "serv_engine_type": "wfcode"
+            }
+        },
+        {
+            "node_id": "nlp_lc",
+            "resource": {
+                "cpu_requests": "200m",
+                "cpu_limits": "1",
+                "mem_requests": "500Mi",
+                "mem_limits": "1Gi"
+            },
+            "replicas": "1",
+            "profile": {
+                "serv_engine_type": "wfcode"
+            }
+        },
+        {
+            "node_id": "nlp_aggregator",
+            "resource": {
+                "cpu_requests": "200m",
+                "cpu_limits": "1",
+                "mem_requests": "500Mi",
+                "mem_limits": "1Gi"
+            },
+            "replicas": "1",
+            "profile": {
+                "serv_engine_type": "wfcode"
+            }
+        },
+        {
+            "node_id": "AIV_EX0019",
+            "resource": {
+                "cpu_requests": "1",
+                "cpu_limits": "4",
+                "mem_requests": "4Gi",
+                "mem_limits": "16Gi",
+                "gpu_limits": "1"
+            },
+            "replicas": "1",
+            "profile": {
+                "serv_engine_type": "vllm-v0.9.1-cuda122",
+                "gpu_type": "A100"
+            },
+            "volumes": [
+                {
+                    "vlm_path": "model-repository/a35f929095384923a0a2556085cfcf48/models",
+                    "vlm_nm": "model-repo",
+                    "vlm_size": "17015053342"
+                }
+            ],
             "parameter": {
                 "args": [
+                    {
+                        "key": "--model",
+                        "val": "/model-repo/ex0019"
+                    },
+                    {
+                        "key": "--gpu-memory-utilization",
+                        "val": "0.9"
+                    },
+                    {
+                        "key": "--data-parallel-size",
+                        "val": "1"
+                    },
                     {
                         "key": "--max-model-len",
                         "val": "10240"
                     },
                     {
-                        "key": "--enable-reasonin",
+                        "key": "--max-num-seqs",
+                        "val": "128"
+                    }
+                ],
+                "envs": []
+            }
+        },
+        {
+            "node_id": "NLP_LLM",
+            "resource": {
+                "cpu_requests": "2",
+                "cpu_limits": "8",
+                "mem_requests": "8Gi",
+                "mem_limits": "64Gi",
+                "gpu_limits": "2"
+            },
+            "replicas": "1",
+            "profile": {
+                "serv_engine_type": "vllm-v0.10.1-gptoss-cuda128",
+                "gpu_type": "A100"
+            },
+            "volumes": [
+                {
+                    "vlm_path": "model-repository/2913ca98d8d44b4bbcaf307e8a3feab7/models",
+                    "vlm_nm": "model-repo",
+                    "vlm_size": "65280472109"
+                }
+            ],
+            "parameter": {
+                "args": [
+                    {
+                        "key": "--model",
+                        "val": "/model-repo/gpt-oss-120b"
+                    },
+                    {
+                        "key": "--tensor-parallel-size",
+                        "val": "2"
+                    },
+                    {
+                        "key": "--gpu-memory-utilization",
+                        "val": "0.9"
+                    },
+                    {
+                        "key": "--async-scheduling",
                         "val": null
                     }
                 ],
                 "envs": [
                     {
-                        "key": "VLLM_USE_FLASH_ATTN",
+                        "key": "NCCL_SOCKET_IFNAME",
+                        "val": "eth0"
+                    },
+                    {
+                        "key": "NVIDIA_DRIVER_CAPABILITIES",
+                        "val": "compute,utility"
+                    },
+                    {
+                        "key": "VLLM_INSTALL_PUNICA_KERNELS",
                         "val": "0"
+                    },
+                    {
+                        "key": "VLLM_ATTENTION_BACKEND",
+                        "val": "TRITON_ATTN_VLLM_V1"
+                    },
+                    {
+                        "key": "TIKTOKEN_ENCODINGS_BASE",
+                        "val": "/model-repo/vocab"
+                    },
+                    {
+                        "key": "TIKTOKEN_RS_CACHE_DIR",
+                        "val": "/model-repo/vocab"
                     }
                 ]
             }
         },
         {
-            "node_id": "RAG_RETR_CB7865_node",
+            "node_id": "NLP_VLM",
             "resource": {
-                "cpu_requests": "200m",
-                "cpu_limits": "1",
-                "mem_requests": "500Mi",
-                "mem_limits": "1Gi"
+                "cpu_requests": "1",
+                "cpu_limits": "4",
+                "mem_requests": "4Gi",
+                "mem_limits": "16Gi",
+                "gpu_limits": "1"
             },
             "replicas": "1",
             "profile": {
-                "serv_type": "workflow",
-                "serv_engine_type": "wfnode"
-            }
-        },
-        {
-            "node_id": "WF_ENG_node",
-            "resource": {
-                "cpu_requests": "200m",
-                "cpu_limits": "1",
-                "mem_requests": "500Mi",
-                "mem_limits": "1Gi"
+                "serv_engine_type": "vllm-v0.14.0-cuda129",
+                "gpu_type": "V100"
             },
-            "replicas": "1",
-            "profile": {
-                "serv_type": "workflow",
-                "serv_engine_type": "wfeng"
+            "volumes": [
+                {
+                    "vlm_path": "model-repository/e93d38d906854bf6a2bb81f09603900f/models",
+                    "vlm_nm": "model-repo",
+                    "vlm_size": "17545917724"
+                }
+            ],
+            "parameter": {
+                "args": [
+                    {
+                        "key": "--model",
+                        "val": "/model-repo/Qwen3-VL-8B-Instruct"
+                    },
+                    {
+                        "key": "--trust-remote-code",
+                        "val": null
+                    },
+                    {
+                        "key": "--gpu_memory_utilization",
+                        "val": "0.9"
+                    },
+                    {
+                        "key": "--tensor_parallel_size",
+                        "val": "1"
+                    },
+                    {
+                        "key": "--max_model_len",
+                        "val": "102768"
+                    },
+                    {
+                        "key": "--enable-lora",
+                        "val": null
+                    },
+                    {
+                        "key": "--max-loras",
+                        "val": "2"
+                    },
+                    {
+                        "key": "--lora-modules",
+                        "val": null
+                    },
+                    {
+                        "key": "{\"name\":\"lc45\",\"path\":\"/model-repo/lora/qwen3_vl_8b_lc_finetune_lora_rank64_alpha128_px2700_lr2e-4_epoch2_datav4_0121_section45_v4\",\"base_model_name\":\"Qwen3-VL-8B-Instruct\"}",
+                        "val": null
+                    },
+                    {
+                        "key": "{\"name\":\"lc46\",\"path\":\"/model-repo/lora/qwen3_vl_8b_lc_finetune_lora_rank64_alpha128_px2700_lr2e-4_epoch2_datav4_0121_section46_v4\",\"base_model_name\":\"Qwen3-VL-8B-Instruct\"}",
+                        "val": null
+                    },
+                    {
+                        "key": "-cc.mode",
+                        "val": "0"
+                    },
+                    {
+                        "key": "--max_lora_rank",
+                        "val": "64"
+                    },
+                    {
+                        "key": "--limit-mm-per-prompt",
+                        "val": "{\"image\":14}"
+                    },
+                    {
+                        "key": "--served-model-name",
+                        "val": "Qwen3-VL-8B-Instruct-lora"
+                    }
+                ],
+                "envs": [
+                    {
+                        "key": "VLLM_ATTENTION_BACKEND",
+                        "val": "TRITON_ATTN"
+                    },
+                    {
+                        "key": "CUDA_VISIBLE_DEVICES",
+                        "val": "0"
+                    },
+                    {
+                        "key": "NVIDIA_DRIVER_CAPABILITIES",
+                        "val": "compute,utility"
+                    },
+                    {
+                        "key": "VLLM_INSTALL_PUNICA_KERNELS",
+                        "val": "0"
+                    },
+                    {
+                        "key": "VLLM_DISABLE_MM_CACHE",
+                        "val": "1"
+                    },
+                    {
+                        "key": "PYTORCH_SEED",
+                        "val": "42"
+                    },
+                    {
+                        "key": "PYTHONHASHSEED",
+                        "val": "42"
+                    }
+                ]
             }
         }
     ]
