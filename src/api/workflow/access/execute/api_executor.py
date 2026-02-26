@@ -73,6 +73,10 @@ class ApiExecutor:
     async def _call_api(self) -> Dict:
         headers = self._build_headers()
         params = self.get_params()
+        if 'EXTR-WT-POS' in headers.keys():
+            headers['EXTR-WT-POS'] = 'true'
+        self._logger.debug(f" - Header: {headers}")
+        self._logger.debug(f" - Params: {params}")
 
         async with aiohttp.ClientSession() as session:
             try:
@@ -88,6 +92,8 @@ class ApiExecutor:
 
                 elif self._method == 'POST':
                     # POST 요청: body에 JSON으로 전달
+                    self._logger.debug(f" - HEADER: {headers}")
+                    self._logger.debug(f" - PARAMS: {params}")
                     async with session.post(
                             self.get_url(),
                             headers=headers,
@@ -141,6 +147,7 @@ class ApiExecutor:
     async def _handle_response(self, response: aiohttp.ClientResponse) -> Dict:
         try:
             if response.status >= 400:
+                self._logger.error(f"Error Url: {self._url}")
                 error_json = await response.json()
                 self._logger.error(
                     f"Error details (JSON): {json.dumps(error_json, indent=2)}"
@@ -188,4 +195,6 @@ class ApiExecutor:
         self.set_params(params)
         result = asyncio.run(self._call_api())
         result_map = result.get('result')
+        if 'result' in result_map.keys():
+            result_map = result_map.get('result')
         return result_map

@@ -17,7 +17,6 @@ class ExternalApiRequester:
     def _call_api_sync(self, url: str, base_url: str=None, route_path: str=None, method: str='get', headers: Dict = None, json_data: Dict = None, params: Dict = None):
         if not url:
             url = f"{base_url}{route_path}"
-
         try:
             response = requests.request(
                 method=method.upper(),

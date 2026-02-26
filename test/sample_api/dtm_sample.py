@@ -244,12 +244,14 @@ async def aggregate_results(request: WorkflowRequest):
 # Node z - Result Aggregator
 app_callback = FastAPI(title="Result Received callback server")
 @app_callback.post("/v1/success")#, response_model=WorkflowResponse)
-async def callback_success(request):
+async def callback_success(request: Request, body: dict):
     print(f"# Callback Success")
-    print(request)
+    print(request.headers)
+    print(request.body)
+    print(body)
 
 @app_callback.post("/v1/error")#, response_model=WorkflowResponse)
-async def call_chained_model_service(request: Request, body: dict):
+async def callback_faile(request: Request, body: dict):
     print(f"# Callback Error")
     print(request.headers)
     print(request.body)

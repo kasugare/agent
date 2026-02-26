@@ -47,9 +47,9 @@ class WorkflowHelper:
                     ref_service_id = ".".join(ref_value_addr.split('.')[:-1])
                     task_state = self._get_task_state(ref_service_id)
                 else:
-                    self._logger.warn(f" {service_id}: PENDING")
+                    self._logger.debug(f" {service_id}: PENDING")
         else:
-            self._logger.warn(f" {service_id}: PENDING")
+            self._logger.debug(f" {service_id}: PENDING")
 
     def _check_skipable(self, service_id, prev_service_id):
         # self._get_edge_param_map(service_id, prev_service_id)
@@ -168,10 +168,22 @@ class WorkflowHelper:
                 return {}
 
             node_id = service_info.get('node_id')
-            env_params_map = {env_param_map.get('key'): f"E.{node_id}.{env_param_map.get('key')}"
+            env_params_map = {env_param_map.get('key'): {
+                "key": f"E.{node_id}.{env_param_map.get('key')}",
+                "type": f"{env_param_map.get('type')}"}
                              for env_param_map in env_params_info if env_param_map.get('key')}
-            for env_name, env_value_id in env_params_map.items():
+            for env_name, env_value_map in env_params_map.items():
+                env_value_id = env_value_map.get('key')
+                env_value_type = env_value_map.get('type')
                 env_value = self._datastore.get_param_value_service(env_value_id)
+                try:
+                    if env_value and env_value_type in ['str', 'string']:
+                        if isinstance(env_value, int):
+                            env_value = str(env_value)
+                        elif isinstance(env_value, bool):
+                            env_value = str(env_value).lower()
+                except:
+                    pass
                 env_params_map[env_name] = self._map_template(service_id, env_value)
             return env_params_map
         except Exception as e:
@@ -205,25 +217,10 @@ class WorkflowHelper:
         return extract_param_value
 
     def _extract_param_value(self, service_id, param_map_list) -> dict:
-        def get_default_value(param_map):
-            default_value = None
-            default = param_map.get(default_value)
-            self._logger.critical(f" - {service_id} : {default}")
-            if default:
-                default_value = default
-            else:
-                data_type = param_map.get('value_data_type')
-                if data_type == 'list':
-                    default_value = []
-                elif data_type == 'dict' or data_type == 'json':
-                    default_value = {}
-                else:
-                    default_value = None
-            return default_value
-
         params = {}
         if not isinstance(param_map_list, list):
             return params
+
         for param_map in param_map_list:
             param_name = param_map.get('key')
             if 'value' in param_map.keys():
@@ -233,8 +230,6 @@ class WorkflowHelper:
                 else:
                     addr_value = param_map.get('value')
                     extract_params_value = self._datastore.get_output_value(addr_value)
-                    if not extract_params_value:
-                        extract_params_value = get_default_value(param_map)
                 params[param_name] = extract_params_value
             elif 'values' in param_map.keys():
                 value_param_map_list = param_map.get('values')
@@ -438,3 +433,4 @@ class WorkflowHelper:
     def _show_task(self, task_map):
         for service_id, task in task_map.items():
             self._logger.info(f" - [{task.get_state()}] {service_id}")
+

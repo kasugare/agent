@@ -178,17 +178,31 @@ class TaskStoreController:
         start_ts = self._task_service_access.get_data_access("start_ts")
         end_ts = self._task_service_access.get_data_access("end_ts")
         assigned_ts = self._task_service_access.get_data_access("assigned_ts")
-        duration_ts = end_ts - start_ts
-
-        processing_time = {
-            "assigned_ts": assigned_ts,
-            "start_ts": start_ts,
-            "end_ts": end_ts,
-            "assigned_dt": cvt_htime(assigned_ts),
-            "start_dt": cvt_htime(start_ts),
-            "end_dt": cvt_htime(end_ts),
-            "duration_ts": duration_ts
-        }
+        if not start_ts or start_ts == 0:
+            start_ts = 0
+            end_ts = 0
+            assigned_ts = 0
+            duration_ts = 0
+            processing_time = {
+                "assigned_ts": assigned_ts,
+                "start_ts": start_ts,
+                "end_ts": end_ts,
+                "assigned_dt": assigned_ts,
+                "start_dt": start_ts,
+                "end_dt": end_ts,
+                "duration_ts": duration_ts
+            }
+        else:
+            duration_ts = end_ts - start_ts
+            processing_time = {
+                "assigned_ts": assigned_ts,
+                "start_ts": start_ts,
+                "end_ts": end_ts,
+                "assigned_dt": cvt_htime(assigned_ts),
+                "start_dt": cvt_htime(start_ts),
+                "end_dt": cvt_htime(end_ts),
+                "duration_ts": duration_ts
+            }
         return processing_time
 
     def clear_ctl(self):

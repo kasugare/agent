@@ -93,9 +93,15 @@ class EngineAdapter(BaseRouter):
                                , data: str = Form(...)
                                , files: list[UploadFile] = File(...)
                                , bg: BackgroundTasks = None):
-            # self._logger.info("################################################################")
-            # self._logger.info("#                         < Predict >                          #")
-            # self._logger.info("################################################################")
+            self._logger.info("################################################################")
+            self._logger.info("#                < Adapter - Call Prediction >                 #")
+            self._logger.info("################################################################")
+
+            try:
+                self._logger.info(f"request base_url: {request.base_url}")
+                self._logger.info(headers)
+            except:
+                pass
             path_list = await self._engine_adaptor_service.upload_files(files)
             job_id = headers.x_sampl_job_id
             call_back_url = headers.x_sampl_callback
@@ -104,6 +110,7 @@ class EngineAdapter(BaseRouter):
             user_data = headers.x_sampl_user_data
 
             self._logger.debug(f" - job_id: {job_id}")
+            self._logger.debug(f" - engine_url: {request.base_url}")
             self._logger.debug(f" - call_back_url: {call_back_url}")
             self._logger.debug(f" - call_back_error_url: {call_back_error_url}")
             self._logger.debug(f" - member_id: {member_id}")
@@ -123,8 +130,8 @@ class EngineAdapter(BaseRouter):
                             "file_path_list": json.dumps(path_list),
                             "request-id": str(uuid.uuid4()),
                             "session-id": str(uuid.uuid4()),
-                            "call_back_error_url": call_back_url,
-                            "call_back_url": call_back_error_url
+                            "call_back_error_url": call_back_error_url,
+                            "call_back_url": call_back_url
                         },
                         json_data={"tar_path": path_list}
                     )

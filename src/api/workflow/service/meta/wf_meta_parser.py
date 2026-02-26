@@ -126,7 +126,7 @@ class WorkflowMetaParser(WorkflowMetaHandler):
     def _print_debug_data(self, debug_data) -> None:
         if isinstance(debug_data, dict):
             for k, v in debug_data.items():
-                self._logger.debug(f"  - {k} : {v}")
+                self._logger.debug(f"  - {k} : {v} - {type(v)}")
         elif isinstance(debug_data, list):
             for l in debug_data:
                 self._logger.debug(f"  - {l}")
