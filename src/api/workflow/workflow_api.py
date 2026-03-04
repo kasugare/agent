@@ -203,8 +203,10 @@ class WorkflowEngine(BaseRouter):
             try:
                 req_id = params.get('request-id')
                 session_id = params.get('session-id', req_id)
-                wf_id = params.get('workflow_id', getWorkflowId())
                 job_id = params.get('job_id', session_id)
+                wf_id = params.get('workflow_id', getWorkflowId())
+
+                self._logger.info(f"[{job_id}] Request Params: {params}")
                 store_pack = self._gen_store_pack(wf_id, job_id)
                 workflow_executor = WorkflowExecutor(self._logger, store_pack)
                 result = workflow_executor.run_workflow(params)

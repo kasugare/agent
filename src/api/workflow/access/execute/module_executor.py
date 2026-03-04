@@ -43,5 +43,5 @@ class ModuleExecutor(DynamicLoader):
                 result = self.call_module_function(self._module_path, self._function_name, *args, **kwargs)
         except Exception as e:
             self._logger.error(e)
-            raise RuntimeError
+            raise
         return result

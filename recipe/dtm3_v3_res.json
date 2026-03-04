@@ -14,19 +14,23 @@
 			"env_params": [
 				{
 					"key": "DOCCLS_MODEL_STATE_NAME",
-					"value": "/share/tom/env/DOC_EXT/code_module/fe251q_master/api_module/MODEL/ex0034_ft/2026_01_14/base_lora_merged"
+					"value": "/share/tom/env/DOC_EXT/code_module/fe251q_master/api_module/MODEL/ex0034_ft/2026_01_14/base_lora_merged",
+					"type": "string"
 				},
 				{
 					"key": "DOCCLS_PROMPT_PATH",
-					"value": "/database/FE_BANK251Q/platform_model/ailand/inference/DATA/prompt/doccls_prompt.json"
+					"value": "/database/FE_BANK251Q/platform_model/ailand/inference/DATA/prompt/doccls_prompt.json",
+					"type": "string"
 				},
 				{
 					"key": "TAG_PATH",
-					"value": "/database/FE_BANK251Q/platform_model/vLLM_model/inference/DATA/tag/"
+					"value": "/database/FE_BANK251Q/platform_model/vLLM_model/inference/DATA/tag/TEST",
+					"type": "string"
 				},
 				{
 					"key": "POOL_PATH",
-					"value": "/database/FE_BANK251Q/platform_model/output_sample/260115_run_data/"
+					"value": true,
+					"type": "boolean"
 				}
 			]
 		},
@@ -44,11 +48,11 @@
 				},
 				{
 					"key": "TAG_PATH",
-					"value": "/database/FE_BANK251Q/platform_model/vLLM_model/inference/DATA/tag/"
+					"value": "/database/FE_BANK251Q/platform_model/vLLM_model/inference/DATA/tag"
 				},
 				{
 					"key": "POOL_PATH",
-					"value": "/database/FE_BANK251Q/platform_model/output_sample/260115_run_data/"
+					"value": "/database/FE_BANK251Q/platform_model/output_sample/260115_run_data"
 				}
 			]
 		}
@@ -309,7 +313,7 @@
 						"required": true,
 					    "key": "ocr_model_name",
 					    "type": "string",
-						"default": "TEST_OCR"
+						"default": "false"
 					}
 				]
 			},
@@ -323,7 +327,7 @@
 							"required": true,
 							"key": "tif_path",
 							"type": "str",
-							"default": null
+							"default": "null"
 						}
 					],
 					"result": [
@@ -1555,56 +1559,6 @@
 				"environments": [],
 				"formatter": []
 			},
-			"target": "EXTERNAL_CALLBACK.callback",
-			"target_handler": {
-				"type": "sequence",
-				"conditions": [],
-				"references": [],
-				"environments": [],
-				"formatter": []
-			},
-			"env_info": [],
-			"asset_info": [],
-			"param_info": [
-				{
-					"refer_type": "indirect",
-					"key": "callback_url",
-					"value": "START_NODE.input_node.call_back_url"
-				},
-				{
-					"refer_type": "indirect",
-					"key": "callback_error_url",
-					"value": "START_NODE.input_node.call_back_error_url"
-				},
-				{
-					"refer_type": "indirect",
-					"key": "user_id",
-					"value": "START_NODE.input_node.user_id"
-				},
-				{
-					"refer_type": "indirect",
-					"key": "file_path_list",
-					"value": "START_NODE.input_node.tar_path"
-				},
-				{
-					"refer_type": "indirect",
-					"key": "result_path",
-					"value": "NODE_H.process.result_path",
-					"default": null
-				}
-			],
-			"result_info": []
-		},
-		{
-			"edge_type": "sequence",
-			"source": "EXTERNAL_CALLBACK.callback",
-			"source_handler": {
-				"type": "sequence",
-				"conditions": [],
-				"references": [],
-				"environments": [],
-				"formatter": []
-			},
 			"target": "END_NODE.output",
 			"target_handler": {
 				"type": "sequence",
@@ -1619,10 +1573,16 @@
 				{
 					"refer_type": "indirect",
 					"key": "result",
-					"value": "EXTERNAL_CALLBACK.callback.result"
+					"value": "NODE_H.process.result_path"
 				}
 			],
-			"result_info": []
+			"result_info": [
+				{
+					"refer_type": "indirect",
+					"key": "result1",
+					"value": "NODE_H.process.result_path"
+				}
+			]
 		},
 		{
 			"edge_type": "reference",

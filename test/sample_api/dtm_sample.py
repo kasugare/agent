@@ -211,7 +211,7 @@ async def process_node(request: NodeH_Model):
     await asyncio.sleep(random.randrange(1, 5) * 0.1)
 
     response = {
-        "result_path": "/data/2026_01_16/033500010101722969020240422093257001_1_merged/lc_meta.json",
+        "result_path": "/Users/hanati/workspace/agent/downloads/result_meta.json",
         "timestamp": datetime.now().isoformat()
     }
     return response

@@ -47,6 +47,7 @@ class WorkflowExecutor:
         return processing_time
 
     def run_workflow(self, params):
+        job_id = params.get('job_id')
         taskstore = self._store_pack.get('taskstore')
         start_node = params.get('from_node', None)
         end_node = params.get('to_node', None)
@@ -55,10 +56,10 @@ class WorkflowExecutor:
             taskstore.set_workflow_start_ts()
             if act_meta_pack.get('act_start_nodes'):
 
-                workflow_engine = WorkflowExecutionOrchestrator(self._logger, self._store_pack, act_meta_pack, self._stream_Q)
+                workflow_engine = WorkflowExecutionOrchestrator(self._logger, self._store_pack, act_meta_pack, self._stream_Q, job_id)
                 result = workflow_engine.run_workflow(params)
             else:
-                self._logger.error(f"# Not generated task_map, check DAG meta")
+                self._logger.error(f"[{job_id}] Not generated task_map, check DAG meta")
                 result = "# Not generated task_map, check DAG meta"
             taskstore.set_workflow_end_ts()
             return result
@@ -68,3 +69,6 @@ class WorkflowExecutor:
         except InvalidInputException as e:
             taskstore.set_workflow_end_ts()
             raise AttributeError
+        except Exception as e:
+            self._logger.error(f"[{job_id}] {str(e)}")
+            raise

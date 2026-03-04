@@ -3,21 +3,29 @@
 
 from api.workflow.control.execute.task_state import TaskState
 from api.workflow.control.execute.env_template import AutoTemplateRenderer
+from api.workflow.common.util_data_type_converter import DataTypeConverter
 from jinja2 import Template, meta, Environment
 
 
 class WorkflowHelper:
-    def __init__(self, logger, store_pack, meta_pack):
+    def __init__(self, logger, store_pack, meta_pack, job_id=None):
         self._logger = logger
+        self._job_id = job_id
         self._store_pack = store_pack
         self._datastore = store_pack.get('datastore', {})
         self._taskstore = store_pack.get('taskstore', {})
         self._meta_pack = meta_pack
+        self._type_converter = DataTypeConverter(logger)
 
     def _get_task(self, service_id):
         task_map = self._meta_pack.get('act_task_map')
         task = task_map.get(service_id)
         return task
+
+    def get_task_error(self, service_id):
+        task = self._get_task(service_id)
+        error = task.get_error()
+        return error
 
     def _get_next_service_ids(self, service_id):
         edges_graph = self._meta_pack['act_forward_graph']
@@ -47,9 +55,9 @@ class WorkflowHelper:
                     ref_service_id = ".".join(ref_value_addr.split('.')[:-1])
                     task_state = self._get_task_state(ref_service_id)
                 else:
-                    self._logger.debug(f" {service_id}: PENDING")
+                    self._logger.debug(f"[{self._job_id}] {service_id}: PENDING")
         else:
-            self._logger.debug(f" {service_id}: PENDING")
+            self._logger.debug(f"[{self._job_id}] {service_id}: PENDING")
 
     def _check_skipable(self, service_id, prev_service_id):
         # self._get_edge_param_map(service_id, prev_service_id)
@@ -67,8 +75,8 @@ class WorkflowHelper:
             else:
                 return False
         space = "    " * depth
-        self._logger.debug(f"{space} # Service_id: {service_id},  skip_target_service_ids: {skip_target_service_ids}")
-        self._logger.debug(f"{space}   L skip target service ids: {skip_target_service_ids}")
+        self._logger.debug(f"[{self._job_id}] {space} # Service_id: {service_id},  skip_target_service_ids: {skip_target_service_ids}")
+        self._logger.debug(f"[{self._job_id}] {space}   L skip target service ids: {skip_target_service_ids}")
 
         for skip_target_service_id in skip_target_service_ids:
             backward_graph = self._meta_pack['act_backward_graph']
@@ -77,7 +85,7 @@ class WorkflowHelper:
             if all(check_skipable(prev_service_id) for prev_service_id in prev_service_ids):
                 if skip_target_service_id not in execution_service_ids:
                     self._set_task_state(skip_target_service_id, TaskState.SKIPPED)
-                    self._logger.debug(f"{space}   @ skip service ids: {skip_target_service_id}")
+                    self._logger.debug(f"[{self._job_id}] {space}   @ skip service ids: {skip_target_service_id}")
 
             next_skip_service_ids = self._get_next_service_ids(skip_target_service_id)
             next_depth = depth + 1
@@ -106,8 +114,8 @@ class WorkflowHelper:
                     has_ref_value = True
                 ref_task_state = self._get_task_state(ref_service_id)
                 # ref_value = self._datastore.get_output_value(value_id)
-                # self._logger.debug(f"{space}    L {ref_service_id} : {ref_task_state}")
-                # self._logger.debug(f"{space}    L {value_id}: {ref_value}")
+                # self._logger.debug(f"[{self._job_id}]{space}    L {ref_service_id} : {ref_task_state}")
+                # self._logger.debug(f"[{self._job_id}]{space}    L {value_id}: {ref_value}")
                 if ref_task_state in [TaskState.STOPPED,
                                       TaskState.SKIPPED,
                                       TaskState.BLOCKED] and not has_ref_value:
@@ -115,81 +123,61 @@ class WorkflowHelper:
             return result
 
         space = "    " * depth
-        self._logger.info(f"{space} # Service_id: {service_id}, state: {self._get_task_state(service_id)}")
+        self._logger.info(f"[{self._job_id}]{space} # Service_id: {service_id}, state: {self._get_task_state(service_id)}")
 
         edges_param_map = self._meta_pack['act_edges_param_map']
         if self._get_task_state(service_id) == TaskState.PENDING:
             edge_ids = self._get_edge_ids_by_service_id(service_id)
             for edge_id in edge_ids:
                 edge_param_map_list = edges_param_map.get(edge_id)
-                self._logger.debug(f"{space}   L edge_id:  {edge_id}")
+                self._logger.debug(f"[{self._job_id}]{space}   L edge_id:  {edge_id}")
                 if any(check_blocked_task_state(edge_param_map) for edge_param_map in edge_param_map_list):
-                    self._logger.debug(f"{space}   @ blocked service ids: {service_id}")
+                    self._logger.debug(f"[{self._job_id}]{space}   @ blocked service ids: {service_id}")
                     self._set_task_state(service_id, TaskState.BLOCKED)
                     break
         # else:
         #     # Check Next services
         next_service_ids = self._get_next_service_ids(service_id)
-        self._logger.debug(f"{space}   L check next service ids: {next_service_ids}")
+        self._logger.debug(f"[{self._job_id}]{space}   L check next service ids: {next_service_ids}")
         for next_service_id in next_service_ids:
             next_depth = depth + 1
             self._set_blocked_nodes(next_service_id, next_depth)
 
-    def _map_template(self, service_id, text_value):
-        if not isinstance(text_value, str):
-            return text_value
-        env = Environment()
-        ast = env.parse(text_value)
-        ref_keys = meta.find_undeclared_variables(ast)
-        value_map = {}
-        for ref_key in ref_keys:
-            try:
-                value_id = f"{service_id}.{ref_key}"
-                ref_value = self._datastore.get_input_value(value_id)
-                value_map[ref_key] = ref_value
-            except:
-                pass
-
-        if value_map:
-            renderer = AutoTemplateRenderer(self._logger)
-            rederer_info = renderer.auto_render(text_value, value_map)
-        return text_value
+    def _convert_value_type(self, target_map):
+        params_map = {}
+        for key, value_map in target_map.items():
+            env_value_id = value_map.get('key')
+            env_value_type = value_map.get('type')
+            env_value = self._datastore.get_param_value_service(env_value_id)
+            cvt_value = self._type_converter.convert(env_value, env_value_type)
+            self._logger.debug(f"[{self._job_id}]{env_value_id}: {env_value}({env_value_type}) -> {cvt_value}({type(cvt_value)}")
+            params_map[key] = cvt_value
+        return params_map
 
     def _get_envs(self, service_id):
+        params_map = {}
         try:
             service_pool = self._meta_pack['service_pool']
             service_info = service_pool.get(service_id)
             env_map = service_info.get('environments')
             if not env_map:
                 return {}
-
-            env_params_info = env_map.get('params')
-            if not env_params_info:
+            env_params_list = env_map.get('params')
+            if not env_params_list:
                 return {}
 
             node_id = service_info.get('node_id')
             env_params_map = {env_param_map.get('key'): {
                 "key": f"E.{node_id}.{env_param_map.get('key')}",
-                "type": f"{env_param_map.get('type')}"}
-                             for env_param_map in env_params_info if env_param_map.get('key')}
-            for env_name, env_value_map in env_params_map.items():
-                env_value_id = env_value_map.get('key')
-                env_value_type = env_value_map.get('type')
-                env_value = self._datastore.get_param_value_service(env_value_id)
-                try:
-                    if env_value and env_value_type in ['str', 'string']:
-                        if isinstance(env_value, int):
-                            env_value = str(env_value)
-                        elif isinstance(env_value, bool):
-                            env_value = str(env_value).lower()
-                except:
-                    pass
-                env_params_map[env_name] = self._map_template(service_id, env_value)
-            return env_params_map
+                "type": f"{env_param_map.get('type', 'any_type')}"}
+                             for env_param_map in env_params_list if env_param_map.get('key')}
+            params_map = self._convert_value_type(env_params_map)
         except Exception as e:
-            return {}
+            self._logger.error(f"[{self._job_id}] str({e})")
+        return params_map
 
     def _get_assets(self, service_id):
+        params_map = {}
         try:
             service_pool = self._meta_pack['service_pool']
             service_info = service_pool.get(service_id)
@@ -202,14 +190,15 @@ class WorkflowHelper:
                 return {}
 
             node_id = service_info.get('node_id')
-            asset_params_map = {asset_param_map.get('key'): f"A.{node_id}.{asset_param_map.get('key')}"
+            asset_params_map = {asset_param_map.get('key'): {
+                "key": f"A.{node_id}.{asset_param_map.get('key')}",
+                "type": f"{asset_param_map.get('type', 'any_type')}"}
                              for asset_param_map in asset_params_info if asset_param_map.get('key')}
-            for asset_name, asset_value_id in asset_params_map.items():
-                asset_value = self._datastore.get_param_value_service(asset_value_id)
-                asset_params_map[asset_name] = self._map_template(service_id, asset_value)
-            return asset_params_map
+            self._logger.debug(f"[{self._job_id}] {asset_params_map}")
+            params_map = self._convert_value_type(asset_params_map)
         except Exception as e:
-            return {}
+            self._logger.error(f"[{self._job_id}] str({e})")
+        return params_map
 
     def _extract_forced_param_value(self, service_id, param_name):
         value_id = f"{service_id}.{param_name}"
@@ -327,14 +316,14 @@ class WorkflowHelper:
                     for _index, res_key in enumerate(schema_keys):
                         result_map[res_key] = result[_index]
                 except IndexError:
-                    self._logger.warn("Wrong output schema: output result schema not matched ")
-                    self._logger.warn(f" - output schema: {str(results_schema)}")
+                    self._logger.warn(f"[{self._job_id}] Wrong output schema: output result schema not matched ")
+                    self._logger.warn(f"[{self._job_id}] - output schema: {str(results_schema)}")
         else:
             for schema in results_schema:
                 result_name = schema['key']
                 result_map[result_name] = result
 
-        custom_result_info = self._meta_pack.get('custom_result_meta', {})
+        custom_result_info = self._meta_pack.get('custom_result_info', {})
         custom_result_meta = custom_result_info.get(service_id)
         if custom_result_meta:
             for result_meta in custom_result_meta:
@@ -416,7 +405,7 @@ class WorkflowHelper:
         else:
             for prev_service_id in prev_service_list:
                 prev_task_state = self._get_task_state(prev_service_id)
-                self._logger.debug(f" - Prev_task: {prev_service_id} - {prev_task_state}")
+                self._logger.debug(f"[{self._job_id}] - Prev_task: {prev_service_id} - {prev_task_state}")
                 if prev_task_state not in [TaskState.COMPLETED, TaskState.SKIPPED]:
                     return False
         return True
@@ -432,5 +421,5 @@ class WorkflowHelper:
 
     def _show_task(self, task_map):
         for service_id, task in task_map.items():
-            self._logger.info(f" - [{task.get_state()}] {service_id}")
+            self._logger.info(f"[{self._job_id}] - [{task.get_state()}] {service_id}")
 
