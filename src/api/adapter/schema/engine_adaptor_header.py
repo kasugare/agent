@@ -2,8 +2,10 @@
 # -*- code utf-8 -*-
 
 from typing import Annotated, Dict, Optional, Any
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ValidationError, field_validator
 from fastapi import Header, HTTPException
+from urllib.parse import unquote
+import base64
 
 
 class HeaderModel(BaseModel):
@@ -16,6 +18,26 @@ class FileHeaderModel(BaseModel):
     x_sampl_callback: str
     x_sampl_err_callback: str
     x_sampl_user_data: str
+
+    @field_validator('*', mode='before')
+    @classmethod
+    def decode_url(cls, v):
+        if isinstance(v, str):
+            try:
+                return unquote(v)
+            except Exception:
+                return v
+        return v
+
+    # @field_validator('*', mode='before')
+    # @classmethod
+    # def decode_base64(cls, v):
+    #     if isinstance(v, str):
+    #         try:
+    #             return base64.b64decode(v).decode('utf-8')
+    #         except Exception:
+    #             return v
+    #     return v
 
 
 async def get_headers(
@@ -73,6 +95,7 @@ async def get_file_headers(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error while parsing headers: {str(e)}")
+
 
 class StatusHeaderModel(BaseModel):
     x_sampl_job_id: str

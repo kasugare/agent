@@ -3,22 +3,28 @@
 
 from common.conf_adapter import getDownloadPath
 import os
+from datetime import datetime, timezone, timedelta
 
 
 class EngineAdaptorService:
     def __init__(self, logger):
         self._logger = logger
-        self._pjt_id = 'pjt_id'
-        self._wf_id = 'wf_id'
         self._upload_path = getDownloadPath()
 
     async def upload_files(self, files):
+        def curr_dt():
+            tz_utc_minus_9 = timezone(timedelta(hours=-9))
+            now = datetime.now(tz=tz_utc_minus_9)
+            date_str = now.strftime("%Y%m%d")
+            return date_str
+
         try:
             if len(files) < 1:
                 raise FileNotFoundError("File to upload does not exist")
         except Exception as e:
             raise e
-        upload_dir = os.path.join(self._upload_path, self._pjt_id , self._wf_id)
+
+        upload_dir = os.path.join(self._upload_path, curr_dt())
         if not os.path.isdir(upload_dir):
             try:
                 os.makedirs(upload_dir)
