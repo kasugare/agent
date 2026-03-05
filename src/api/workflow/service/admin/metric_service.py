@@ -5,6 +5,7 @@ from api.workflow.common.api_requester.external_api_requester import ExternalApi
 from api.workflow.service.meta.meta_store_service import MetaStoreService
 from api.workflow.service.data.data_store_service import DataStoreService
 from api.workflow.service.task.task_store_service import TaskStoreService
+from api.workflow.service.request.user_request_store_service import UserRequestStoreService
 
 
 class MetricService:
@@ -16,9 +17,11 @@ class MetricService:
         metastore = MetaStoreService(self._logger, wf_id)
         datastore = DataStoreService(self._logger, job_id)
         taskstore = TaskStoreService(self._logger, job_id)
+        requestor = UserRequestStoreService(self._logger, job_id)
         store_pack['metastore'] = metastore
         store_pack['datastore'] = datastore
         store_pack['taskstore'] = taskstore
+        store_pack['request'] = requestor
         return store_pack
 
     def _cvt_params(self, request, body={}):
@@ -118,6 +121,10 @@ class MetricService:
         processing_time_map = taskstore.get_processing_time()
         job_status["processing_time"] = processing_time_map
 
+        requestor = UserRequestStoreService(self._logger, job_id)
+        user_parmas = requestor.get_user_params()
+        job_status["user_params"] = user_parmas
+
         for state_key, state_value in job_status.items():
             if isinstance(state_value, dict):
                 self._logger.debug(f" - {state_key}")
@@ -125,6 +132,7 @@ class MetricService:
                     self._logger.debug(f"    L {k}: {v}")
             else:
                 self._logger.debug(f" - {state_key}: {state_value}")
+
         return job_status
 
     def check_working_state(self, wf_id):

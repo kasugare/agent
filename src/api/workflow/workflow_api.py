@@ -12,6 +12,7 @@ from api.workflow.service.stream.web_stream_connection_manager import WSConnecti
 from api.workflow.service.meta.meta_store_service import MetaStoreService
 from api.workflow.service.data.data_store_service import DataStoreService
 from api.workflow.service.task.task_store_service import TaskStoreService
+from api.workflow.service.request.user_request_store_service import UserRequestStoreService
 from api.workflow.service.stream.web_stream_handler import WebStreamHandler
 from api.workflow.protocol.schema import BaseResponse
 from api.workflow.protocol.workflow_headers import HeaderModel, get_headers
@@ -22,8 +23,10 @@ from fastapi import APIRouter, WebSocket, Depends, Request
 from abc import abstractmethod
 from typing import Any
 import api.workflow.protocol.workflow_schema as schema
+import base64
 import uuid
 import time
+import json
 
 
 class BaseRouter:
@@ -80,9 +83,11 @@ class WorkflowEngine(BaseRouter):
         metastore = MetaStoreService(self._logger, wf_id)
         datastore = DataStoreService(self._logger, job_id)
         taskstore = TaskStoreService(self._logger, job_id)
+        requestor = UserRequestStoreService(self._logger, job_id)
         store_pack['metastore'] = metastore
         store_pack['datastore'] = datastore
         store_pack['taskstore'] = taskstore
+        store_pack['request'] = requestor
         return store_pack
 
 
@@ -199,15 +204,25 @@ class WorkflowEngine(BaseRouter):
 
             params = self._cvt_params(request, body)
             response = {}
+            try:
+                call_back_data_body = params.get('call_back_data_body')
+                decoded = json.loads(base64.b64decode(call_back_data_body))
+                params['decoded_call_back_data_body'] = decoded
+            except:
+                pass
+
 
             try:
                 req_id = params.get('request-id')
                 session_id = params.get('session-id', req_id)
                 job_id = params.get('job_id', session_id)
                 wf_id = params.get('workflow_id', getWorkflowId())
-
                 self._logger.info(f"[{job_id}] Request Params: {params}")
+
                 store_pack = self._gen_store_pack(wf_id, job_id)
+                request_service = store_pack.get('request')
+                request_service.set_user_params(params)
+
                 workflow_executor = WorkflowExecutor(self._logger, store_pack)
                 result = workflow_executor.run_workflow(params)
                 self._set_task_executor(job_id, workflow_executor)

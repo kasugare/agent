@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 from abc import abstractmethod
 from typing import Dict
 import asyncio
+import base64
 import httpx
 import json
 
@@ -155,7 +156,10 @@ class EngineAdapter(BaseRouter):
             parsed_data = json.loads(clean_data)
             return parsed_data
         except json.JSONDecodeError as e:
-            return JSONResponse(status_code=400, content={"error": f"Invalid JSON in data field: {str(e)}"})
+            if not isinstance(data, dict):
+                self._logger.warn(f"data")
+            self._logger.warn(f"Invalid JSON in data field: {str(e)}")
+            return data
 
     def setup_routes(self):
         @self.router.post(path='/predict/async/web', response_model=schema.ResAdaptWorkflow)
@@ -206,7 +210,8 @@ class EngineAdapter(BaseRouter):
                     "request-id": str(job_id),
                     "session-id": str(job_id),
                     "call_back_error_url": call_back_error_url,
-                    "call_back_url": call_back_url
+                    "call_back_url": call_back_url,
+                    "call_back_data_body": base64.b64encode(json.dumps(data_body).encode()).decode()
                 }
                 json_data = {"tar_path": tar_path_list}
                 bg.add_task(self.call_back_response, base_url, route_path, call_method, req_headers, json_data, headers, data_body)
@@ -290,10 +295,12 @@ class EngineAdapter(BaseRouter):
                 start_datetime = processing_time.get('start_dt', "0")
                 end_datetime = processing_time.get('end_dt', "0")
                 status = result.get('status')
-                params = result.get('params', {})
-                if params:
-                    call_back_url = params.get('call_back_url')
-                    call_back_error_url = params.get('call_back_error_url')
+                user_params = result.get('user_params', {})
+
+                if user_params:
+                    call_back_url = user_params.get('call_back_url', None)
+                    call_back_error_url = user_params.get('call_back_error_url', None)
+                    call_back_error_url = user_params.get('call_back_error_url', None)
                 else:
                     call_back_url = None
                     call_back_error_url = None
