@@ -92,7 +92,8 @@
             },
             "required_nodes": [],
             "api_info": {
-                "base_url": ""
+                "base_url": "",
+                "use_gateway": true
             },
             "module_info": {
                 "module_path": "app.dtm.input",

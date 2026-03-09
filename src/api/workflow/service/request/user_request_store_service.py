@@ -23,7 +23,7 @@ class UserRequestStoreService:
         self._request_controller.set_user_params_ctl(params_map)
 
     def get_user_params(self, job_id=None):
-        user_parmas = self._request_controller.get_user_params_Ctl(job_id)
+        user_parmas = self._request_controller.get_user_params_ctl(job_id)
         return user_parmas
 
 

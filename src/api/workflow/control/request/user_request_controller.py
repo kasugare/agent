@@ -26,7 +26,7 @@ class UserRequestStoreController:
         for key, values in params_map.items():
             self._user_request_access.set_data(key, values)
 
-    def get_user_params_Ctl(self, job_id=None):
+    def get_user_params_ctl(self, job_id=None):
         user_parmas = self._user_request_access.get_all(job_id)
         return user_parmas
 

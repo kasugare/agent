@@ -206,11 +206,11 @@ class WorkflowEngine(BaseRouter):
             response = {}
             try:
                 call_back_data_body = params.get('call_back_data_body')
-                decoded = json.loads(base64.b64decode(call_back_data_body))
-                params['decoded_call_back_data_body'] = decoded
+                if call_back_data_body:
+                    decoded = json.loads(base64.b64decode(call_back_data_body))
+                    params['decoded_call_back_data_body'] = decoded
             except:
                 pass
-
 
             try:
                 req_id = params.get('request-id')

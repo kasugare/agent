@@ -149,7 +149,10 @@ class MetricService:
         try:
             for node_id, node_map in nodes_meta.items():
                 node_type = node_map.get('node_type')
-                if node_type == 'external':
+                node_info = node_map.get('node_info', {})
+                node_src_type = node_info.get('type')
+
+                if node_type == 'external' or node_src_type == "CODE":
                     api_info = node_map.get('api_info', {})
                     base_url = api_info.get('base_url')
                     gateway_info = external_api.call_api_sync(base_url=base_url, method='get', route_path='/_gateway/metrics')

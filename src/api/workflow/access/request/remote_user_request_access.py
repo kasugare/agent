@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 
 from api.workflow.common.redis.redis_access import RedisAccess
+import datetime
+import pytz
+import time
 
 
 class RemoteCachedUserRequestAccess(RedisAccess):
@@ -24,6 +27,13 @@ class RemoteCachedUserRequestAccess(RedisAccess):
 
     def set_data(self, field, data):
         self.hset(key=self._cache_key, mapping={field: data})
+        ts = int(time.time())
+        try:
+            date_time = datetime.datetime.fromtimestamp(ts, pytz.utc).strftime('%Y-%m-%d_%H:%M:%S')
+            time_key = f"{date_time}-{self._cache_key}"
+            self.hset(key=time_key, mapping={field: data})
+        except:
+            pass
 
     def delete(self, field):
         self.hdel(key=self._cache_key, field=field)

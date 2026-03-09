@@ -10,6 +10,7 @@ from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
 from abc import abstractmethod
 from typing import Dict
+from urllib.parse import quote, unquote
 import asyncio
 import base64
 import httpx
@@ -108,6 +109,7 @@ class EngineAdapter(BaseRouter):
         result_data = []
         result = {}
         job_id = req_headers.get('job_id', "EMPTY_JOB_ID")
+        print(req_headers)
         try:
             self._logger.info(f"call prediction on engine: {job_id}")
             result = await asyncio.create_task(
@@ -174,17 +176,17 @@ class EngineAdapter(BaseRouter):
 
             try:
                 self._logger.info(f"request client ip: {request.client.host}")
-                self._logger.info(headers)
+                self._logger.info(f" - HEADER: {headers}")
 
                 job_id = headers.x_sampl_job_id
-                call_back_url = headers.x_sampl_callback
-                call_back_error_url = headers.x_sampl_err_callback
+                call_back_url = unquote(headers.x_sampl_callback)
+                call_back_error_url = unquote(headers.x_sampl_err_callback)
                 member_id = headers.x_sampl_member_id
                 user_callback_data = headers.x_sampl_user_data
 
-                data_body = self._cvt_to_json(data)
-                tags = data_body.get('tags', {})
-                data_info = data_body.get('data', {})
+                json_data_body = self._cvt_to_json(data)
+                tags = json_data_body.get('tags', {})
+                data_info = json_data_body.get('data', {})
                 tar_path_list = await self._engine_adaptor_service.upload_files(file)
 
                 self._logger.debug(f" - [{job_id}] engine_url   : {request.base_url}")
@@ -196,7 +198,8 @@ class EngineAdapter(BaseRouter):
                 self._logger.debug(f" - [{job_id}] tar_path_list: {tar_path_list}")
                 self._logger.debug(f" - [{job_id}] tags         : {tags}")
                 self._logger.debug(f" - [{job_id}] data_info    : {data_info}")
-
+                print(headers.x_sampl_callback)
+                print(headers.x_sampl_err_callback)
                 base_url = str(request.base_url)
                 route_path = "/api/v1/workflow/inference"
                 call_method = "POST"
@@ -211,10 +214,15 @@ class EngineAdapter(BaseRouter):
                     "session-id": str(job_id),
                     "call_back_error_url": call_back_error_url,
                     "call_back_url": call_back_url,
-                    "call_back_data_body": base64.b64encode(json.dumps(data_body).encode()).decode()
+                    "call_back_data_body": base64.b64encode(json.dumps(json_data_body).encode()).decode(),
+                    "x_sampl_job_id": job_id,
+                    "x_sampl_callback": headers.x_sampl_callback,
+                    "x_sampl_err_callback": headers.x_sampl_err_callback,
+                    "x_sampl_member_id": member_id,
+                    "x_sampl_user_data": user_callback_data
                 }
                 json_data = {"tar_path": tar_path_list}
-                bg.add_task(self.call_back_response, base_url, route_path, call_method, req_headers, json_data, headers, data_body)
+                bg.add_task(self.call_back_response, base_url, route_path, call_method, req_headers, json_data, headers, json_data_body)
             except Exception as e:
                 self._logger.error(e)
             response = {

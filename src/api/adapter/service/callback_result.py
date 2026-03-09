@@ -2,12 +2,33 @@
 # -*- coding: utf-8 -*-
 
 from typing import Dict
+from urllib.parse import quote, unquote
 import requests
+import base64
 
 
 class CallbackApiRequester:
     def __init__(self, logger):
         self._logger = logger
+
+    def _encode_base64_header_value(self, headers: dict, key: str) -> dict:
+        if key in headers:
+            header_value = headers.get(key)
+            try:
+                encoded_value = base64.b64encode(header_value.encode()).decode()
+                headers[key] = encoded_value
+            except Exception as e:
+                self._logger.warn(f"header {key} is not encoded: {header_value}")
+        return headers
+
+    def _decode_base64_header_value(self, headers: dict, key: str) -> dict:
+        header_value = headers.get(key)
+        try:
+            decoded_value = base64.b64decode(header_value).decode()
+            headers[key] = decoded_value
+        except Exception as e:
+            self._logger.warn(f"header {key} is not decoded: {header_value}")
+        return headers
 
     def _call_api_sync(self, url: str, base_url: str=None, route_path: str=None, method: str='get', headers: Dict = None, json_data: Dict = None, params: Dict = None):
         if not url:
@@ -17,7 +38,6 @@ class CallbackApiRequester:
                 method=method.upper(),
                 url=url,
                 json=json_data,
-                params=params,
                 headers=headers,
                 timeout=None
             )
@@ -33,8 +53,8 @@ class CallbackApiRequester:
 
     def call_back_result(self, callback_header, callback_data_info, result_pack):
         job_id = callback_header.x_sampl_job_id
-        call_back_url = callback_header.x_sampl_callback
-        call_back_error_url = callback_header.x_sampl_err_callback
+        call_back_url = unquote(callback_header.x_sampl_callback)
+        call_back_error_url = unquote(callback_header.x_sampl_err_callback)
         user_callback_data = callback_header.x_sampl_user_data
         tags = callback_data_info.get('tags', {})
         data_info = callback_data_info.get('data', {})
@@ -52,18 +72,19 @@ class CallbackApiRequester:
 
         headers = {
             'X-SAMPL-USER-DATA': user_callback_data,  # 온것 그대로
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json; charset=UTF-8'
         }
+        headers = self._encode_base64_header_value(headers, 'X-SAMPL-USER-DATA')
         body = {
-            "status": status_code,  # 성공: 0, 실패: -1
-            "statusText": status_text,  # 성공: success, 실패: error_msg
+            "status": status_code,  # success: 0, fail: -1
+            "statusText": status_text,  # success: 'success', fail: 'error_msg'
             "data": {
                 "project": "ocr",
                 "blueprint": "detection",
                 "tags": tags,
                 "result": {
                     "uuid": "abc",
-                    "image": result_data  # 실패시: [], 성공: 아래 포멧
+                    "image": result_data  # success: read json_result, fail: [],
                 },
                 "data": data_info
             }
