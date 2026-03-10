@@ -78,7 +78,6 @@ class CallbackApiRequester:
             'X-SAMPL-USER-DATA': user_callback_data,  # 온것 그대로
             'Content-Type': 'application/json; charset=UTF-8'
         }
-        headers = self._encode_base64_header_value(headers, 'X-SAMPL-USER-DATA')
         body = {
             "status": status_code,  # success: 0, fail: -1
             "statusText": status_text,  # success: 'success', fail: 'error_msg'
@@ -102,6 +101,7 @@ class CallbackApiRequester:
             else:
                 self._logger.info(f"[{job_id}] callback prediction result")
                 self._logger.info(f"[{job_id}] status_code: {status_code}, status_message: {status_text}")
-                self._call_api_sync(url=callback_url, method='post', headers=headers, json_data=body)
+                result = self._call_api_sync(url=callback_url, method='post', headers=headers, json_data=body)
+                self._logger.info(f"[{job_id} callback success: {result}")
         except Exception as e:
             self._logger.error(e)
