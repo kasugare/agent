@@ -9,7 +9,7 @@ import json
 
 
 class ApiExecutor:
-    def __init__(self, logger, url, method, header={}):
+    def __init__(self, logger, url, method, header={}, timeout=3600):
         self._logger = logger
         self._url = url
         self._method = method.upper()  # GET, POST, PUT, DELETE, PATCH
@@ -17,6 +17,7 @@ class ApiExecutor:
         self._env_params = {}
         self._asset_params = {}
         self._params = {}
+        self._timeout = 3600
 
     def set_url(self, url):
         self._url = url
@@ -82,11 +83,12 @@ class ApiExecutor:
             try:
                 if self._method == 'GET':
                     # GET 요청: query parameter로 전달
+                    # timeout=None --> 300s, def: 300s
                     async with session.get(
                             self.get_url(),
                             headers=headers,
                             params=params,
-                            timeout=None
+                            timeout=self._timeout
                     ) as response:
                         return await self._handle_response(response)
 
@@ -98,7 +100,7 @@ class ApiExecutor:
                             self.get_url(),
                             headers=headers,
                             json=params,
-                            timeout=None
+                            timeout=self._timeout
                     ) as response:
                         return await self._handle_response(response)
 
@@ -108,7 +110,7 @@ class ApiExecutor:
                             self.get_url(),
                             headers=headers,
                             json=params,
-                            timeout=None
+                            timeout=self._timeout
                     ) as response:
                         return await self._handle_response(response)
 
@@ -118,7 +120,7 @@ class ApiExecutor:
                             self.get_url(),
                             headers=headers,
                             json=params,
-                            timeout=None
+                            timeout=self._timeout
                     ) as response:
                         return await self._handle_response(response)
 
@@ -128,7 +130,7 @@ class ApiExecutor:
                             self.get_url(),
                             headers=headers,
                             json=params if params else None,
-                            timeout=None
+                            timeout=self._timeout
                     ) as response:
                         return await self._handle_response(response)
 

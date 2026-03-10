@@ -48,6 +48,7 @@ class EngineAdapter(BaseRouter):
         self._isWorking = False
         self._member_id = ''
         self._user_data = ''
+        self._timeout = 3600
 
     async def _call_workflow_api(self, base_url: str, method: str, path: str, headers: Dict = None, json_data: Dict = None, params: Dict = None):
         if not base_url:
@@ -63,13 +64,13 @@ class EngineAdapter(BaseRouter):
         async with httpx.AsyncClient() as client:
             try:
                 if method.upper() == "POST":
-                    response = await client.post(url_path, json=json_data, headers=headers, timeout=None)
+                    response = await client.post(url_path, json=json_data, headers=headers, timeout=self._timeout) # timeout=None --> unlimit, def: 5s
                 elif method.upper() == "GET":
-                    response = await client.get(url_path, params=params, headers=headers, timeout=None)
+                    response = await client.get(url_path, params=params, headers=headers, timeout=self._timeout)
                 elif method.upper() == "PUT":
-                    response = await client.put(url_path, json=json_data, headers=headers, timeout=None)
+                    response = await client.put(url_path, json=json_data, headers=headers, timeout=self._timeout)
                 elif method.upper() == "DELETE":
-                    response = await client.delete(url_path, headers=headers, timeout=None)
+                    response = await client.delete(url_path, headers=headers, timeout=self._timeout)
                 else:
                     raise ValueError(f"Unsupported HTTP method: {method}")
 
@@ -109,7 +110,7 @@ class EngineAdapter(BaseRouter):
         result_data = []
         result = {}
         job_id = req_headers.get('job_id', "EMPTY_JOB_ID")
-        print(req_headers)
+
         try:
             self._logger.info(f"call prediction on engine: {job_id}")
             result = await asyncio.create_task(
@@ -198,8 +199,7 @@ class EngineAdapter(BaseRouter):
                 self._logger.debug(f" - [{job_id}] tar_path_list: {tar_path_list}")
                 self._logger.debug(f" - [{job_id}] tags         : {tags}")
                 self._logger.debug(f" - [{job_id}] data_info    : {data_info}")
-                print(headers.x_sampl_callback)
-                print(headers.x_sampl_err_callback)
+
                 base_url = str(request.base_url)
                 route_path = "/api/v1/workflow/inference"
                 call_method = "POST"
@@ -307,7 +307,6 @@ class EngineAdapter(BaseRouter):
 
                 if user_params:
                     call_back_url = user_params.get('call_back_url', None)
-                    call_back_error_url = user_params.get('call_back_error_url', None)
                     call_back_error_url = user_params.get('call_back_error_url', None)
                 else:
                     call_back_url = None

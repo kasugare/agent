@@ -3,7 +3,7 @@
 
 from typing import Annotated, Dict, Optional, Any
 from pydantic import BaseModel, ValidationError, field_validator
-from fastapi import Header, HTTPException
+from fastapi import Header, HTTPException, Request
 from urllib.parse import unquote
 import base64
 
@@ -18,16 +18,17 @@ class FileHeaderModel(BaseModel):
     x_sampl_callback: str
     x_sampl_err_callback: str
     x_sampl_user_data: str
+    x_callbackable: bool = True
 
-    @field_validator('*', mode='before')
-    @classmethod
-    def decode_url(cls, v):
-        if isinstance(v, str):
-            try:
-                return unquote(v)
-            except Exception:
-                return v
-        return v
+    # @field_validator('*', mode='before')
+    # @classmethod
+    # def decode_url(cls, v):
+    #     if isinstance(v, str):
+    #         try:
+    #             return unquote(v)
+    #         except Exception:
+    #             return v
+    #     return v
 
     # @field_validator('*', mode='before')
     # @classmethod
@@ -69,6 +70,7 @@ async def get_file_headers(
         x_sampl_err_callback: Annotated[
             str, Header(..., alias="X-SAMPL-ERR-CALLBACK", convert_underscores=False)] = None,
         x_sampl_user_data: Annotated[str, Header(..., alias="X-SAMPL-USER-DATA", convert_underscores=False)] = None,
+        x_callbackable: Annotated[str, Header(alias="X-CALLBACKABLE", convert_underscores=False)] = None,
 
 ) -> FileHeaderModel:
     try:
@@ -83,9 +85,12 @@ async def get_file_headers(
         elif not x_sampl_user_data:
             raise HTTPException(status_code=400, detail="Missing required header: x_sampl_user_data")
         else:
-            return FileHeaderModel(x_sampl_job_id=x_sampl_job_id, x_sampl_member_id=x_sampl_member_id,
-                               x_sampl_callback=x_sampl_callback, x_sampl_err_callback=x_sampl_err_callback,
-                               x_sampl_user_data=x_sampl_user_data)
+            return FileHeaderModel(x_sampl_job_id=x_sampl_job_id
+                            , x_sampl_member_id=x_sampl_member_id
+                            , x_sampl_callback=x_sampl_callback
+                            , x_sampl_err_callback=x_sampl_err_callback
+                            , x_sampl_user_data=x_sampl_user_data
+                            , x_callbackable=x_callbackable.lower() == "true" if x_callbackable else True)
 
     except ValidationError as e:
         raise HTTPException(status_code=422, detail=f"Invalid header format: {e.errors()}")
