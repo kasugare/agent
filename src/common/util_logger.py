@@ -19,20 +19,29 @@ def tz_converter(tz):
     return converter
 
 
-class KSTRainbowHandler(RainbowLoggingHandler):
-	def __init__(self, *args, converter=None, **kwargs):
-		super().__init__(*args, **kwargs)
-		self._converter = converter  # ← converter 저장
+class TZFormatter(logging.Formatter):
+    def __init__(self, *args, tz=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._tz = tz
 
-	def colorize(self, record):
-		color_fmt = self._colorize_fmt(self._fmt, record.levelno)
-		formatter = logging.Formatter(color_fmt, datefmt='%Y-%m-%d %H:%M:%S')
-		if self._converter:
-			formatter.converter = self._converter  # ← 주입된 converter 사용
-		self.colorize_traceback(formatter, record)
-		output = formatter.format(record)
-		record.ext_text = None
-		return output
+    def formatTime(self, record, datefmt=None):
+        dt = datetime.fromtimestamp(record.created, tz=pytz.utc).astimezone(self._tz)
+        return dt.strftime('%Y-%m-%d %H:%M:%S.') + f'{record.msecs:03.0f}'  # ← 밀리초 추가
+
+
+class CustomedRainbowHandler(RainbowLoggingHandler):
+    def __init__(self, *args, converter=None, tz=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._converter = converter
+        self._tz = tz  # ← tz 저장
+
+    def colorize(self, record):
+        color_fmt = self._colorize_fmt(self._fmt, record.levelno)
+        formatter = TZFormatter(color_fmt, tz=self._tz)
+        self.colorize_traceback(formatter, record)
+        output = formatter.format(record)
+        record.ext_text = None
+        return output
 
 class Logger:
 	_loggerPool = {}
@@ -88,26 +97,17 @@ class Logger:
 			try:
 				topic = loggerInfo.get('topic', 'log')
 				bootstrap_servers = loggerInfo.get('kafka_bootstrap_servers', [])
-				handler = self._setKafkaLoggingHandler(topic, bootstrap_servers, formatter)
+				group_id = loggerInfo.get('kafka_group_id', 'log')
+				handler = self._setKafkaLoggingHandler(topic, bootstrap_servers, group_id, formatter)
 				logger.addHandler(handler)
 			except:
 				print("# kafka_libraries are not installed: $> pip install kafka")
 				print(" - not used log pipline mode")
 		return logger
 
-	def _setKafkaLoggingHandler(self, topic, bootstrap_servers, formatter):
-		from kafka import KafkaProducer
-		handler = KafkaLoggingHandler(
-			KafkaProducer,
-			bootstrap_servers=bootstrap_servers,
-			topic=topic,
-			formatter=formatter
-		)
-		return handler
-
 	def _getFormmater(self, logFormat, tz_code):
-		formatter = logging.Formatter(logFormat)
 		tz = pytz.timezone(tz_code)
+		formatter = TZFormatter(logFormat, tz=tz)
 		formatter.converter = tz_converter(tz)
 		return formatter
 
@@ -139,32 +139,26 @@ class Logger:
 		return handler
 
 	def _setStreamLoggingHandler(self, formatter):
-		handler = KSTRainbowHandler(
+		handler = CustomedRainbowHandler(
 			sys.stderr,
-			converter = formatter.converter,
-			# datefmt 				= '%Y-%m-%d %H:%M:%S',
-			# color_name				= ('white'	, None, True),
-			# color_levelno			= ('white'	, None, False),
-			# color_levelname			= ('white'	, None, True),
-			# color_pathname			= ('blue'	, None, True),
-			# color_filename			= ('blue'	, None, True),
-			# color_module			= ('blue'	, None, True),
-			color_lineno			= ('blue'	, None, True),
-			color_funcName			= ('blue'	, None, True),
-			# color_created			= ('white'	, None, False),
-			color_asctime			= ('white'	, None, True),
-			# color_msecs				= ('white'	, None, False),
-			# color_relativeCreated	= ('white'	, None, False),
-			# color_thread			= ('white'	, None, False),
-			# color_threadName		= ('white'	, None, False),
-			# color_process			= ('black'	, None, True),
-			# color_message_debug		= ('cyan'	, None , False),
-			# color_message_info		= ('white'	, None , False),
-			# color_message_warning	= ('yellow'	, None , True),
-			# color_message_error		= ('red'	, None , True),
-			# color_message_critical	= ('white'	, 'red', True)
+			converter=formatter.converter,
+			tz=formatter._tz,
+			color_lineno=('blue', None, True),
+			color_funcName=('blue', None, True),
+			color_asctime=('white', None, True)
 		)
 		handler.setFormatter(formatter)
+		return handler
+
+	def _setKafkaLoggingHandler(self, topic, group_id, bootstrap_servers, formatter):
+		from kafka import KafkaProducer
+		handler = KafkaLoggingHandler(
+			KafkaProducer,
+			bootstrap_servers=bootstrap_servers,
+			topic=topic,
+			group_id=group_id,  # ← 전달
+			formatter=formatter
+		)
 		return handler
 
 	def setLevel(self, level:str = "INFO"):
@@ -185,13 +179,15 @@ class Logger:
 	def get_instance(cls):
 		return cls()
 
+
 class KafkaLoggingHandler(logging.Handler):
-    def __init__(self, KafkaProducer, bootstrap_servers, topic, formatter=None):
+    def __init__(self, KafkaProducer, bootstrap_servers, topic, group_id=None, formatter=None):
         super().__init__()
         self._topic = topic
         self._producer = KafkaProducer(
             bootstrap_servers=bootstrap_servers,
-            value_serializer=lambda v: json.dumps(v).encode('utf-8')
+            value_serializer=lambda v: json.dumps(v).encode('utf-8'),
+            client_id=group_id,  # ← group_id를 client_id로 사용
         )
         if formatter:
             self.setFormatter(formatter)
@@ -199,7 +195,7 @@ class KafkaLoggingHandler(logging.Handler):
     def emit(self, record):
         try:
             log_entry = {
-                'timestamp': self.format(record).split(' ')[0],  # asctime
+                'timestamp': self.format(record).split(' ')[0],
                 'level'    : record.levelname,
                 'module'   : record.module,
                 'funcName' : record.funcName,

@@ -26,7 +26,19 @@ DATA_TYPE_MAP = {
 	'log_maxsize': 'int',
 	'backup_count': 'int',
 	'topic': 'str',
-	'kafka_bootstrap_servers': 'str'
+	'kafka_bootstrap_servers': 'str',
+	'kafka_group_id': 'str'
+}
+
+ENV_CONF_MAP = {
+	'log_level': 'LOG_LEVEL',
+	'log_dir': 'LOG_FILE_PATH',
+	'log_filename': 'LOG_FILE_NAME',
+	'log_maxsize': 'LOG_FILE_MAX_SIZE',
+	'backup_count': 'LOG_FILE_BACKUP_COUNT',
+	'kafka_bootstrap_servers': 'LOG_KAFKA_BOOTSTRAP_SERVERS',
+	'kafka_group_id': 'KAFKA_GROUP_ID',
+	'topic': 'APP_ID'
 }
 
 
@@ -119,21 +131,43 @@ def _dataTypeConverter(dataType, value):
 	except Exception as e:
 		raise ValueError(f"Conversion failed: {e}")
 
-def _getAllLogConf(loggerConfName):
-	configList = {}
+def _getAllLogConf(section):
+	config_info = {}
 	conf = _getConfig()
-	conf_items = conf.items(loggerConfName)
-	for conf_item in conf_items:
-		key = conf_item[0]
-		value = conf_item[1]
-		dataType = DATA_TYPE_MAP.get(key, 'str')
-		configList[key] = _dataTypeConverter(dataType, value)
 
-	if configList.get('kafka_bootstrap_servers'):
-		str_servers = configList.get('kafka_bootstrap_servers')
+	ENV_CONF_MAP = {
+		'timezone': 'TIMEZONE',
+		'log_level': 'LOG_LEVEL',
+		'log_dir': 'LOG_FILE_PATH',
+		'log_filename': 'LOG_FILE_NAME',
+		'log_maxsize': 'LOG_FILE_MAX_SIZE',
+		'backup_count': 'LOG_FILE_BACKUP_COUNT',
+		'kafka_bootstrap_servers': 'LOG_KAFKA_BOOTSTRAP_SERVERS',
+		'kafka_group_id': 'KAFKA_GROUP_ID',
+		'topic': 'APP_ID'
+	}
+	conf_options = conf.options(section)
+	for option in conf_options:
+		if option.lower() == 'topic':
+			app_id = os.environ.get('APP_ID')
+			group_id = os.environ.get('GROUP_ID')
+			if app_id and group_id:
+				value = f'log-{group_id}-{app_id}'
+			else:
+				value = conf.get(section, option)
+		else:
+			option_key = ENV_CONF_MAP.get(option, option)
+			def_value = conf.get(section, option)
+			value = os.environ.get(option_key, def_value)
+
+		dataType = DATA_TYPE_MAP.get(option, 'str')
+		config_info[option] = _dataTypeConverter(dataType, value)
+
+	if config_info.get('kafka_bootstrap_servers'):
+		str_servers = config_info.get('kafka_bootstrap_servers')
 		server_list = str_servers.split(',')
-		configList['kafka_bootstrap_servers'] = server_list
-	return configList
+		config_info['kafka_bootstrap_servers'] = server_list
+	return config_info
 
 def getLoggerInfo(loggerConfName):
 	configList = _getAllLogConf(loggerConfName)
