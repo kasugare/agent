@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from common.logger import Logger
+from common.util_logger import Logger
 from api.launcher.api_launcher import ApiLauncher
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,8 +17,8 @@ class CSPMiddleware(BaseHTTPMiddleware):
         response.headers["Content-Security-Policy"] = "default-src *; img-src *; script-src * 'unsafe-inline'; style-src * 'unsafe-inline';"
         return response
 
-logger = Logger()
-logger.setLevel("DEBUG")
+logger = Logger("SYSTEM")
+# logger.setLevel("DEBUG")
 
 app = FastAPI(docs_url=None, redoc_url=None, title="Workflow Engine")
 

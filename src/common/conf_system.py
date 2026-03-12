@@ -118,3 +118,17 @@ def getWorkflowTimeoutConfig(section='WORKFLOW_TIMEOUT'):
         'exponential_backoff': exponential_backoff
     }
     return timeout_config
+
+def getServerInfo(section='SERVER'):
+    conf = getConfig()
+    server_info = {}
+    server_info['bind'] = str(conf.get(section, 'bind'))
+    server_info['workers'] = int(conf.get(section, 'workers'))
+    server_info['worker_class'] = str(conf.get(section, 'worker_class'))
+    server_info['timeout'] = int(conf.get(section, 'timeout'))
+    server_info['keepalive'] = int(conf.get(section, 'keepalive'))
+    server_info['worker_connections'] = int(conf.get(section, 'worker_connections'))
+    server_info['max_requests'] = int(conf.get(section, 'max_requests'))
+    server_info['max_requests_jitter'] = int(conf.get(section, 'max_requests_jitter'))
+    return server_info
+

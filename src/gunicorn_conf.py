@@ -1,18 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from common.conf_system import getServerInfo
 import multiprocessing
 import resource
 import os
 
-bind = "0.0.0.0:8080"
-workers = 5
-worker_class = "uvicorn.workers.UvicornWorker"
-timeout = 86400
-keepalive = 60
-worker_connections = 10000
-max_requests = 5000
-max_requests_jitter = 300
+server_info = getServerInfo()
+bind = server_info.get("bind", "0.0.0.0:8080")
+workers = server_info.get("workers", 1)
+worker_class = server_info.get("worker_class", "uvicorn.workers.UvicornWorker")
+timeout = server_info.get("timeout", 86400)
+keepalive = server_info.get("keepalive", 60)
+worker_connections = server_info.get("worker_connections", 10000)
+max_requests = server_info.get("max_requests", 5000)
+max_requests_jitter = server_info.get("max_requests_jitter", 300)
 # preload_app = True
 
 def on_starting(server):
