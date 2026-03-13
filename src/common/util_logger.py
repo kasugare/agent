@@ -13,35 +13,35 @@ import os
 
 
 def tz_converter(tz):
-    def converter(*args):
-        utc_dt = datetime.now(tz=pytz.utc)
-        return utc_dt.astimezone(tz).timetuple()
-    return converter
+	def converter(*args):
+		utc_dt = datetime.now(tz=pytz.utc)
+		return utc_dt.astimezone(tz).timetuple()
+	return converter
 
 
 class TZFormatter(logging.Formatter):
-    def __init__(self, *args, tz=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._tz = tz
+	def __init__(self, *args, tz=None, **kwargs):
+		super().__init__(*args, **kwargs)
+		self._tz = tz
 
-    def formatTime(self, record, datefmt=None):
-        dt = datetime.fromtimestamp(record.created, tz=pytz.utc).astimezone(self._tz)
-        return dt.strftime('%Y-%m-%d %H:%M:%S.') + f'{record.msecs:03.0f}'  # ← 밀리초 추가
+	def formatTime(self, record, datefmt=None):
+		dt = datetime.fromtimestamp(record.created, tz=pytz.utc).astimezone(self._tz)
+		return dt.strftime('%Y-%m-%d %H:%M:%S.') + f'{record.msecs:03.0f}'  # ← 밀리초 추가
 
 
 class CustomedRainbowHandler(RainbowLoggingHandler):
-    def __init__(self, *args, converter=None, tz=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._converter = converter
-        self._tz = tz  # ← tz 저장
+	def __init__(self, *args, converter=None, tz=None, **kwargs):
+		super().__init__(*args, **kwargs)
+		self._converter = converter
+		self._tz = tz  # ← tz 저장
 
-    def colorize(self, record):
-        color_fmt = self._colorize_fmt(self._fmt, record.levelno)
-        formatter = TZFormatter(color_fmt, tz=self._tz)
-        self.colorize_traceback(formatter, record)
-        output = formatter.format(record)
-        record.ext_text = None
-        return output
+	def colorize(self, record):
+		color_fmt = self._colorize_fmt(self._fmt, record.levelno)
+		formatter = TZFormatter(color_fmt, tz=self._tz)
+		self.colorize_traceback(formatter, record)
+		output = formatter.format(record)
+		record.ext_text = None
+		return output
 
 class Logger:
 	_loggerPool = {}
@@ -95,10 +95,14 @@ class Logger:
 
 		if isPipe:
 			try:
+				import socket
+				app_id = loggerInfo.get('app_id', '')
+				hostname = socket.gethostname()
+				namespace = ""
 				topic = loggerInfo.get('topic', 'log')
 				bootstrap_servers = loggerInfo.get('kafka_bootstrap_servers', [])
 				group_id = loggerInfo.get('kafka_group_id', 'log')
-				handler = self._setKafkaLoggingHandler(topic, bootstrap_servers, group_id, formatter)
+				handler = self._setKafkaLoggingHandler(app_id, hostname, namespace, topic, group_id, bootstrap_servers, formatter)
 				logger.addHandler(handler)
 			except:
 				print("# kafka_libraries are not installed: $> pip install kafka")
@@ -150,13 +154,16 @@ class Logger:
 		handler.setFormatter(formatter)
 		return handler
 
-	def _setKafkaLoggingHandler(self, topic, group_id, bootstrap_servers, formatter):
+	def _setKafkaLoggingHandler(self, app_id, hostname, namespace, topic, group_id, bootstrap_servers, formatter):
 		from kafka import KafkaProducer
 		handler = KafkaLoggingHandler(
 			KafkaProducer,
+			app_id=app_id,
+			hostname=hostname,
+			namespace=namespace,
 			bootstrap_servers=bootstrap_servers,
 			topic=topic,
-			group_id=group_id,  # ← 전달
+			group_id=group_id,
 			formatter=formatter
 		)
 		return handler
@@ -181,32 +188,70 @@ class Logger:
 
 
 class KafkaLoggingHandler(logging.Handler):
-    def __init__(self, KafkaProducer, bootstrap_servers, topic, group_id=None, formatter=None):
-        super().__init__()
-        self._topic = topic
-        self._producer = KafkaProducer(
-            bootstrap_servers=bootstrap_servers,
-            value_serializer=lambda v: json.dumps(v).encode('utf-8'),
-            client_id=group_id,  # ← group_id를 client_id로 사용
-        )
-        if formatter:
-            self.setFormatter(formatter)
+	def __init__(self, KafkaProducer, app_id, hostname, bootstrap_servers, topic, group_id=None, formatter=None, namespace=""):
+		super().__init__()
+		self._app_id = app_id
+		self._hostname = hostname
+		self._namespace = namespace
 
-    def emit(self, record):
-        try:
-            log_entry = {
-                'timestamp': self.format(record).split(' ')[0],
-                'level'    : record.levelname,
-                'module'   : record.module,
-                'funcName' : record.funcName,
-                'lineno'   : record.lineno,
-                'message'  : record.getMessage(),
-            }
-            self._producer.send(self._topic, log_entry)
-            self._producer.flush()
-        except Exception:
-            self.handleError(record)
+		self._topic = topic
+		self._bootstrap_servers = bootstrap_servers
+		self._create_topic_if_not_exists(topic, bootstrap_servers)
+		self._producer = KafkaProducer(
+			bootstrap_servers=bootstrap_servers,
+			value_serializer=lambda v: json.dumps(v).encode('utf-8'),
+			client_id=group_id,
+		)
+		if formatter:
+			self.setFormatter(formatter)
 
-    def close(self):
-        self._producer.close()
-        super().close()
+	def _create_topic_if_not_exists(self, topic, bootstrap_servers, num_partitions=1, replication_factor=1):
+		try:
+			from kafka import KafkaConsumer
+
+			consumer = KafkaConsumer(
+				bootstrap_servers=bootstrap_servers,
+				request_timeout_ms=5000,
+				connections_max_idle_ms=10000
+			)
+			existing_topics = consumer.topics()
+			print(f"# existing_topics: {existing_topics}")
+
+			if topic not in existing_topics:
+				from kafka import KafkaProducer
+				temp_producer = KafkaProducer(bootstrap_servers=bootstrap_servers)
+				temp_producer.send(topic, b'init')
+				temp_producer.flush()
+				temp_producer.close()
+				print(f"# Kafka topic created: {topic}")
+			else:
+				print(f"# Kafka topic already exists: {topic}")
+
+			consumer.close()
+
+		except Exception as e:
+			print(f"# Failed to create kafka topic: {str(e)}")
+
+	def emit(self, record):
+		try:
+			splited_recode = self.format(record).split(' ')
+			datetime = f"{splited_recode[0]} {splited_recode[1]}"
+			log_entry = {
+				'service_id': self._app_id,
+				'namespace': self._namespace,
+				'pod_name': self._hostname,
+				'timestamp': datetime,
+				'log_level': record.levelname,
+				'module': record.module,
+				'funcName': record.funcName,
+				'lineno': record.lineno,
+				'message': self.format(record),
+			}
+			self._producer.send(self._topic, log_entry)
+			self._producer.flush()
+		except Exception:
+			self.handleError(record)
+
+	def close(self):
+		self._producer.close()
+		super().close()

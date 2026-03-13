@@ -23,5 +23,5 @@ def getConfig():
 
 def getDownloadPath(section='ADAPTER'):
     conf = getConfig()
-    downloadPath = conf.get(section, 'upload_dir_path')
+    downloadPath = os.environ.get('UPLOAD_DIR_PATH', conf.get(section, 'upload_dir_path'))
     return downloadPath

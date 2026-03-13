@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from common.conf_system import getAppId
 import configparser
 import sys
 import os
@@ -31,6 +32,7 @@ DATA_TYPE_MAP = {
 }
 
 ENV_CONF_MAP = {
+	'timezone': 'TIMEZONE',
 	'log_level': 'LOG_LEVEL',
 	'log_dir': 'LOG_FILE_PATH',
 	'log_filename': 'LOG_FILE_NAME',
@@ -38,9 +40,8 @@ ENV_CONF_MAP = {
 	'backup_count': 'LOG_FILE_BACKUP_COUNT',
 	'kafka_bootstrap_servers': 'LOG_KAFKA_BOOTSTRAP_SERVERS',
 	'kafka_group_id': 'KAFKA_GROUP_ID',
-	'topic': 'APP_ID'
+	'topic': 'KAFKA_TOPIC'
 }
-
 
 def _getConfig():
 	src_path = os.path.dirname(CONF_PATH)
@@ -131,26 +132,48 @@ def _dataTypeConverter(dataType, value):
 	except Exception as e:
 		raise ValueError(f"Conversion failed: {e}")
 
+def _getLogHandler():
+	log_handler_list = []
+	try:
+		log_handlers = os.environ.get('LOG_HANDLERS')
+		if log_handlers:
+			splited_log_handlers = log_handlers.replace(" ","").split(',')
+			for handler_name in splited_log_handlers:
+				if handler_name.lower() == 'console':
+					log_handler_list.append('is_stream')
+				elif handler_name.lower() == 'file_handler':
+					log_handler_list.append('is_file')
+				elif handler_name.lower() == 'kafka_handler':
+					log_handler_list.append('is_pipe')
+	except:
+		pass
+	return log_handler_list
+
+def _activateLogHandler(config_info):
+	env_log_handler = _getLogHandler()
+	target_handlers = ['is_stream', 'is_file', 'is_pipe']
+	if not env_log_handler:
+		return config_info
+	act_handler = list(set(target_handlers).intersection(set(env_log_handler)))
+	for act_handler_type in act_handler:
+		if config_info.get(act_handler_type):
+			config_info[act_handler_type] = True
+
+	deact_handler = list(set(target_handlers).difference(set(env_log_handler)))
+	for deact_handler_type in deact_handler:
+		if config_info.get(deact_handler_type):
+			config_info[deact_handler_type] = False
+	return config_info
+
 def _getAllLogConf(section):
 	config_info = {}
 	conf = _getConfig()
-
-	ENV_CONF_MAP = {
-		'timezone': 'TIMEZONE',
-		'log_level': 'LOG_LEVEL',
-		'log_dir': 'LOG_FILE_PATH',
-		'log_filename': 'LOG_FILE_NAME',
-		'log_maxsize': 'LOG_FILE_MAX_SIZE',
-		'backup_count': 'LOG_FILE_BACKUP_COUNT',
-		'kafka_bootstrap_servers': 'LOG_KAFKA_BOOTSTRAP_SERVERS',
-		'kafka_group_id': 'KAFKA_GROUP_ID',
-		'topic': 'APP_ID'
-	}
 	conf_options = conf.options(section)
 	for option in conf_options:
 		if option.lower() == 'topic':
-			app_id = os.environ.get('APP_ID')
-			group_id = os.environ.get('GROUP_ID')
+			app_id = os.environ.get('APP_ID', getAppId())
+			config_info['app_id'] = app_id
+			group_id = os.environ.get('GROUP_ID', conf.get(section, 'kafka_group_id'))
 			if app_id and group_id:
 				value = f'log-{group_id}-{app_id}'
 			else:
@@ -167,9 +190,10 @@ def _getAllLogConf(section):
 		str_servers = config_info.get('kafka_bootstrap_servers')
 		server_list = str_servers.split(',')
 		config_info['kafka_bootstrap_servers'] = server_list
+
 	return config_info
 
 def getLoggerInfo(loggerConfName):
-	configList = _getAllLogConf(loggerConfName)
-
-	return configList
+	config_info = _getAllLogConf(loggerConfName)
+	config_info = _activateLogHandler(config_info)
+	return config_info

@@ -23,6 +23,11 @@ def getConfig():
     conf.read(ini_path)
     return conf
 
+def getAppId(section="ENV"):
+    conf = getConfig()
+    app_id = os.environ.get('APP_ID', conf.get(section, 'app_id'))
+    return app_id
+
 def getOperMode(section='OPERATION'):
     conf = getConfig()
     operMode = conf.get(section, 'operation_mode')
