@@ -151,10 +151,12 @@ class MetastoreController:
     def get_metas_ctl(self):
         meta_pack = {
             "wf_meta": self._metastore_access.get_wf_meta_access(),
+            "common": self._metastore_access.get_comm_meta_access(),
             "project_id": self._metastore_access.get_project_id_access(),
             "workflow_id": self._metastore_access.get_workflow_id_access(),
             "start_nodes": self._metastore_access.get_start_nodes_meta_access(),
             "end_nodes": self._metastore_access.get_end_nodes_meta_access(),
+            "resources": self._metastore_access.get_resources_meta_access(),
             "nodes_info": self._metastore_access.get_nodes_meta_access(),
             "service_pool": self._metastore_access.get_node_service_pool_access(),
             "edges_info": self._metastore_access.get_edges_meta_access(),
@@ -175,3 +177,6 @@ class MetastoreController:
     def load_wf_meta_on_file(self, dirpath: str = None, filename: str = None) -> Dict:
         wf_meta = self._meta_file_access.load_wf_meta_on_file()
         return wf_meta
+
+    def set_all_meta_ctl(self, meta_pack):
+        self._metastore_access.set_all_meta_access(meta_pack)

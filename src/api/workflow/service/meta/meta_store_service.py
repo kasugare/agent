@@ -163,8 +163,7 @@ class MetaStoreService:
         setWorkflowId(opt_value=wf_id)
         dirpath, filename = self._gen_dag_file_path(wf_comm, request_id)
         self.set_wf_meta_file_service(wf_meta, dirpath=dirpath, filename=filename)
-        self.set_wf_meta_service(wf_meta)
-
+        # self.set_wf_meta_service(wf_meta)
         return meta_pack
 
     def get_meta_pack_service(self) -> Dict:
@@ -172,19 +171,20 @@ class MetaStoreService:
         return meta_pack
 
     def set_meta_pack_service(self, meta_pack):
-        self.set_wf_meta_service(meta_pack.get('wf_meta'))
-        self.set_comm_meta_service(meta_pack.get('common'))
-        self.set_env_pool_service(meta_pack.get("env_pool"))
-        self.set_resources_meta_service(meta_pack.get("wf_resources_meta"))
-        self.set_nodes_meta_service(meta_pack.get("nodes_info"))
-        self.set_node_service_pool_service(meta_pack.get("service_pool"))
-        self.set_edges_meta_service(meta_pack.get("edges_info"))
-        self.set_nodes_env_value_map_service(meta_pack.get("nodes_env_value_map"))
-        self.set_nodes_asset_value_map_service(meta_pack.get("nodes_asset_value_map"))
-        self.set_custom_result_meta_service(meta_pack.get("custom_result_info"))
-        self.set_forward_edge_graph_meta_service(meta_pack.get("forward_edge_graph"))
-        self.set_forward_graph_meta_service(meta_pack.get("forward_graph"))
-        self.set_backward_graph_meta_service(meta_pack.get("backward_graph"))
-        self.set_start_nodes_meta_service(meta_pack.get("start_nodes"))
-        self.set_end_nodes_meta_service(meta_pack.get("end_nodes"))
-        self.set_edges_param_map_service(meta_pack.get("edges_param_map"))
+        self._metastore_controller.set_all_meta_ctl(meta_pack)
+        # self.set_wf_meta_service(meta_pack.get('wf_meta'))
+        # self.set_comm_meta_service(meta_pack.get('common'))
+        # self.set_env_pool_service(meta_pack.get("env_pool"))
+        # self.set_resources_meta_service(meta_pack.get("resources"))
+        # self.set_nodes_meta_service(meta_pack.get("nodes_info"))
+        # self.set_node_service_pool_service(meta_pack.get("service_pool"))
+        # self.set_edges_meta_service(meta_pack.get("edges_info"))
+        # self.set_nodes_env_value_map_service(meta_pack.get("nodes_env_value_map"))
+        # self.set_nodes_asset_value_map_service(meta_pack.get("nodes_asset_value_map"))
+        # self.set_custom_result_meta_service(meta_pack.get("custom_result_info"))
+        # self.set_forward_edge_graph_meta_service(meta_pack.get("forward_edge_graph"))
+        # self.set_forward_graph_meta_service(meta_pack.get("forward_graph"))
+        # self.set_backward_graph_meta_service(meta_pack.get("backward_graph"))
+        # self.set_start_nodes_meta_service(meta_pack.get("start_nodes"))
+        # self.set_end_nodes_meta_service(meta_pack.get("end_nodes"))
+        # self.set_edges_param_map_service(meta_pack.get("edges_param_map"))

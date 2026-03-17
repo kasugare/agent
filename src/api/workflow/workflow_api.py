@@ -113,6 +113,7 @@ class WorkflowEngine(BaseRouter):
                 wf_id = meta_pack.get('workflow_id')
                 metastore = MetaStoreService(self._logger, wf_id)
                 metastore.set_wf_meta(meta_pack, request_id)
+                metastore.set_meta_pack_service(meta_pack)
                 status_code = 200
                 message = "success"
             except MetaTypeError as e:

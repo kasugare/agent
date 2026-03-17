@@ -30,46 +30,46 @@ class RemoteCachedMetastoreAccess(RedisAccess):
         return self.hget(key=self._cache_key, field='wf_meta')
 
     def set_project_id_access(self, project_id: str) -> None:
-        self.hset(key=self._cache_key, mapping={'proj_id': json.dumps(project_id)})
+        self.hset(key=self._cache_key, mapping={'project_id': json.dumps(project_id)})
 
     def get_project_id_access(self):
-        return self.hget(key=self._cache_key, field="proj_id")
+        return self.hget(key=self._cache_key, field="project_id")
 
     def set_workflow_id_access(self, workflow_id: str) -> None:
-        self.hset(key=self._cache_key, mapping={'wf_id': json.dumps(workflow_id)})
+        self.hset(key=self._cache_key, mapping={'workflow_id': json.dumps(workflow_id)})
 
     def get_workflow_id_access(self):
-        return self.hget(key=self._cache_key, field="wf_id")
+        return self.hget(key=self._cache_key, field="workflow_id")
 
     def set_comm_meta_access(self, wf_comm_meta: Dict) -> None:
-        self.hset(key=self._cache_key, mapping={'comm_meta': json.dumps(wf_comm_meta)})
+        self.hset(key=self._cache_key, mapping={'common': json.dumps(wf_comm_meta)})
 
     def get_comm_meta_access(self) -> Dict:
-        return self.hget(key=self._cache_key, field='comm_meta')
+        return self.hget(key=self._cache_key, field='common')
 
     def set_env_pool_access(self, wf_env_pool: Dict) -> None:
-        self.hset(key=self._cache_key, mapping={'wf_env': json.dumps(wf_env_pool)})
+        self.hset(key=self._cache_key, mapping={'env_pool': json.dumps(wf_env_pool)})
 
     def get_env_pool_access(self) -> Dict:
-        return self.hget(key=self._cache_key, field='wf_env')
+        return self.hget(key=self._cache_key, field='env_pool')
 
     def set_nodes_env_value_map_access(self, wf_nodes_env_map_pool: Dict) -> None:
-        self.hset(key=self._cache_key, mapping={'nodes_env_map': json.dumps(wf_nodes_env_map_pool)})
+        self.hset(key=self._cache_key, mapping={'nodes_env_value_map': json.dumps(wf_nodes_env_map_pool)})
 
     def get_nodes_env_value_map_access(self) -> Dict:
-        return self.hget(key=self._cache_key, field='nodes_env_map')
+        return self.hget(key=self._cache_key, field='nodes_env_value_map')
 
     def set_nodes_asset_value_map_access(self, wf_nodes_asset_map_pool: Dict) -> None:
-        self.hset(key=self._cache_key, mapping={'nodes_asset_map': json.dumps(wf_nodes_asset_map_pool)})
+        self.hset(key=self._cache_key, mapping={'nodes_asset_value_map': json.dumps(wf_nodes_asset_map_pool)})
 
     def get_nodes_asset_value_map_access(self) -> Dict:
-        return self.hget(key=self._cache_key, field='nodes_asset_map')
+        return self.hget(key=self._cache_key, field='nodes_asset_value_map')
 
     def set_nodes_meta_access(self, wf_nodes_meta: Dict) -> None:
-        self.hset(key=self._cache_key, mapping={'nodes_meta': json.dumps(wf_nodes_meta)})
+        self.hset(key=self._cache_key, mapping={'nodes_info': json.dumps(wf_nodes_meta)})
 
     def get_nodes_meta_access(self) -> Dict:
-        return self.hget(key=self._cache_key, field='nodes_meta')
+        return self.hget(key=self._cache_key, field='nodes_info')
 
     def set_node_service_pool_access(self, wf_service_pool: Dict) -> None:
         self.hset(key=self._cache_key, mapping={'service_pool': json.dumps(wf_service_pool)})
@@ -78,16 +78,16 @@ class RemoteCachedMetastoreAccess(RedisAccess):
         return self.hget(key=self._cache_key, field='service_pool')
 
     def set_edges_meta_access(self, wf_edges_meta: Dict) -> None:
-        self.hset(key=self._cache_key, mapping={'edges_meta': json.dumps(wf_edges_meta)})
+        self.hset(key=self._cache_key, mapping={'edges_info': json.dumps(wf_edges_meta)})
 
     def get_edges_meta_access(self) -> List:
-        return self.hget(key=self._cache_key, field='edges_meta')
+        return self.hget(key=self._cache_key, field='edges_info')
 
     def set_custom_result_meta_access(self, custom_result_meta: Dict) -> None:
-        self.hset(key=self._cache_key, mapping={'custom_result_meta': json.dumps(custom_result_meta)})
+        self.hset(key=self._cache_key, mapping={'custom_result_info': json.dumps(custom_result_meta)})
 
     def get_custom_result_meta_access(self):
-        return self.hget(key=self._cache_key, field='custom_result_meta')
+        return self.hget(key=self._cache_key, field='custom_result_info')
 
     def get_custom_result_meta_by_service_id_access(self, service_id):
         custom_result_meta = self.get_custom_result_meta_access()
@@ -113,10 +113,10 @@ class RemoteCachedMetastoreAccess(RedisAccess):
         return self.hget(key=self._cache_key, field='backward_graph')
 
     def set_resources_meta_access(self, wf_resources_meta: Dict) -> None:
-        self.hset(key=self._cache_key, mapping={'resources_meta': json.dumps(wf_resources_meta)})
+        self.hset(key=self._cache_key, mapping={'resources': json.dumps(wf_resources_meta)})
 
     def get_resources_meta_access(self) -> Dict:
-        return self.hget(key=self._cache_key, field='resources_meta')
+        return self.hget(key=self._cache_key, field='resources')
 
     def set_start_nodes_meta_access(self, start_nodes: list) -> None:
         self.hset(key=self._cache_key, mapping={'start_nodes': json.dumps(start_nodes)})
@@ -138,5 +138,9 @@ class RemoteCachedMetastoreAccess(RedisAccess):
 
     def get_dag_access(self) -> List:
         return self.hget(key=self._cache_key, field='dag')
+
+    def set_all_meta_access(self, meta_pack: Dict):
+        self.clear(self._cache_key)
+        self.hsetall_from_dict(key=self._cache_key, data_map=meta_pack)
 
 
