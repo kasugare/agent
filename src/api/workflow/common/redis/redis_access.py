@@ -9,7 +9,9 @@ import json
 
 class RedisAccess:
     def __init__(self, logger, db=0, ttl=0):
-        self._logger = self._db = self._ttl = ttl
+        self._logger = logger
+        self._db = db
+        self._ttl = ttl
         redis_conn = getRemoteConnInfo()
         self._host = redis_conn.get('host')
         self._port = redis_conn.get('port')
@@ -43,6 +45,30 @@ class RedisAccess:
                 self._redis_client.expire(key, ttl_seconds)
         except Exception as e:
             self._logger.error(f"Redis HSET failed: {e}")
+
+    def hset_replace(self, key: str, mapping: Dict) -> None:
+        try:
+            self._redis_client.delete(key)
+            self.hset(key, mapping)
+        except Exception as e:
+            self._logger.error(f"Redis HSET_REPLACE failed: {e}")
+
+    def hsetall_from_dict(self, key:str, data_map: Dict):
+        try:
+            mapping = {}
+            for field, value in data_map.items():
+                if isinstance(value, (dict, list)):
+                    mapping[field] = json.dumps(value)
+                else:
+                    mapping[field] = str(value)
+
+            self._redis_client.hset(name=key, mapping=mapping)
+            if self._ttl > 0:
+                self._redis_client.expire(key, self._ttl)
+
+            self._logger.debug(f"Redis HSET_FROM_JSON key: {key}, fields: {list(mapping.keys())}")
+        except Exception as e:
+            self._logger.error(f"Redis HSET_FROM_JSON failed: {e}")
 
     def hget(self, key: str, field: str):
         try:
@@ -86,6 +112,7 @@ class RedisAccess:
         except Exception as e:
             self._logger.error(f"Redis HDEL failed: {e}")
 
+
     def clear(self, key: str):
         try:
             self._redis_client.delete(key)
@@ -93,7 +120,6 @@ class RedisAccess:
             self._logger.error(f"Redis DELETE failed: {e}")
 
     def switch_db(self, db):
-        """DB 변경"""
         self._redis_client = redis.Redis(
             host=self._host,
             port=self._port,

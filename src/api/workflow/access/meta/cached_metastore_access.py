@@ -171,3 +171,21 @@ class CachedMetastoreAccess:
 
     def get_nodes_asset_value_map_access(self):
         return deepcopy(self._wf_nodes_asset_value_map_pool)
+
+    def set_all_meta_access(self, meta_pack):
+        self.set_wf_meta_access(meta_pack.get('wf_meta'))
+        self.set_comm_meta_access(meta_pack.get('common'))
+        self.set_env_pool_access(meta_pack.get("env_pool"))
+        self.set_resources_meta_access(meta_pack.get("wf_resources_meta"))
+        self.set_nodes_meta_access(meta_pack.get("nodes_info"))
+        self.set_node_service_pool_access(meta_pack.get("service_pool"))
+        self.set_edges_meta_access(meta_pack.get("edges_info"))
+        self.set_nodes_env_value_map_access(meta_pack.get("nodes_env_value_map"))
+        self.set_nodes_asset_value_map_access(meta_pack.get("nodes_asset_value_map"))
+        self.set_custom_result_meta_access(meta_pack.get("custom_result_info"))
+        self.set_forward_edge_graph_meta_access(meta_pack.get("forward_edge_graph"))
+        self.set_forward_graph_meta_access(meta_pack.get("forward_graph"))
+        self.set_backward_graph_meta_access(meta_pack.get("backward_graph"))
+        self.set_start_nodes_meta_access(meta_pack.get("start_nodes"))
+        self.set_end_nodes_meta_access(meta_pack.get("end_nodes"))
+        self.set_edges_param_map_access(meta_pack.get("edges_param_map"))

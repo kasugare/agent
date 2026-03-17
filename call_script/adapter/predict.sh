@@ -9,3 +9,9 @@ curl --location --request POST 'http://127.0.0.1:8080/api/v1/predict/async/web' 
 --form 'file=@"/Users/hanati/workspace/agent/test/dtm_adapter/test/dummy.py"' \
 --form 'data="{\"job_id\": \"chauwli1keid9w01u84yuk1o2sidl23a\",\"job\": \"Detection\",\"project\": \"ocr\",\"blueprint\": \"detection\",\"conveyor\": \"application\",\"tags\": {\"uuid\": \"ldj9l29i09id9w01u84yuq0a9sidles1\",},\"data\": {\"user_id\": \"admin\",\"user_uid\": 1,\"site_uid\": 9,\"infer_uid\": 21,\"batch_uid\": \"ldj9l29i09id9w01u84yuq0a9sidles1\",\"uuid\": \"ldj9l29i09id9w01u84yuq0a9sidles1\"}}"'
 
+refer_key
+llm_model_conn_env
+vlm_model_conn_env
+
+TEST_GPU_LLM_1
+gpt-oss-120b

@@ -182,8 +182,6 @@ class WorkflowExecutionOrchestrator(WorkflowHelper):
                 task = task_map.get(service_id)
                 task_state = task.get_state()
                 self._set_task_state(service_id, task_state)
-                if service_id == 'NODE_G.process':
-                    self._logger.warn(service_id)
 
                 if self._stream_Q:
                     self._send_status(request_id, service_id, task)

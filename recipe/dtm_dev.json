@@ -55,7 +55,7 @@
                     "value": "lc_meta.json"
                 },
                 {
-                    "key": "MAX_IMMAGES",
+                    "key": "MAX_IMAGES",
                     "value": "10"
                 },
                 {
@@ -616,7 +616,7 @@
                         "required": true,
                         "key": "LLM_MODEL",
                         "type": "string",
-                        "default": "/models/gpt-oss-120b"
+                        "default": "gpt-oss-120b"
                     },
                     {
                         "required": true,
@@ -1164,7 +1164,12 @@
             "target_handler": {
                 "type": "sequence",
                 "conditions": [],
-                "references": [],
+                "references": [
+                    {
+                        "refer_key": "AIV_EX0019",
+                        "node_id": "AIV_EX0019"
+                    }
+                ],
                 "environments": [],
                 "formatter": []
             },
@@ -1305,7 +1310,16 @@
             "target_handler": {
                 "type": "first_come",
                 "conditions": [],
-                "references": [],
+                "references": [
+                    {
+                        "refer_key": "llm_model_conn_env",
+                        "node_id": "NLP_LLM"
+                    },
+                    {
+                        "refer_key": "vlm_model_conn_env",
+                        "node_id": "NLP_VLM"
+                    }
+                ],
                 "environments": [],
                 "formatter": []
             },
@@ -1335,17 +1349,17 @@
                 {
                     "refer_type": "indirect",
                     "key": "LLM_URL",
-                    "value": "NLP_LLM.base_url"
+                    "value": "llm_model_conn_env.base_url"
                 },
                 {
-                    "refer_type": "indirect",
+                    "refer_type": "direct",
                     "key": "VLM_MODEL",
                     "value": "Qwen3-VL-30B-A3B-Instruct"
                 },
                 {
                     "refer_type": "indirect",
                     "key": "VLM_URL",
-                    "value": "NLP_VLM.base_url"
+                    "value": "vlm_model_conn_env.base_url"
                 }
             ],
             "param_info": [
@@ -1378,7 +1392,16 @@
             "target_handler": {
                 "type": "first_come",
                 "conditions": [],
-                "references": [],
+                "references": [
+                    {
+                        "refer_key": "llm_model_conn_env",
+                        "node_id": "NLP_LLM"
+                    },
+                    {
+                        "refer_key": "vlm_model_conn_env",
+                        "node_id": "NLP_VLM"
+                    }
+                ],
                 "environments": [],
                 "formatter": []
             },
@@ -1408,17 +1431,17 @@
                 {
                     "refer_type": "indirect",
                     "key": "LLM_URL",
-                    "value": "NLP_LLM.base_url"
+                    "value": "llm_model_conn_env.base_url"
                 },
                 {
-                    "refer_type": "indirect",
+                    "refer_type": "direct",
                     "key": "VLM_MODEL",
                     "value": "Qwen3-VL-30B-A3B-Instruct"
                 },
                 {
                     "refer_type": "indirect",
                     "key": "VLM_URL",
-                    "value": "NLP_VLM.base_url"
+                    "value": "vlm_model_conn_env.base_url"
                 }
             ],
             "param_info": [
