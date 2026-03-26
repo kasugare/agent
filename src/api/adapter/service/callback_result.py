@@ -8,8 +8,9 @@ import base64
 
 
 class CallbackApiRequester:
-    def __init__(self, logger):
+    def __init__(self, logger, remote_adapter_service):
         self._logger = logger
+        self._remote_adapter_service = remote_adapter_service
         self._timeout = 3600
 
     def _encode_base64_header_value(self, headers: dict, key: str) -> dict:
@@ -98,10 +99,13 @@ class CallbackApiRequester:
                 self._logger.warn(f"[{job_id}] This job does not perform a callback upon user request. - CALLBACKABLE: {callbackable}")
                 self._logger.debug(f"[{job_id}] callback prediction result")
                 self._logger.debug(f"[{job_id}] status_code: {status_code}, status_message: {status_text}")
+                self._remote_adapter_service.set_job_state(job_id, state='COMPLETED')
             else:
                 self._logger.info(f"[{job_id}] callback prediction result")
                 self._logger.info(f"[{job_id}] status_code: {status_code}, status_message: {status_text}")
                 result = self._call_api_sync(url=callback_url, method='post', headers=headers, json_data=body)
                 self._logger.info(f"[{job_id} callback success: {result}")
+                self._remote_adapter_service.set_job_state(job_id, state='COMPLETED')
         except Exception as e:
             self._logger.error(e)
+            self._remote_adapter_service.set_job_state(job_id, state='ERROR', error_msg=f"{type(e).__name__}: {e}")

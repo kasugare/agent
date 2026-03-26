@@ -3,6 +3,7 @@
 
 import api.adapter.schema.engine_adaptor_schema as schema
 from api.adapter.schema.engine_adaptor_header import get_file_headers, get_status_headers, FileHeaderModel, StatusHeaderModel
+from api.adapter.service.remote_cached_adapter_service import RemoteCachedAdapterService
 from api.adapter.service.engine_adaptor_service import EngineAdaptorService
 from api.adapter.service.callback_result import CallbackApiRequester
 from fastapi import APIRouter, Depends, UploadFile, File, Form, BackgroundTasks
@@ -42,8 +43,9 @@ class EngineAdapter(BaseRouter):
     def __init__(self, logger):
         super().__init__(logger, tags=['DTM Adaptor'])
         self._logger = logger
+        self._remote_adapter_service = RemoteCachedAdapterService(logger)
         self._engine_adaptor_service = EngineAdaptorService(logger)
-        self._callback_requester = CallbackApiRequester(logger)
+        self._callback_requester = CallbackApiRequester(logger, self._remote_adapter_service)
 
         self._isWorking = False
         self._member_id = ''
@@ -113,6 +115,7 @@ class EngineAdapter(BaseRouter):
 
         try:
             self._logger.info(f"call prediction on engine: {job_id}")
+            self._remote_adapter_service.set_job_state(job_id, state='RUNNING')
             result = await asyncio.create_task(
                 self._call_workflow_api(
                     base_url=base_url,
@@ -136,6 +139,7 @@ class EngineAdapter(BaseRouter):
                     error_message = result_message.get('error')
                     status_code = -1
                     status_text = error_message
+                    self._remote_adapter_service.set_job_state(job_id, state='ERROR', error_msg=error_message)
             else:
                 status_text = 'ValidError: result format is not valid'
         except FileNotFoundError as e:
@@ -144,6 +148,7 @@ class EngineAdapter(BaseRouter):
             status_text = f"{type(e).__name__}: {e}"
         except Exception as e:
             self._logger.warn(f"[{job_id}]: Unknown Error, result: {result}")
+            self._remote_adapter_service.set_job_state(job_id, state='ERROR', error_msg=str(e))
             status_code = -1
             status_text = f"{type(e).__name__}: {e}"
         result_pack = {
@@ -174,6 +179,7 @@ class EngineAdapter(BaseRouter):
             self._logger.info("################################################################")
             self._logger.info("#                 < Adapter: Call Prediction >                 #")
             self._logger.info("################################################################")
+            job_id = None
 
             try:
                 self._logger.info(f"request client ip: {request.client.host}")
@@ -222,9 +228,11 @@ class EngineAdapter(BaseRouter):
                     "x_sampl_user_data": user_callback_data
                 }
                 json_data = {"tar_path": tar_path_list}
+                self._remote_adapter_service.set_job_info(job_id, req_headers, tar_path_list, state='ACCEPTED')
                 bg.add_task(self.call_back_response, base_url, route_path, call_method, req_headers, json_data, headers, json_data_body)
             except Exception as e:
                 self._logger.error(e)
+                self._remote_adapter_service.set_job_state(job_id, state='ERROR', error_msg=str(e))
             response = {
                 "data": {},
                 "status": 0,
@@ -251,6 +259,8 @@ class EngineAdapter(BaseRouter):
                 )
             except Exception as e:
                 self._logger.error(e)
+
+            print(result)
 
             response = {
                 "data": {
@@ -293,7 +303,7 @@ class EngineAdapter(BaseRouter):
                 reg_datetime = "0"
                 start_datetime = "0"
                 end_datetime = "0"
-                status = None
+                engine_status = 'RUNNING'
                 call_back_url = None
                 call_back_error_url = None
                 error_yn = 'N'
@@ -302,7 +312,7 @@ class EngineAdapter(BaseRouter):
                 reg_datetime = processing_time.get('assigned_dt', "0")
                 start_datetime = processing_time.get('start_dt', "0")
                 end_datetime = processing_time.get('end_dt', "0")
-                status = result.get('status')
+                engine_status = result.get('status')
                 user_params = result.get('user_params', {})
 
                 if user_params:
@@ -312,10 +322,19 @@ class EngineAdapter(BaseRouter):
                     call_back_url = None
                     call_back_error_url = None
 
-                if status == 'COMPLETED':
-                    completion_yn = 'Y'
-                    error_yn = "N"
-                elif status == 'FAILED':
+                job_status = self._remote_adapter_service.get_job_status(job_id)
+
+                if engine_status == 'COMPLETED':
+                    if job_status.get('state') == 'COMPLETED':
+                        completion_yn = 'Y'
+                        error_yn = "N"
+                    elif job_status.get('state') == 'ERROR':
+                        completion_yn = 'Y'
+                        error_yn = "Y"
+                    else:
+                        completion_yn = 'N'
+                        error_yn = "N"
+                elif engine_status == 'FAILED':
                     completion_yn = 'Y'
                     error_yn = "Y"
                 else:
@@ -341,7 +360,7 @@ class EngineAdapter(BaseRouter):
                         "pid_created_time": 0,
                         "reg_datetime": reg_datetime,
                         "start_datetime": start_datetime,
-                        "status": status,
+                        "status": engine_status,
                         "thread_id": 0,
                         "uid": ""
                     }]
