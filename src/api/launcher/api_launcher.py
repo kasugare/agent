@@ -3,7 +3,7 @@
 
 from .service.launcher_service import DynamicRouterService
 from .utility.file_lock import FileLock
-from common.conf_system import getLockDir, getRouteDir, getAiLandContext
+from common.conf_system import getLockDir, getAiLandContext, getRouteDirPath, getRouteFileName, getLaucherApis
 from abc import ABC, abstractmethod
 from fastapi import APIRouter, FastAPI
 from watchfiles import awatch
@@ -24,8 +24,9 @@ class BaseHandler:
         self.router = APIRouter(tags=['ADMIN'])
         self.setup_routes()
 
-        route_dir_path = getRouteDir()
-        self._routes_file_path = f"{route_dir_path}/api_routes.json"
+        route_dir_path = getRouteDirPath()
+        route_file_name = getRouteFileName()
+        self._routes_file_path = f"{route_dir_path}/{route_file_name}"
         self._init_service_path(route_dir_path)
 
         # FastAPI 시작 시 파일 감시 시작
@@ -65,18 +66,24 @@ class BaseHandler:
             self._logger.warn(f"Not ready {self._routes_file_path} file")
 
     def _add_service_router(self):
-        with FileLock(f"{getLockDir()}/routes.lock"):
-            with open(self._routes_file_path, 'r') as fd:
-                try:
-                    route_info = json.load(fd)
-                    for class_name, module_info in route_info.items():
-                        self._logger.debug(f"class_name: {class_name}")
-                        prefix = module_info.get('prefix')
-                        module_name = module_info.get('module_name')
-                        class_name = module_info.get('class_name')
-                        self.dynamic_router.add_api_service(prefix, module_name, class_name)
-                except json.JSONDecodeError:
-                    self._logger.error("Invalid routes file format")
+        active_services = getLaucherApis()
+
+        # with FileLock(f"{getLockDir()}/routes.lock"):
+        with open(self._routes_file_path, 'r') as fd:
+            try:
+                route_info = json.load(fd)
+                for service_name, module_info in route_info.items():
+                    if "*" in active_services:
+                        pass
+                    elif service_name not in active_services:
+                        continue
+                    self._logger.debug(f"service_name: {service_name}")
+                    prefix = module_info.get('prefix')
+                    module_name = module_info.get('module_name')
+                    class_name = module_info.get('class_name')
+                    self.dynamic_router.add_api_service(prefix, module_name, class_name)
+            except json.JSONDecodeError:
+                self._logger.error("Invalid routes file format")
 
     async def _sync_routes(self):
         if not os.path.exists(self._routes_file_path):
@@ -85,21 +92,21 @@ class BaseHandler:
 
     def _set_service_info(self, prefix, module_name, class_name):
         if os.path.exists(self._routes_file_path):
-            with FileLock(f"{getLockDir()}/routes.lock"):
-                with open(self._routes_file_path, 'r') as f:
-                    try:
-                        service_info = json.load(f)
-                    except json.JSONDecodeError:
-                        service_info = {}
+            # with FileLock(f"{getLockDir()}/routes.lock"):
+            with open(self._routes_file_path, 'r') as f:
+                try:
+                    service_info = json.load(f)
+                except json.JSONDecodeError:
+                    service_info = {}
 
-                service_info[class_name] = {
-                    'prefix': prefix,
-                    'module_name': module_name,
-                    'class_name': class_name
-                }
+            service_info[class_name] = {
+                'prefix': prefix,
+                'module_name': module_name,
+                'class_name': class_name
+            }
 
-                with open(self._routes_file_path, 'w') as fd:
-                    json.dump(service_info, fd, indent=2)
+            with open(self._routes_file_path, 'w') as fd:
+                json.dump(service_info, fd, indent=2)
 
     async def add_api_service(self, prefix, module_name, class_name):
         self.dynamic_router.add_api_service(prefix, module_name, class_name)

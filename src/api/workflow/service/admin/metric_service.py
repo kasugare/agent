@@ -136,16 +136,10 @@ class MetricService:
         return job_status
 
     def check_working_state(self, wf_id):
-        def is_available(queue_info):
-            available_stat = queue_info.get('available', 0)
-            if available_stat > 0:
-                return True
-            return False
-
         external_api = ExternalApiRequester(self._logger)
         metastore = MetaStoreService(self._logger, wf_id)
         nodes_meta = metastore.get_nodes_meta_service()
-        status_map = {}
+        node_status = {}
         try:
             for node_id, node_map in nodes_meta.items():
                 node_type = node_map.get('node_type')
@@ -156,13 +150,36 @@ class MetricService:
                     api_info = node_map.get('api_info', {})
                     base_url = api_info.get('base_url')
                     gateway_info = external_api.call_api_sync(base_url=base_url, method='get', route_path='/_gateway/metrics')
-                    servers_stat = gateway_info.get('backend_servers')
-                    status_map[node_id] = servers_stat
-                    self._logger.debug(f" - {node_id}: {servers_stat}")
+                    server_queue = gateway_info.get('queue', {})
+                    servers_stat = gateway_info.get('backend_servers', {})
+                    node_status[node_id] = {
+                        'workers': gateway_info.get('workers', {}),
+                        'status': {
+                            'pending': server_queue.get('pending', 0),
+                            'processing': server_queue.get('processing', 0),
+                            'total': servers_stat.get('total', 0),
+                            'available': servers_stat.get('available', 0),
+                            'busy': servers_stat.get('busy', 0)
+                        },
+                        'statistics': gateway_info.get('statistics', {}),
+                        'details': servers_stat.get('details', {}),
+                        'config': gateway_info.get('config')
+                    }
         except Exception as e:
             raise
-        is_working = (lambda x: not x)(all(is_available(queue_info) for queue_info in status_map.values()))
-        result = {
-            "is_working": is_working
-        }
-        return result
+
+        for node_id, status_map in node_status.items():
+            status = status_map.get('status')
+            details = status_map.get('details')
+            self._logger.debug(f" - node_id: {node_id}")
+            self._logger.debug(f"    L status:  {status}")
+            self._logger.debug(f"    L statistics: {status_map.get('statistics')}")
+            self._logger.debug(f"    L config: {status_map.get('config')}")
+            if details and isinstance(details, dict):
+                for server_url, state in details.items():
+                    self._logger.debug(f"    L details")
+                    self._logger.debug(f"      L {server_url} - {state}")
+            else:
+                self._logger.debug(f"    L details: None")
+
+        return node_status

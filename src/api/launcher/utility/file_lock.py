@@ -8,7 +8,7 @@ import os
 
 
 class FileLock:
-    def __init__(self, lock_file_path: str = None, timeout: float = 5.0):
+    def __init__(self, lock_file_path: str = None, timeout: float = 30.0):
         self.lock_file_path = lock_file_path
         self.timeout = timeout
         self.lock_file = None

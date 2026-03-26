@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from common.util_logger import Logger
 from common.conf_serving import getWorkflowId
 from api.workflow.error_pool.error import MetaTypeError
 from api.workflow.service.admin.metric_service import MetricService
@@ -30,8 +31,7 @@ import json
 
 
 class BaseRouter:
-    def __init__(self, logger=None, tags=[]):
-        self._logger = logger
+    def __init__(self, tags=[]):
         self.router = APIRouter(tags=tags)
         self.setup_routes()
 
@@ -45,9 +45,11 @@ class BaseRouter:
 
 class WorkflowEngine(BaseRouter):
     def __init__(self, logger):
-        super().__init__(logger, tags=['Workflow Engine'])
-        self._ws_manager = WSConnectionManager(logger)
-        self._metric_service = MetricService(logger)
+        super().__init__(tags=['Workflow Engine'])
+        self._logger = Logger("WORKFLOW")
+
+        self._ws_manager = WSConnectionManager(self._logger)
+        self._metric_service = MetricService(self._logger)
 
         auto_meta_loader = AutoMetaLoader(self._logger)
         auto_meta_loader.init_workflow_meta()
@@ -308,17 +310,17 @@ class WorkflowEngine(BaseRouter):
             self._logger.info("#                      < Working State >                       #")
             self._logger.info("################################################################")
             wf_id = getWorkflowId()
-            state = 0
-            message = 'success'
             try:
-                is_working = self._metric_service.check_working_state(wf_id)
+                status_map = self._metric_service.check_working_state(wf_id)
+                state = 0
+                message = 'success'
             except Exception as e:
                 self._logger.error(e)
-                is_working = False
                 state = 401
                 message = str(e)
+                status_map = {}
             result = {
-                'is_workfing': is_working,
+                'status_map': status_map,
                 'state': state,
                 'message': message
             }

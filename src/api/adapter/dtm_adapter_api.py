@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from common.util_logger import Logger
 import api.adapter.schema.engine_adaptor_schema as schema
+from common.conf_system import getEngineUrl
 from api.adapter.schema.engine_adaptor_header import get_file_headers, get_status_headers, FileHeaderModel, StatusHeaderModel
 from api.adapter.service.remote_cached_adapter_service import RemoteCachedAdapterService
 from api.adapter.service.engine_adaptor_service import EngineAdaptorService
@@ -19,8 +21,7 @@ import json
 
 
 class BaseRouter:
-    def __init__(self, logger=None, tags=[]):
-        self._logger = logger
+    def __init__(self, tags=[]):
         self.router = APIRouter(tags=tags)
         self.setup_routes()
 
@@ -40,17 +41,24 @@ class EngineAdapter(BaseRouter):
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self, logger):
-        super().__init__(logger, tags=['DTM Adaptor'])
-        self._logger = logger
-        self._remote_adapter_service = RemoteCachedAdapterService(logger)
-        self._engine_adaptor_service = EngineAdaptorService(logger)
-        self._callback_requester = CallbackApiRequester(logger, self._remote_adapter_service)
+    def __init__(self, logger=None):
+        super().__init__(tags=['DTM Adaptor'])
+        self._logger = Logger("ADAPTER")
+        self._remote_adapter_service = RemoteCachedAdapterService(self._logger)
+        self._engine_adaptor_service = EngineAdaptorService(self._logger)
+        self._callback_requester = CallbackApiRequester(self._logger, self._remote_adapter_service)
 
         self._isWorking = False
         self._member_id = ''
         self._user_data = ''
         self._timeout = 3600
+
+    def _is_available(self, status_map):
+        status = status_map.get('status', {})
+        available_nodes = status.get('available', 0)
+        if available_nodes > 0:
+            return True
+        return False
 
     async def _call_workflow_api(self, base_url: str, method: str, path: str, headers: Dict = None, json_data: Dict = None, params: Dict = None):
         if not base_url:
@@ -78,7 +86,11 @@ class EngineAdapter(BaseRouter):
 
                 if response.status_code >= 400:
                     error_detail = response.json() if response.headers.get('content-type') == 'application/json' else response.text
-                    self._logger.error(f"Workflow API error: {error_detail}")
+                    self._logger.error(f"Workflow Engine API error: {error_detail}")
+                    self._logger.error(f"  L base_url: {base_url}")
+                    self._logger.error(f"  L path: {path}")
+                    self._logger.error(f"  L method: {method}")
+                    self._logger.error(f"  L headers: {headers}")
                     raise HTTPException(
                         status_code=response.status_code,
                         detail=error_detail
@@ -196,7 +208,11 @@ class EngineAdapter(BaseRouter):
                 data_info = json_data_body.get('data', {})
                 tar_path_list = await self._engine_adaptor_service.upload_files(file)
 
-                self._logger.debug(f" - [{job_id}] engine_url   : {request.base_url}")
+                engine_url = getEngineUrl()
+                route_path = "/api/v1/workflow/inference"
+                call_method = "POST"
+
+                self._logger.debug(f" - [{job_id}] engine_url   : {engine_url}")
                 self._logger.debug(f" - [{job_id}] client ip    : {request.client.host}")
                 self._logger.debug(f" - [{job_id}] call_back_url      : {call_back_url}")
                 self._logger.debug(f" - [{job_id}] call_back_error_url: {call_back_error_url}")
@@ -206,9 +222,6 @@ class EngineAdapter(BaseRouter):
                 self._logger.debug(f" - [{job_id}] tags         : {tags}")
                 self._logger.debug(f" - [{job_id}] data_info    : {data_info}")
 
-                base_url = str(request.base_url)
-                route_path = "/api/v1/workflow/inference"
-                call_method = "POST"
                 req_headers = {
                     "Content-Type": "application/json",
                     "secret_key": "",
@@ -229,15 +242,20 @@ class EngineAdapter(BaseRouter):
                 }
                 json_data = {"tar_path": tar_path_list}
                 self._remote_adapter_service.set_job_info(job_id, req_headers, tar_path_list, state='ACCEPTED')
-                bg.add_task(self.call_back_response, base_url, route_path, call_method, req_headers, json_data, headers, json_data_body)
+                bg.add_task(self.call_back_response, engine_url, route_path, call_method, req_headers, json_data, headers, json_data_body)
+                response = {
+                    "data": {},
+                    "status": 0,
+                    "statusText": "success"
+                }
             except Exception as e:
                 self._logger.error(e)
                 self._remote_adapter_service.set_job_state(job_id, state='ERROR', error_msg=str(e))
-            response = {
-                "data": {},
-                "status": 0,
-                "statusText": "success"
-            }
+                response = {
+                    "data": {},
+                    "status": -1,
+                    "statusText": "failed"
+                }
             return response
 
         @self.router.post(path='/isworking', response_model=schema.ResAdaptWorkflow)
@@ -246,10 +264,11 @@ class EngineAdapter(BaseRouter):
             self._logger.info("#                   < Adapter: Is Working >                    #")
             self._logger.info("################################################################")
             self._logger.info(f"request client ip: {request.client.host}")
-            result = {}
+
             try:
-                result = await asyncio.create_task(self._call_workflow_api(
-                        base_url=str(request.base_url),
+                engine_url = getEngineUrl()
+                result_map = await asyncio.create_task(self._call_workflow_api(
+                        base_url=str(engine_url),
                         method="GET",
                         path="/api/v1/workflow/working_state",
                         headers={
@@ -258,20 +277,24 @@ class EngineAdapter(BaseRouter):
                     )
                 )
             except Exception as e:
+                result_map = {}
                 self._logger.error(e)
 
-            print(result)
-
+            status_info = result_map.get('status_map', {})
+            if all(self._is_available(status_map) for node_id, status_map in status_info.items()):
+                is_working = False
+            else:
+                is_working = True
             response = {
                 "data": {
-                    "isworking": result.get('is_working', False),
+                    "isworking": is_working,
                     "async_queue_count": 0,
                     "job_list": []
                 },
-                "status": result.get('state'),
-                "statusText": result.get('message')
+                "status": result_map.get('state'),
+                "statusText": result_map.get('message')
             }
-
+            self._logger.debug(response)
             return response
 
         @self.router.post(path='/joblist', response_model=schema.ResAdaptWorkflow)
@@ -284,8 +307,9 @@ class EngineAdapter(BaseRouter):
             self._logger.info(f" - job_id: {job_id}")
             result = None
             try:
+                engine_url = getEngineUrl()
                 result = await asyncio.create_task(self._call_workflow_api(
-                        base_url=str(request.base_url),
+                        base_url=engine_url,
                         method="GET",
                         path="/api/v1/workflow/job_state",
                         headers={

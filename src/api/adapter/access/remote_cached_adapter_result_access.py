@@ -8,7 +8,7 @@ from api.adapter.access.adapter_redis_access import AdapterRedisAccess
 
 class RemoteCachedAdapterResultAccess(AdapterRedisAccess):
     def __init__(self, logger):
-        super().__init__(logger, db=4, ttl=2592000)
+        super().__init__(logger, db=11, ttl=2592000)
 
     def set_job_info_access(self, job_id, context):
         self.hset(key=job_id, mapping=context)

@@ -28,6 +28,23 @@ def getAppId(section="ENV"):
     app_id = os.environ.get('APP_ID', conf.get(section, 'app_id'))
     return app_id
 
+def getRouteDirPath(section='LAUNCHER'):
+    conf = getConfig()
+    homeDir = os.environ.get("LAUNCHER_ROUTE_DIR", str(conf.get(section, 'route_dir')))
+    return homeDir
+
+def getRouteFileName(section="LAUNCHER"):
+    conf = getConfig()
+    launcherMetaPath = os.environ.get("LAUNCHER_ROUTE_FILE", str(conf.get(section, 'route_file')))
+    return launcherMetaPath
+
+def getLaucherApis(section="LAUNCHER"):
+    conf = getConfig()
+    str_apis = os.environ.get("LAUNCHER_ACTIVE_APIS", conf.get(section, 'active_apis'))
+    str_apis = str_apis.replace(" ", "")
+    act_apis = str_apis.split(",")
+    return act_apis
+
 def getOperMode(section='OPERATION'):
     conf = getConfig()
     operMode = conf.get(section, 'operation_mode')
@@ -41,11 +58,6 @@ def getHomeDir(section='HOME'):
 def getLockDir(section='HOME'):
     conf = getConfig()
     homeDir = conf.get(section, 'lock_dir')
-    return homeDir
-
-def getRouteDir(section='HOME'):
-    conf = getConfig()
-    homeDir = conf.get(section, 'route_dir')
     return homeDir
 
 def getAccessPoolType(section='WORKFLOW', option='access_pool_type'):
@@ -137,3 +149,7 @@ def getServerInfo(section='SERVER'):
     server_info['max_requests_jitter'] = int(conf.get(section, 'max_requests_jitter'))
     return server_info
 
+def getEngineUrl(section='ENGINE'):
+    conf = getConfig()
+    baseUrl = os.environ.get("ENGINE_BASE_URL", str(conf.get(section, 'base_url')))
+    return baseUrl
