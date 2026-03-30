@@ -23,27 +23,39 @@ def getConfig():
     conf.read(ini_path)
     return conf
 
+def _get_config(section, option):
+    conf = getConfig()
+    config = os.environ.get(f"{section}_{option.upper()}", str(conf.get(section, option)))
+    return config
+
 def getAppId(section="ENV"):
     conf = getConfig()
     app_id = os.environ.get('APP_ID', conf.get(section, 'app_id'))
     return app_id
 
-def getRouteDirPath(section='LAUNCHER'):
-    conf = getConfig()
-    homeDir = os.environ.get("LAUNCHER_ROUTE_DIR", str(conf.get(section, 'route_dir')))
-    return homeDir
 
-def getRouteFileName(section="LAUNCHER"):
-    conf = getConfig()
-    launcherMetaPath = os.environ.get("LAUNCHER_ROUTE_FILE", str(conf.get(section, 'route_file')))
-    return launcherMetaPath
+def getRouteAutoReload(section='LAUNCHER', option='reload'):
+    isReload = _get_config(section, option)
+    return isReload
 
-def getLaucherApis(section="LAUNCHER"):
-    conf = getConfig()
-    str_apis = os.environ.get("LAUNCHER_ACTIVE_APIS", conf.get(section, 'active_apis'))
+def getRouteAccessType(section='LAUNCHER', option='access_type'):
+    accessType = _get_config(section, option)
+    return accessType
+
+def getRouteDirPath(section='LAUNCHER', option='route_dir'):
+    routeDirPath = _get_config(section, option)
+    return routeDirPath
+
+def getRouteFileName(section="LAUNCHER", option='route_file'):
+    metaFileName = _get_config(section, option)
+    return metaFileName
+
+def getLaucherApis(section="LAUNCHER", option='active_apis'):
+    str_apis = _get_config(section, option)
     str_apis = str_apis.replace(" ", "")
     act_apis = str_apis.split(",")
     return act_apis
+
 
 def getOperMode(section='OPERATION'):
     conf = getConfig()

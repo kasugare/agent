@@ -2,7 +2,7 @@
 #!/usr/bin/env python
 
 import traceback
-import pymysql
+
 
 class Access:
     def __init__(self, logger, db_conn):

@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from .service.launcher_service import DynamicRouterService
-from .utility.file_lock import FileLock
+from api.launcher.utility.file_lock import FileLock
+from api.launcher.router.service.launcher_service import DynamicRouterService
+from api.launcher.route_meta.service.route_meta_service import RouteMetaService
 from common.conf_system import getLockDir, getAiLandContext, getRouteDirPath, getRouteFileName, getLaucherApis
 from abc import ABC, abstractmethod
 from fastapi import APIRouter, FastAPI
@@ -18,6 +19,7 @@ class BaseHandler:
     def __init__(self, app: FastAPI, logger):
         self.app = app
         self._logger = logger
+        self._route_meta_service = RouteMetaService(logger)
         self._db_conn = self._set_db_conn()
 
         self.dynamic_router = DynamicRouterService(app, logger, self._db_conn)
@@ -71,7 +73,7 @@ class BaseHandler:
         # with FileLock(f"{getLockDir()}/routes.lock"):
         with open(self._routes_file_path, 'r') as fd:
             try:
-                route_info = json.load(fd)
+                route_info = self._route_meta_service.get_route_meta()
                 for service_name, module_info in route_info.items():
                     if "*" in active_services:
                         pass
@@ -143,14 +145,6 @@ class BaseHandler:
     def get_router(self) -> APIRouter:
         return self.router
 
-    def get_launcher_service(self) -> DynamicRouterService:
-        return self.dynamic_router
-
-    def get_db_conn(self):
-        if not self._db_conn:
-            self._db_conn = self._set_db_conn()
-        return self._db_conn
-
     def reset_openapi(self):
         self.app.openapi_schema = None
         self.app.openapi()
@@ -164,10 +158,6 @@ class ApiLauncher(BaseHandler):
     def setup_routes(self):
         @self.router.post("/add")
         async def add_service(prefix, module_name, class_name) -> dict:
-            # prefix = "/api/v1"
-            # module_name = "api.serving.serving_api"
-            # class_name = "ServingProvider"
-
             await self.add_api_service(prefix, module_name, class_name)
             self.reset_openapi()
             return {"prefix": prefix, "module_name": module_name, "class_name": class_name}

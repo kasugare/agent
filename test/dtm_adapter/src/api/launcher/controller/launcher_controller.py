@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from ailand.dao.aidao import Controller
 
-from api.launcher.access.launcher_access import LauncherAccess
+from api.launcher.router.access.launcher_access import LauncherAccess
 
 
 class LauncherController(Controller):

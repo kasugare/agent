@@ -2,8 +2,7 @@
 #!/usr/bin/env python
 
 from ailand.dao.aidao import Access
-from .query_pool import *
-import traceback
+from api.launcher.router.access.query_pool import *
 
 
 class LauncherAccess(Access):

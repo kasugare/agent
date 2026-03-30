@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from ailand.dao.aidao import Service
-from ..control.launcher_ctl import LauncherController
+from api.launcher.router.control.launcher_ctl import LauncherController
 from fastapi.routing import APIRoute
 import traceback
 import sys

@@ -56,7 +56,7 @@ class AutoMetaLoader:
         meta_parser = WorkflowMetaParser(self._logger)
         filed_meta_pack = meta_parser.parse_wf_meta(filed_wf_meta)
         if not filed_meta_pack:
-            self._logger.error("Not existed meta")
+            self._logger.error("Not existed route_meta")
             return
 
         wf_id = filed_meta_pack.get('workflow_id')

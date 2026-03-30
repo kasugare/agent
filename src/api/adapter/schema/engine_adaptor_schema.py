@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 
 
 class ReqCreateWorkflow(BaseModel):
-    meta: Annotated[Dict[str, Any], Field(description="meta")]
+    meta: Annotated[Dict[str, Any], Field(description="route_meta")]
 
 
 class ResAdaptWorkflow(BaseModel):

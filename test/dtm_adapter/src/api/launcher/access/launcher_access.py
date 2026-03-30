@@ -2,8 +2,6 @@
 # !/usr/bin/env python
 from ailand.dao.aidao import Access
 
-from api.launcher.access.query_pool import *
-
 
 class LauncherAccess(Access):
     def __init__(self, logger, db_conn):

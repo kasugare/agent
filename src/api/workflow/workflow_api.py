@@ -106,8 +106,8 @@ class WorkflowEngine(BaseRouter):
             new_wf_meta = body
 
             if not new_wf_meta:
-                self._logger.warn("InvalidInputException: invalid workflow meta")
-                raise InvalidInputException(err_detail="Invalid workflow meta")
+                self._logger.warn("InvalidInputException: invalid workflow route_meta")
+                raise InvalidInputException(err_detail="Invalid workflow route_meta")
 
             try:
                 meta_paraser = WorkflowMetaParser(self._logger)
@@ -158,7 +158,7 @@ class WorkflowEngine(BaseRouter):
                     "result": result
                 }
             except NotDefinedWorkflowMetaException as e:
-                raise NotDefinedMetaException(err_detail="Not defined workflow meta")
+                raise NotDefinedMetaException(err_detail="Not defined workflow route_meta")
             except AttributeError as e:
                 raise InvalidInputException(err_detail="Not defined node_id(s)")
             except Exception as e:
@@ -192,7 +192,7 @@ class WorkflowEngine(BaseRouter):
                     "result": result
                 }
             except NotDefinedWorkflowMetaException as e:
-                raise NotDefinedMetaException(err_detail="Not defined workflow meta")
+                raise NotDefinedMetaException(err_detail="Not defined workflow route_meta")
             except AttributeError as e:
                 raise InvalidInputException(err_detail="Not defined node_id(s)")
             except Exception as e:
@@ -233,7 +233,7 @@ class WorkflowEngine(BaseRouter):
                     "result": result
                 }
             except NotDefinedWorkflowMetaException as e:
-                raise NotDefinedMetaException(err_detail="Not defined workflow meta")
+                raise NotDefinedMetaException(err_detail="Not defined workflow route_meta")
             except AttributeError as e:
                 raise InvalidInputException(err_detail="Not defined node_id(s)")
             except Exception as e:

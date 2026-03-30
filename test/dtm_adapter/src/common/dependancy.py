@@ -28,7 +28,7 @@ def create_redis_client(
 # -------------------------
 # 요청 시 주입
 # -------------------------
-def get_redis_client(name: str = "meta"):
+def get_redis_client(name: str = "route_meta"):
     print(name)
     def _get_client(request: Request) -> Redis:
         clients = getattr(request.app.state, "redis_clients", None)

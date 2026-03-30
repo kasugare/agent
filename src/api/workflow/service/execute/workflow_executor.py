@@ -59,8 +59,8 @@ class WorkflowExecutor:
                 workflow_engine = WorkflowExecutionOrchestrator(self._logger, self._store_pack, act_meta_pack, self._stream_Q, job_id)
                 result = workflow_engine.run_workflow(params)
             else:
-                self._logger.error(f"[{job_id}] Not generated task_map, check DAG meta")
-                result = "# Not generated task_map, check DAG meta"
+                self._logger.error(f"[{job_id}] Not generated task_map, check DAG route_meta")
+                result = "# Not generated task_map, check DAG route_meta"
             taskstore.set_workflow_end_ts()
             return result
         except NotDefinedWorkflowMetaException as e:

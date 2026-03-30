@@ -3,10 +3,7 @@
 
 import json
 from typing import Dict, List
-from fastapi import Depends
-from redis import Redis
 from api.workflow.common.redis.redis_access import RedisAccess
-from common.dependancy import get_redis_client
 
 
 class RemoteCachedMetastoreAccess(RedisAccess):

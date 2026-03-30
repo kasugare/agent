@@ -19,7 +19,7 @@ class WorkflowMetaParser(WorkflowMetaHandler):
             if not wf_meta:
                 return
 
-            self._logger.info("# [DAG Loader] Step 00. Check meta validation")
+            self._logger.info("# [DAG Loader] Step 00. Check route_meta validation")
             self.check_meta_validation(wf_meta)
 
             self._logger.info("# [DAG Loader] Step 01. Extract Common Info")
@@ -114,7 +114,7 @@ class WorkflowMetaParser(WorkflowMetaHandler):
             }
             self._meta_pack = meta_pack
         except Exception as e:
-            self._logger.error("Wrong workflow meta")
+            self._logger.error("Wrong workflow route_meta")
             raise MetaTypeError
         return self._meta_pack
 
