@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from common.conf_workflow import getWorkflowId
 from typing import Dict, List, Any
 from copy import deepcopy
 import threading
@@ -15,6 +16,7 @@ class CachedMetastoreAccess:
 
         self._project_id = None
         self._workflow_id = None
+        self._current_workflow = {}
 
         self._wf_meta = {}
         self._wf_comm_meta = {}
@@ -58,6 +60,16 @@ class CachedMetastoreAccess:
 
     def get_project_id_access(self):
         return self._project_id
+
+    def set_current_workflow_id_access(self, key, wf_info: Dict):
+        self._current_workflow = wf_info
+
+    def get_current_workflow_id_access(self, key=None):
+        if self._current_workflow:
+            workflow_id = self._current_workflow.get('workflow_id')
+        else:
+            workflow_id = getWorkflowId()
+        return workflow_id
 
     def set_workflow_id_access(self, workflow_id):
         self._workflow_id = workflow_id

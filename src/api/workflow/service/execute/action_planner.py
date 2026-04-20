@@ -226,7 +226,6 @@ class ActionPlanningService:
             action_meta_pack['act_end_nodes'] = act_end_nodes
             action_meta_pack['act_edges_param_map'] = act_edges_param_map
             action_meta_pack['act_task_map'] = act_task_map
-            # self._print_map(action_meta_pack)
             return action_meta_pack
         except NotDefinedWorkflowMetaException as e:
             self._logger.error(e)

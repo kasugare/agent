@@ -25,7 +25,7 @@ def getConfig():
 
 def _get_config(section, option):
     conf = getConfig()
-    config = os.environ.get(f"{section}_{option.upper()}", str(conf.get(section, option)))
+    config = os.environ.get(f"{section.upper()}_{option.upper()}", str(conf.get(section, option)))
     return config
 
 def getAppId(section="ENV"):
@@ -56,112 +56,55 @@ def getLaucherApis(section="LAUNCHER", option='active_apis'):
     act_apis = str_apis.split(",")
     return act_apis
 
-
-def getOperMode(section='OPERATION'):
-    conf = getConfig()
-    operMode = conf.get(section, 'operation_mode')
+def getOperMode(section='OPERATION', option='operation_mode'):
+    operMode = _get_config(section, option)
     return operMode.upper()
 
-def getHomeDir(section='HOME'):
-    conf = getConfig()
-    homeDir = conf.get(section, 'home_dir')
+def getHomeDir(section='HOME', option='home_dir'):
+    homeDir = _get_config(section, option)
     return homeDir
 
-def getLockDir(section='HOME'):
-    conf = getConfig()
-    homeDir = conf.get(section, 'lock_dir')
-    return homeDir
+def getLockDir(section='HOME', option='lock_dir'):
+    lockDir = _get_config(section, option)
+    return lockDir
 
-def getAccessPoolType(section='WORKFLOW', option='access_pool_type'):
-    conf = getConfig()
-    access_type = conf.get(section, option)
-    return access_type
-
-def isMetaAutoLoad(section='WORKFLOW', option='auto_load'):
-    conf = getConfig()
-    is_auto_load = conf.get(section, option)
-    if is_auto_load.lower() == 'true':
-        is_auto_load = True
+def isServiceMetaReload(section='LAUNCHER', option='reload'):
+    is_reload = _get_config(section, option)
+    if is_reload.lower() == 'true':
+        is_reload = True
     else:
-        is_auto_load = False
-    return is_auto_load
-
-def numOfBackupMetas(section='WORKFLOW', option='num_of_backup_metas'):
-    conf = getConfig()
-    try:
-        num_of_backup_metas = int(conf.get(section, option))
-    except Exception as e:
-        num_of_backup_metas = 20
-    return num_of_backup_metas
+        is_reload = False
+    return is_reload
 
 def getRemoteConnInfo(section='REMOTEPOOL'):
-    conf = getConfig()
-    host = os.environ.get(f'{section}_ip', conf.get(section, 'ip'))
-    port = int(os.environ.get(f'{section}_port', conf.get(section, 'port')))
-    passwd = os.environ.get(f'{section}_password', conf.get(section, 'password'))
-    ttl = int(os.environ.get(f'{section}_ttl', conf.get(section, 'ttl')))
+    host = _get_config(section, option='ip')
+    port = _get_config(section, option='port')
+    passwd = _get_config(section, option='password')
+    ttl = _get_config(section, option='ttl')
     redisInfo = {
         'host': host,
-        'port': port,
+        'port': int(port),
         'passwd': passwd,
-        'ttl': ttl
+        'ttl': int(ttl)
     }
     return redisInfo
 
 def getSecretKey(section='SECRETKEY', option='secret_key'):
-    conf = getConfig()
-    secret_key = conf.get(section, option)
+    secret_key = _get_config(section, option)
     return secret_key
 
-def getAiLandContext(section='AILAND'):
-    conf = getConfig()
-    host = os.environ.get(f'{section}_host', conf.get(section, 'host'))
-    port = int(os.environ.get(f'{section}_port', conf.get(section, 'port')))
-    db = os.environ.get(f'{section}_db', conf.get(section, 'db'))
-    user = os.environ.get(f'{section}_user', conf.get(section, 'user'))
-    passwd = os.environ.get(f'{section}_passwd', conf.get(section, 'passwd'))
-    dbContext = {
-        'host': host,
-        'port': port,
-        'db': db,
-        'user': user,
-        'passwd': passwd
-    }
-    return dbContext
-
-def getWorkflowTimeoutConfig(section='WORKFLOW_TIMEOUT'):
-    conf = getConfig()
-    max_retries = int(conf.get(section, 'max_retries'))
-    timeout = float(conf.get(section, 'timeout'))
-    delay_time = float(conf.get(section, 'delay_time'))
-    exponential_backoff = conf.get(section, 'exponential_backoff')
-    if exponential_backoff.lower() == 'true':
-        exponential_backoff = True
-    else:
-        exponential_backoff = False
-
-    timeout_config = {
-        'max_retries': max_retries,
-        'timeout': timeout,
-        'delay_time': delay_time,
-        'exponential_backoff': exponential_backoff
-    }
-    return timeout_config
-
 def getServerInfo(section='SERVER'):
-    conf = getConfig()
     server_info = {}
-    server_info['bind'] = str(conf.get(section, 'bind'))
-    server_info['workers'] = int(conf.get(section, 'workers'))
-    server_info['worker_class'] = str(conf.get(section, 'worker_class'))
-    server_info['timeout'] = int(conf.get(section, 'timeout'))
-    server_info['keepalive'] = int(conf.get(section, 'keepalive'))
-    server_info['worker_connections'] = int(conf.get(section, 'worker_connections'))
-    server_info['max_requests'] = int(conf.get(section, 'max_requests'))
-    server_info['max_requests_jitter'] = int(conf.get(section, 'max_requests_jitter'))
+    server_info['bind'] = str(_get_config(section, option='bind'))
+    server_info['workers'] = int(_get_config(section, option='workers'))
+    server_info['worker_class'] = str(_get_config(section, option='worker_class'))
+    server_info['timeout'] = int(_get_config(section, option='timeout'))
+    server_info['keepalive'] = int(_get_config(section, option='keepalive'))
+    server_info['worker_connections'] = int(_get_config(section, option='worker_connections'))
+    server_info['max_requests'] = int(_get_config(section, option='max_requests'))
+    server_info['max_requests_jitter'] = int(_get_config(section, option='max_requests_jitter'))
     return server_info
 
 def getEngineUrl(section='ENGINE'):
-    conf = getConfig()
-    baseUrl = os.environ.get("ENGINE_BASE_URL", str(conf.get(section, 'base_url')))
+    baseUrl = _get_config(section, option='base_url')
     return baseUrl

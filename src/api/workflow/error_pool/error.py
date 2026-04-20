@@ -11,9 +11,28 @@ class NotPreparedPrevJob(Exception):
 
 
 class NotExistedData(Exception):
-    def __init__(self):
-        super().__init__("Not existed data in data pool")
+    def __init__(self, err_msg=None, err_detail=None):
+        if not err_msg:
+            err_msg = self.__class__.__name__
+        if not err_detail:
+            err_detail = "Not existed data in data pool"
+        self._errorMessage = err_detail
+        super().__init__(err_msg)
         self._errorMessage = "Not existed data in data pool"
+
+    def __str__(self):
+        return self._errorMessage
+
+
+class NotDefinedWorkflowMeta(Exception):
+    def __init__(self, err_msg=None, err_detail=None):
+        if not err_msg:
+            err_msg = self.__class__.__name__
+        if not err_detail:
+            err_detail = "Not defined workflow metadata"
+        super().__init__(err_msg)
+        self._errorMessage = err_msg
+        self._error_detail = err_detail
 
     def __str__(self):
         return self._errorMessage

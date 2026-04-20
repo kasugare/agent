@@ -1,4 +1,7 @@
-from common.conf_system import getAccessPoolType
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from common.conf_workflow import getMetaPoolType
 from api.workflow.access.meta.cached_metastore_access import CachedMetastoreAccess
 from api.workflow.access.meta.remote_metastore_access import RemoteCachedMetastoreAccess
 
@@ -6,7 +9,7 @@ from api.workflow.access.meta.remote_metastore_access import RemoteCachedMetasto
 class MetastoreAccessController:
     def __init__(self, logger, wf_id):
         self._logger = logger
-        self._access_type = str(getAccessPoolType()).lower()
+        self._access_type = str(getMetaPoolType()).lower()
 
         self._wf_id = wf_id
 

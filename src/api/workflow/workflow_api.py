@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from common.util_logger import Logger
-from common.conf_serving import getWorkflowId
+from common.conf_workflow import isWorkflowMetaAutoLoad, isWorkflowMetaReload, getAccessPoolType
 from api.workflow.error_pool.error import MetaTypeError
 from api.workflow.service.admin.metric_service import MetricService
 from api.workflow.service.meta.auto_meta_loader import AutoMetaLoader
@@ -46,13 +46,17 @@ class BaseRouter:
 class WorkflowEngine(BaseRouter):
     def __init__(self, logger):
         super().__init__(tags=['Workflow Engine'])
-        self._logger = Logger("WORKFLOW")
-
+        # self._logger = Logger("WORKFLOW")
+        self._logger = logger
         self._ws_manager = WSConnectionManager(self._logger)
         self._metric_service = MetricService(self._logger)
 
         auto_meta_loader = AutoMetaLoader(self._logger)
-        auto_meta_loader.init_workflow_meta()
+        if isWorkflowMetaAutoLoad():
+            auto_meta_loader.init_workflow_meta()
+
+        if isWorkflowMetaReload() and getAccessPoolType().lower() == 'file':
+            auto_meta_loader.reload_meta_on_file()
 
         self._task_pool = {}
 
@@ -80,7 +84,7 @@ class WorkflowEngine(BaseRouter):
             self._logger.debug(f" - {k}: {v}")
         return params
 
-    def _gen_store_pack(self, wf_id, job_id):
+    def _gen_store_pack(self, wf_id=None, job_id=None):
         store_pack = {}
         metastore = MetaStoreService(self._logger, wf_id)
         datastore = DataStoreService(self._logger, job_id)
@@ -91,6 +95,11 @@ class WorkflowEngine(BaseRouter):
         store_pack['taskstore'] = taskstore
         store_pack['request'] = requestor
         return store_pack
+
+    def _get_workflow_id(self):
+        metastore = MetaStoreService(self._logger)
+        wf_id = metastore.get_current_workflow_id()
+        return wf_id
 
 
     def setup_routes(self):
@@ -158,7 +167,7 @@ class WorkflowEngine(BaseRouter):
                     "result": result
                 }
             except NotDefinedWorkflowMetaException as e:
-                raise NotDefinedMetaException(err_detail="Not defined workflow route_meta")
+                raise NotDefinedMetaException(err_detail="Not defined workflow metadata")
             except AttributeError as e:
                 raise InvalidInputException(err_detail="Not defined node_id(s)")
             except Exception as e:
@@ -183,7 +192,7 @@ class WorkflowEngine(BaseRouter):
             try:
                 req_id = params.get('request-id')
                 session_id = params.get('session-id', req_id)
-                wf_id = params.get('workflow_id', getWorkflowId())
+                wf_id = params.get('workflow_id', self._get_workflow_id())
                 job_id = params.get('job_id', session_id)
                 store_pack = self._gen_store_pack(wf_id, job_id)
                 workflow_executor = WorkflowExecutor(self._logger, store_pack)
@@ -192,7 +201,7 @@ class WorkflowEngine(BaseRouter):
                     "result": result
                 }
             except NotDefinedWorkflowMetaException as e:
-                raise NotDefinedMetaException(err_detail="Not defined workflow route_meta")
+                raise NotDefinedMetaException(err_detail="Not defined workflow metadata")
             except AttributeError as e:
                 raise InvalidInputException(err_detail="Not defined node_id(s)")
             except Exception as e:
@@ -208,18 +217,10 @@ class WorkflowEngine(BaseRouter):
             params = self._cvt_params(request, body)
             response = {}
             try:
-                call_back_data_body = params.get('call_back_data_body')
-                if call_back_data_body:
-                    decoded = json.loads(base64.b64decode(call_back_data_body))
-                    params['decoded_call_back_data_body'] = decoded
-            except:
-                pass
-
-            try:
                 req_id = params.get('request-id')
                 session_id = params.get('session-id', req_id)
                 job_id = params.get('job_id', session_id)
-                wf_id = params.get('workflow_id', getWorkflowId())
+                wf_id = params.get('workflow_id', self._get_workflow_id())
                 self._logger.info(f"[{job_id}] Request Params: {params}")
 
                 store_pack = self._gen_store_pack(wf_id, job_id)
@@ -228,13 +229,16 @@ class WorkflowEngine(BaseRouter):
 
                 workflow_executor = WorkflowExecutor(self._logger, store_pack)
                 result = workflow_executor.run_workflow(params)
-                self._set_task_executor(job_id, workflow_executor)
+                # 작업 처리 확인을 위한 로직. But 필요 없음
+                # self._set_task_executor(job_id, workflow_executor)
                 response = {
                     "result": result
                 }
             except NotDefinedWorkflowMetaException as e:
-                raise NotDefinedMetaException(err_detail="Not defined workflow route_meta")
+                self._logger.error(e)
+                raise NotDefinedMetaException(err_detail="Not defined workflow metadata")
             except AttributeError as e:
+                self._logger.error(e)
                 raise InvalidInputException(err_detail="Not defined node_id(s)")
             except Exception as e:
                 self._logger.error(e)
@@ -246,9 +250,9 @@ class WorkflowEngine(BaseRouter):
             self._logger.info("#                         < Meta Pack >                        #")
             self._logger.info("################################################################")
             if not wf_id:
-                wf_id = getWorkflowId()
+                wf_id = self._get_workflow_id()
             metastore = MetaStoreService(self._logger, wf_id)
-            meta_pack = metastore.get_meta_pack_service()
+            meta_pack = metastore.get_meta_pack_service(wf_id)
             for k, v in meta_pack.items():
                 self._logger.debug(f" - {k} : \t{v}")
             return meta_pack
@@ -309,7 +313,7 @@ class WorkflowEngine(BaseRouter):
             self._logger.info("################################################################")
             self._logger.info("#                      < Working State >                       #")
             self._logger.info("################################################################")
-            wf_id = getWorkflowId()
+            wf_id = self._get_workflow_id()
             try:
                 status_map = self._metric_service.check_working_state(wf_id)
                 state = 0
@@ -335,7 +339,7 @@ class WorkflowEngine(BaseRouter):
 
             await self._ws_manager.connect(websocket, connection_id)
             session_id = 'session-id'
-            wf_id = getWorkflowId()
+            wf_id = self._get_workflow_id()
             store_pack = self._gen_store_pack(wf_id, None)
             stream_handler = WebStreamHandler(self._logger, self._ws_manager, store_pack)
             await stream_handler.run_stream(connection_id)

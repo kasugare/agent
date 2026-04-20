@@ -232,7 +232,7 @@ async def not_acceptable_exception_handler(request: Request, e: NotAcceptableExc
 async def not_defined_workflow_meta_exception_handler(request: Request, e: NotDefinedMetaException):
     content = {
         'status_code': 405,
-        'message': 'Workflow load failed',
+        'message': 'not existed/defined workflow metadata',
         'result': {
             'err_detail': e.err_detail
         }

@@ -17,11 +17,11 @@ class MetricService:
         metastore = MetaStoreService(self._logger, wf_id)
         datastore = DataStoreService(self._logger, job_id)
         taskstore = TaskStoreService(self._logger, job_id)
-        requestor = UserRequestStoreService(self._logger, job_id)
+        requester = UserRequestStoreService(self._logger, job_id)
         store_pack['metastore'] = metastore
         store_pack['datastore'] = datastore
         store_pack['taskstore'] = taskstore
-        store_pack['request'] = requestor
+        store_pack['request'] = requester
         return store_pack
 
     def _cvt_params(self, request, body={}):
@@ -140,13 +140,14 @@ class MetricService:
         metastore = MetaStoreService(self._logger, wf_id)
         nodes_meta = metastore.get_nodes_meta_service()
         node_status = {}
-        try:
-            for node_id, node_map in nodes_meta.items():
+
+        for node_id, node_map in nodes_meta.items():
+            try:
                 node_type = node_map.get('node_type')
                 node_info = node_map.get('node_info', {})
                 node_src_type = node_info.get('type')
 
-                if node_type == 'external' or node_src_type == "CODE":
+                if node_type == 'external':
                     api_info = node_map.get('api_info', {})
                     base_url = api_info.get('base_url')
                     gateway_info = external_api.call_api_sync(base_url=base_url, method='get', route_path='/_gateway/metrics')
@@ -165,8 +166,8 @@ class MetricService:
                         'details': servers_stat.get('details', {}),
                         'config': gateway_info.get('config')
                     }
-        except Exception as e:
-            raise
+            except Exception as e:
+                self._logger.warn(f"{node_id} is not used a gateway")
 
         for node_id, status_map in node_status.items():
             status = status_map.get('status')

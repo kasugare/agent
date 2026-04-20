@@ -17,23 +17,25 @@ class Access:
         try:
             self._db_conn.close()
         except Exception as e:
-            print(traceback.format_exc())
+            self._logger.error(e)
 
     def _getCursor(self):
         try:
             cursor = self._db_conn.cursor()
             return cursor
         except Exception as e:
-            print(traceback.format_exc())
+            self._logger.error(e)
 
     def execute_get(self, query_string):
         resultList = None
         try:
+            if not self._db_conn:
+                return []
             cursor = self._getCursor()
             cursor.execute(query_string)
             resultList = cursor.fetchall()
         except Exception as e:
-            print(traceback.format_exc())
+            self._logger.error(e)
         return resultList
 
     def execute_set(self, query_string):
@@ -42,7 +44,7 @@ class Access:
             cursor = self._getCursor()
             result = cursor.execute(query_string)
         except Exception as e:
-            print(traceback.format_exc())
+            self._logger.error(e)
         return result
 
     def execute_set_many(self, query_string, data_set):
@@ -51,5 +53,5 @@ class Access:
             cursor = self._getCursor()
             result = cursor.executemany(query_string, data_set)
         except Exception as e:
-            print(traceback.format_exc())
+            self._logger.error(e)
         return result

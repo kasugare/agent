@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from common.conf_system import getAccessPoolType
+from common.conf_workflow import getTaskPoolType
 from api.workflow.access.task.cached_task_store_access import CachedTaskPoolAccess
 from api.workflow.access.task.remote_task_service_access import RemoteTaskServiceAccess
 
@@ -9,7 +9,7 @@ from api.workflow.access.task.remote_task_service_access import RemoteTaskServic
 class TaskServiceAccessController:
     def __init__(self, logger, cache_key=None):
         self._logger = logger
-        self._access_type = str(getAccessPoolType()).lower()
+        self._access_type = str(getTaskPoolType()).lower()
         self._cache_key = cache_key
 
     def get_task_access_instance(self):

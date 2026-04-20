@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from ailand.dao.aidao import Controller
 
+from ailand.dao.aidao import Controller
 from api.launcher.router.access.launcher_access import LauncherAccess
 
 

@@ -1,23 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from ailand.dao.aidao import Service
 from api.launcher.router.control.launcher_ctl import LauncherController
 from fastapi.routing import APIRoute
 import traceback
 import sys
 
 
-class DynamicRouterService(Service):
-    def __init__(self, app, logger, db_conn):
-        super().__init__(logger, db_conn)
+class DynamicRouterService:
+    def __init__(self, logger, app):
         self._app = app
         self._logger = logger
         self._indexCount = 0
-        self._db_conn = db_conn
 
         self._api_services = {}
-        self._launcher_ctl = LauncherController(logger, db_conn)
+        self._launcher_ctl = LauncherController(logger)
 
     def _gen_api_route_path(self, prefix, path):
         path_list = prefix.split("/") + path.split("/")

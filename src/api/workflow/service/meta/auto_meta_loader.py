@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from common.conf_serving import getRecipeDir, getRecipeFile
+from common.conf_workflow import isWorkflowMetaReload, getRecipeDir, getRecipeFile
 from api.workflow.service.meta.wf_meta_parser import WorkflowMetaParser
 from api.workflow.access.meta.meta_file_access import MetaFileAccess
 from api.workflow.service.meta.meta_store_service import MetaStoreService
@@ -16,21 +16,6 @@ import os
 class AutoMetaLoader:
     def __init__(self, logger):
         self._logger = logger
-        self._auto_loader()
-
-    def _auto_loader(self, dirpath: str = None, filename: str = None) -> None:
-        def run_event_loop(dirpath: str, filename: str) -> None:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            self._task = loop.create_task(self._startup_event(dirpath, filename))
-            loop.run_forever()
-
-        if not dirpath:
-            dirpath = getRecipeDir()
-        if not filename:
-            filename = getRecipeFile()
-        thread = threading.Thread(target=run_event_loop, daemon=True, args=(dirpath, filename))
-        thread.start()
 
     async def _startup_event(self, dirpath, filename):
         asyncio.create_task(self._watch_recipe(dirpath, filename))
@@ -61,19 +46,14 @@ class AutoMetaLoader:
 
         wf_id = filed_meta_pack.get('workflow_id')
         metastore = MetaStoreService(self._logger, wf_id)
-        # metastore = self._meta_service_pool.get_metastore(wf_id)
 
-        if metastore:
-            current_wf_meta = metastore.get_wf_meta_service()
-            if current_wf_meta != filed_wf_meta:
-                self._logger.debug("# SYNC UPDATE")
-                metastore.set_meta_pack_service(filed_meta_pack)
-                self._logger.debug(filed_wf_meta)
-            else:
-                return
-        else:
-            # _, metastore = self._meta_service_pool.create_pool(wf_id)
+        current_wf_meta = metastore.get_wf_meta_service()
+        if current_wf_meta != filed_wf_meta:
+            self._logger.debug("# SYNC UPDATE")
             metastore.set_meta_pack_service(filed_meta_pack)
+            self._logger.debug(filed_wf_meta)
+        else:
+            return
 
     def init_workflow_meta(self):
         wf_meta = MetaFileAccess(self._logger).load_wf_meta_on_file()
@@ -83,6 +63,21 @@ class AutoMetaLoader:
         meta_pack = meta_parser.parse_wf_meta(wf_meta)
         wf_id = meta_pack.get("workflow_id")
         metastore = MetaStoreService(self._logger, wf_id)
-
-        # _, metastore = self._meta_service_pool.create_pool(wf_id)
         metastore.set_meta_pack_service(meta_pack)
+
+    def reload_meta_on_file(self, dirpath: str = None, filename: str = None) -> None:
+        def run_event_loop(dirpath: str, filename: str) -> None:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            self._task = loop.create_task(self._startup_event(dirpath, filename))
+            loop.run_forever()
+
+        if not dirpath:
+            dirpath = getRecipeDir()
+        if not filename:
+            filename = getRecipeFile()
+
+        print(dirpath, filename)
+
+        thread = threading.Thread(target=run_event_loop, daemon=True, args=(dirpath, filename))
+        thread.start()

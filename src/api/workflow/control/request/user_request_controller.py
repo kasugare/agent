@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from common.conf_system import getAccessPoolType
+from common.conf_workflow import getAccessPoolType
 from api.workflow.control.request.user_request_access_controller import UserRequestAccessController
 from typing import Dict, Any
 

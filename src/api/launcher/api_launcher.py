@@ -1,16 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from api.launcher.utility.file_lock import FileLock
 from api.launcher.router.service.launcher_service import DynamicRouterService
 from api.launcher.route_meta.service.route_meta_service import RouteMetaService
-from common.conf_system import getLockDir, getAiLandContext, getRouteDirPath, getRouteFileName, getLaucherApis
+from common.conf_system import getRouteDirPath, getRouteFileName, getLaucherApis, isServiceMetaReload, getLockDir
 from abc import ABC, abstractmethod
 from fastapi import APIRouter, FastAPI
 from watchfiles import awatch
 import asyncio
 import traceback
-import pymysql
 import json
 import os
 
@@ -20,9 +18,8 @@ class BaseHandler:
         self.app = app
         self._logger = logger
         self._route_meta_service = RouteMetaService(logger)
-        self._db_conn = self._set_db_conn()
 
-        self.dynamic_router = DynamicRouterService(app, logger, self._db_conn)
+        self.dynamic_router = DynamicRouterService(logger, app)
         self.router = APIRouter(tags=['ADMIN'])
         self.setup_routes()
 
@@ -34,9 +31,11 @@ class BaseHandler:
         # FastAPI 시작 시 파일 감시 시작
         @app.on_event("startup")
         async def startup_event():
-            asyncio.create_task(self._watch_routes())
-
-        self._init_runtime_service()
+            if isServiceMetaReload():
+                asyncio.create_task(self._watch_routes())
+                self._init_runtime_service()
+            else:
+                await self._sync_routes()
 
     def _init_service_path(self, route_dir_path):
         if not os.path.exists(route_dir_path):
@@ -55,7 +54,11 @@ class BaseHandler:
     def _init_runtime_service(self):
         init_service_api_info = self.dynamic_router.get_init_service_info()
         for service_api_info in init_service_api_info:
-            self._set_service_info(**service_api_info)
+            try:
+                self._route_meta_service.set_route_meta(**service_api_info)
+            except Exception as e:
+                self._logger.error(e)
+                self._logger.error(f"{service_api_info}")
         self._add_service_router()
 
     async def _watch_routes(self):
@@ -67,73 +70,31 @@ class BaseHandler:
             self._logger.error(traceback.format_exc())
             self._logger.warn(f"Not ready {self._routes_file_path} file")
 
-    def _add_service_router(self):
-        active_services = getLaucherApis()
-
-        # with FileLock(f"{getLockDir()}/routes.lock"):
-        with open(self._routes_file_path, 'r') as fd:
-            try:
-                route_info = self._route_meta_service.get_route_meta()
-                for service_name, module_info in route_info.items():
-                    if "*" in active_services:
-                        pass
-                    elif service_name not in active_services:
-                        continue
-                    self._logger.debug(f"service_name: {service_name}")
-                    prefix = module_info.get('prefix')
-                    module_name = module_info.get('module_name')
-                    class_name = module_info.get('class_name')
-                    self.dynamic_router.add_api_service(prefix, module_name, class_name)
-            except json.JSONDecodeError:
-                self._logger.error("Invalid routes file format")
-
     async def _sync_routes(self):
         if not os.path.exists(self._routes_file_path):
             return
         self._add_service_router()
 
-    def _set_service_info(self, prefix, module_name, class_name):
-        if os.path.exists(self._routes_file_path):
-            # with FileLock(f"{getLockDir()}/routes.lock"):
-            with open(self._routes_file_path, 'r') as f:
-                try:
-                    service_info = json.load(f)
-                except json.JSONDecodeError:
-                    service_info = {}
-
-            service_info[class_name] = {
-                'prefix': prefix,
-                'module_name': module_name,
-                'class_name': class_name
-            }
-
-            with open(self._routes_file_path, 'w') as fd:
-                json.dump(service_info, fd, indent=2)
+    def _add_service_router(self):
+        active_services = getLaucherApis()
+        try:
+            route_info = self._route_meta_service.get_route_meta()
+            for service_name, module_info in route_info.items():
+                if "*" in active_services:
+                    pass
+                elif service_name not in active_services:
+                    continue
+                self._logger.debug(f"service_name: {service_name}")
+                prefix = module_info.get('prefix')
+                module_name = module_info.get('module_name')
+                class_name = module_info.get('class_name')
+                self.dynamic_router.add_api_service(prefix, module_name, class_name)
+        except json.JSONDecodeError:
+            self._logger.error("Invalid routes file format")
 
     async def add_api_service(self, prefix, module_name, class_name):
         self.dynamic_router.add_api_service(prefix, module_name, class_name)
-        self._set_service_info(prefix, module_name, class_name)
-
-    def _set_db_conn(self):
-        dbConn = None
-        dbContext = getAiLandContext()
-
-        try:
-            dbConn = pymysql.connect(host=dbContext['host']
-                                     , port=dbContext['port']
-                                     , user=dbContext['user']
-                                     , passwd=dbContext['passwd']
-                                     , db=dbContext['db']
-                                     , cursorclass=pymysql.cursors.DictCursor
-                                     , autocommit=True)
-        except Exception as e:
-            self._logger.error(traceback.format_exc())
-        return dbConn
-
-    def set_logger(self):
-        # logger = logging.getLogger()
-        logger = None
-        return logger
+        self._route_meta_service.set_route_meta(prefix, module_name, class_name)
 
     @abstractmethod
     def setup_routes(self):

@@ -21,6 +21,8 @@ class WorkflowExecutor:
 
     def _init_data_store(self):
         meta_pack = self._metastore.get_meta_pack_service()
+        if not meta_pack.get('wf_meta') or not meta_pack.get('common') or not meta_pack.get('service_pool'):
+            raise NotDefinedWorkflowMetaException
         self._datastore.set_init_service_params_service(meta_pack.get('edges_info'))
         self._datastore.set_init_nodes_env_params_service(meta_pack.get('nodes_env_value_map'))
         self._datastore.set_init_nodes_asset_params_service(meta_pack.get('nodes_asset_value_map'))
@@ -55,7 +57,6 @@ class WorkflowExecutor:
             act_meta_pack = self._act_planner.gen_action_meta_pack(start_node, end_node, params)
             taskstore.set_workflow_start_ts()
             if act_meta_pack.get('act_start_nodes'):
-
                 workflow_engine = WorkflowExecutionOrchestrator(self._logger, self._store_pack, act_meta_pack, self._stream_Q, job_id)
                 result = workflow_engine.run_workflow(params)
             else:

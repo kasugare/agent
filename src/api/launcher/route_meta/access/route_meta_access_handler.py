@@ -10,7 +10,7 @@ class RouteMetaAccessHandler:
         self._logger = logger
         self._access_type = getRouteAccessType()
 
-    def get_route_meta_access(self):
+    def get_access(self):
         meta_access = None
         if self._access_type.lower() == 'file':
             meta_access = RouteMetaFileAccess(self._logger)

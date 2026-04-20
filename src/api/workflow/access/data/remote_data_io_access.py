@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from common.conf_workflow import getDataIoPoolDB
 from api.workflow.common.redis.redis_access import RedisAccess
 
 
 class RemoteCachedIODataAccess(RedisAccess):
     def __init__(self, logger, cache_key=None):
-        super().__init__(logger, db=1, ttl=2592000)
+        super().__init__(logger, db=getDataIoPoolDB(), ttl=2592000)
         self._logger = logger
         self._cache_key = cache_key
 

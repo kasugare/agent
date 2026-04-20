@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from common.conf_system import getAccessPoolType
+from common.conf_workflow import getDataIoPoolType
 from api.workflow.access.data.cached_data_io_access import CachedIODataAccess
 from api.workflow.access.data.remote_data_io_access import RemoteCachedIODataAccess
 
@@ -9,7 +9,7 @@ from api.workflow.access.data.remote_data_io_access import RemoteCachedIODataAcc
 class DataIOAccessController:
     def __init__(self, logger):
         self._logger = logger
-        self._access_type = str(getAccessPoolType()).lower()
+        self._access_type = str(getDataIoPoolType()).lower()
 
     def get_data_access_instance(self):
         if self._access_type == 'local':

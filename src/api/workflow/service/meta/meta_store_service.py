@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from common.conf_serving import getRecipeDir, setWorkflowId
+from common.conf_workflow import getRecipeDir, setWorkflowId
 from api.workflow.control.meta.metastore_controller import MetastoreController
 from typing import Dict
 import time
@@ -13,8 +13,12 @@ class MetaStoreService:
         self._logger = logger
         self._metastore_controller = MetastoreController(logger, wf_id)
 
-    def set_workflow_id(self, wf_id):
-        self._metastore_controller.set_cache_key_ctl(wf_id)
+    def set_current_workflow_id(self, wf_id):
+        self._metastore_controller.set_current_workflow_id_ctl(wf_id)
+
+    def get_current_workflow_id(self):
+        wf_id = self._metastore_controller.get_current_workflow_id_ctl()
+        return wf_id
 
     def clear(self):
         self._metastore_controller.clear_ctl()
@@ -156,21 +160,23 @@ class MetaStoreService:
         return new_meta_pack
 
     def set_wf_meta(self, meta_pack, request_id):
-        wf_meta = meta_pack.get('wf_meta')
         self._logger.debug("# New Meta Update")
+        wf_meta = meta_pack.get('wf_meta')
         wf_comm = wf_meta.get('metadata')
         wf_id = wf_comm.get('workflow_id')
         setWorkflowId(opt_value=wf_id)
         dirpath, filename = self._gen_dag_file_path(wf_comm, request_id)
         self.set_wf_meta_file_service(wf_meta, dirpath=dirpath, filename=filename)
         # self.set_wf_meta_service(wf_meta)
+        self.set_meta_pack_service(meta_pack)
         return meta_pack
 
-    def get_meta_pack_service(self) -> Dict:
-        meta_pack = self._metastore_controller.get_metas_ctl()
+    def get_meta_pack_service(self, wf_id=None) -> Dict:
+        meta_pack = self._metastore_controller.get_metas_ctl(wf_id)
         return meta_pack
 
     def set_meta_pack_service(self, meta_pack):
+        self.set_current_workflow_id(meta_pack.get('workflow_id'))
         self._metastore_controller.set_all_meta_ctl(meta_pack)
         # self.set_wf_meta_service(meta_pack.get('wf_meta'))
         # self.set_comm_meta_service(meta_pack.get('common'))

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from api.workflow.control.execute.task import Task
-from common.conf_system import getWorkflowTimeoutConfig
+from common.conf_workflow import getWorkflowTimeoutConfig
 
 
 class TaskGenerationController:

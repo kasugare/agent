@@ -29,8 +29,8 @@ class RemoteCachedUserRequestAccess(RedisAccess):
         self.hset(key=self._cache_key, mapping={field: data})
         ts = int(time.time())
         try:
-            date_time = datetime.datetime.fromtimestamp(ts, pytz.utc).strftime('%Y-%m-%d_%H:%M:%S')
-            time_key = f"{date_time}-{self._cache_key}"
+            date_time = datetime.datetime.fromtimestamp(ts, pytz.timezone('Asia/Seoul')).strftime('%Y-%m-%d_%H:%M:%S')
+            time_key = f"{date_time}@{self._cache_key}"
             self.hset(key=time_key, mapping={field: data})
         except:
             pass

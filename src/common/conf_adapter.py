@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from common.conf_system import getEngineUrl
 import configparser
 import sys
 import os
@@ -21,7 +22,22 @@ def getConfig():
     conf.read(ini_path)
     return conf
 
-def getDownloadPath(section='ADAPTER'):
+def _get_config(section, option):
     conf = getConfig()
-    downloadPath = os.environ.get('UPLOAD_DIR_PATH', conf.get(section, 'upload_dir_path'))
+    config = os.environ.get(f"{section}_{option.upper()}", str(conf.get(section, option)))
+    return config
+
+def getDownloadPath(section='ADAPTER'):
+    downloadPath = _get_config(section, option='upload_dir_path')
     return downloadPath
+
+def getRemoteEngineUrl(section='REMOTE_ENGINE'):
+    base_url = None
+    try:
+        base_url = _get_config(section, option='base_url')
+    except Exception as e:
+        pass
+    finally:
+        if not base_url:
+            base_url = getEngineUrl()
+    return base_url

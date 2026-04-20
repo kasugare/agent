@@ -1,24 +1,32 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import json
-from typing import Dict, List
+from common.conf_workflow import getMetaPoolDB
 from api.workflow.common.redis.redis_access import RedisAccess
+from typing import Dict, List
+import json
 
 
 class RemoteCachedMetastoreAccess(RedisAccess):
     def __init__(self, logger, wf_id=None):
-        super().__init__(logger, db=0)
+        super().__init__(logger, db=getMetaPoolDB())
         if wf_id:
             self._cache_key = f'{wf_id}.meta'
         else:
             self._cache_key = None
 
-    def set_cache_key_access(self, wf_id):
-        self._cache_key = f'{wf_id}.meta'
-
     def clear_access(self):
         self.flush()
+
+    def set_current_workflow_id_access(self, key: str, wf_info: Dict) -> bool:
+        self.set(key, wf_info, ex=0)
+
+    def get_current_workflow_id_access(self, key) -> Dict:
+        current_workflow_info = self.get(key)
+        return current_workflow_info
+
+    def set_cache_key_access(self, wf_id):
+        self._cache_key = f'{wf_id}.meta'
 
     def set_wf_meta_access(self, wf_meta: Dict) -> None:
         self.hset(key=self._cache_key, mapping={'wf_meta': json.dumps(wf_meta)})

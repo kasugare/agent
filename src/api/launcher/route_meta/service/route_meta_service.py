@@ -9,8 +9,8 @@ class RouteMetaService:
         self._logger = logger
         self._meta_controller = RouteMetaController(logger)
 
-    def set_route_meta(self):
-        pass
+    def set_route_meta(self, prefix, module_name, class_name):
+        self._meta_controller.set_route_meta_ctl(prefix, module_name, class_name)
 
     def get_route_meta(self):
         route_meta = self._meta_controller.get_reoute_meta_ctl()

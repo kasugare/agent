@@ -8,13 +8,26 @@ import threading
 
 
 class MetastoreController:
-    def __init__(self, logger, wf_id):
+    def __init__(self, logger, wf_id=None):
         self._logger = logger
         self._thread_lock = threading.Lock()
 
         self._meta_file_access = MetaFileAccess(logger)
         self._metastore_access_controller = MetastoreAccessController(logger, wf_id)
         self._metastore_access = self._metastore_access_controller.get_meta_access_instance()
+
+    def set_current_workflow_id_ctl(self, wf_id):
+        key = 'current_workflow'
+        wf_info = {
+            'workflow_id': wf_id
+        }
+        self._metastore_access.set_current_workflow_id_access(key, wf_info)
+
+    def get_current_workflow_id_ctl(self):
+        key = 'current_workflow'
+        workflow_info = self._metastore_access.get_current_workflow_id_access(key)
+        wf_id = workflow_info.get('workflow_id')
+        return wf_id
 
     def set_cache_key_ctl(self, wf_id):
         self._metastore_access.set_cache_key_access(wf_id)
@@ -148,7 +161,10 @@ class MetastoreController:
         edges_param_map = self._metastore_access.get_edges_param_map_access()
         return edges_param_map
 
-    def get_metas_ctl(self):
+    def get_metas_ctl(self, wf_id=None):
+        if wf_id:
+            self._metastore_access.set_cache_key_access(wf_id)
+
         meta_pack = {
             "wf_meta": self._metastore_access.get_wf_meta_access(),
             "common": self._metastore_access.get_comm_meta_access(),

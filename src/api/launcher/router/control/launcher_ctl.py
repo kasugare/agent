@@ -6,9 +6,8 @@ import time
 
 
 class Controller:
-    def __init__(self, logger=None, db_conn=None):
+    def __init__(self, logger=None):
         self._logger = logger
-        self._db_conn = db_conn
 
     def gen_user_id(self) -> str:
         ts = int(time.time() * 10000000)
@@ -21,9 +20,9 @@ class Controller:
         return id
 
 class LauncherController(Controller):
-    def __init__(self, logger, db_conn):
-        super().__init__(logger, db_conn)
-        self._launcher_access = LauncherAccess(logger, db_conn)
+    def __init__(self, logger):
+        super().__init__(logger)
+        self._launcher_access = LauncherAccess(logger)
 
     def get_init_service_meta(self):
         init_service_meta = self._launcher_access.get_init_service_data()

@@ -3,20 +3,14 @@
 
 from common.util_logger import Logger
 import api.adapter.schema.engine_adaptor_schema as schema
-from common.conf_system import getEngineUrl
 from api.adapter.schema.engine_adaptor_header import get_file_headers, get_status_headers, FileHeaderModel, StatusHeaderModel
 from api.adapter.service.remote_cached_adapter_service import RemoteCachedAdapterService
 from api.adapter.service.engine_adaptor_service import EngineAdaptorService
-from api.adapter.service.callback_result import CallbackApiRequester
+from api.adapter.service.dtm_prediction_service import DtmPredictionService
+from api.adapter.service.job_status_service import JobStatusService
 from fastapi import APIRouter, Depends, UploadFile, File, Form, BackgroundTasks
 from fastapi import HTTPException, Request
-from fastapi.responses import JSONResponse
 from abc import abstractmethod
-from typing import Dict
-from urllib.parse import quote, unquote
-import asyncio
-import base64
-import httpx
 import json
 
 
@@ -43,132 +37,13 @@ class EngineAdapter(BaseRouter):
 
     def __init__(self, logger=None):
         super().__init__(tags=['DTM Adaptor'])
-        self._logger = Logger("ADAPTER")
-        self._remote_adapter_service = RemoteCachedAdapterService(self._logger)
-        self._engine_adaptor_service = EngineAdaptorService(self._logger)
-        self._callback_requester = CallbackApiRequester(self._logger, self._remote_adapter_service)
-
-        self._isWorking = False
-        self._member_id = ''
-        self._user_data = ''
+        # logger = Logger("ADAPTER")
+        self._logger = logger
+        self._engine_adaptor_service = EngineAdaptorService(logger)
+        self._remote_adapter_service = RemoteCachedAdapterService(logger)
+        self._job_status_service = JobStatusService(logger, self._remote_adapter_service)
+        self._prediction_service = DtmPredictionService(logger, self._remote_adapter_service)
         self._timeout = 3600
-
-    def _is_available(self, status_map):
-        status = status_map.get('status', {})
-        available_nodes = status.get('available', 0)
-        if available_nodes > 0:
-            return True
-        return False
-
-    async def _call_workflow_api(self, base_url: str, method: str, path: str, headers: Dict = None, json_data: Dict = None, params: Dict = None):
-        if not base_url:
-            raise HTTPException(
-                status_code=500,
-                detail=f"Internal API call failed: - check base_url: {base_url}"
-            )
-        if base_url[-1] == "/":
-            url_path = f"{base_url[:-1]}{path}"
-        else:
-            url_path = f"{base_url}{path}"
-
-        async with httpx.AsyncClient() as client:
-            try:
-                if method.upper() == "POST":
-                    response = await client.post(url_path, json=json_data, headers=headers, timeout=self._timeout) # timeout=None --> unlimit, def: 5s
-                elif method.upper() == "GET":
-                    response = await client.get(url_path, params=params, headers=headers, timeout=self._timeout)
-                elif method.upper() == "PUT":
-                    response = await client.put(url_path, json=json_data, headers=headers, timeout=self._timeout)
-                elif method.upper() == "DELETE":
-                    response = await client.delete(url_path, headers=headers, timeout=self._timeout)
-                else:
-                    raise ValueError(f"Unsupported HTTP method: {method}")
-
-                if response.status_code >= 400:
-                    error_detail = response.json() if response.headers.get('content-type') == 'application/json' else response.text
-                    self._logger.error(f"Workflow Engine API error: {error_detail}")
-                    self._logger.error(f"  L base_url: {base_url}")
-                    self._logger.error(f"  L path: {path}")
-                    self._logger.error(f"  L method: {method}")
-                    self._logger.error(f"  L headers: {headers}")
-                    raise HTTPException(
-                        status_code=response.status_code,
-                        detail=error_detail
-                    )
-                return response.json()
-
-            except httpx.RequestError as e:
-                self._logger.error(f"Request error calling workflow API: {str(e)}")
-                raise HTTPException(
-                    status_code=500,
-                    detail=f"Internal API call failed: {str(e)}"
-                )
-
-    async def call_back_response(self, base_url, route_path, call_method, req_headers, json_data, callback_header, callback_data_info):
-        def read_file(file_path):
-            try:
-                with open(file_path, 'r', encoding='utf-8') as fd:
-                    json_data = json.load(fd)
-            except FileNotFoundError:
-                self._logger.warn("File not found error")
-                raise FileNotFoundError
-            except json.JSONDecodeError:
-                self._logger.warn("json decoding error")
-                raise json.JSONDecodeError
-            except Exception as e:
-                self._logger.error(e)
-                raise Exception
-            return json_data
-
-        status_code = -1
-        result_data = []
-        result = {}
-        job_id = req_headers.get('job_id', "EMPTY_JOB_ID")
-
-        try:
-            self._logger.info(f"call prediction on engine: {job_id}")
-            self._remote_adapter_service.set_job_state(job_id, state='RUNNING')
-            result = await asyncio.create_task(
-                self._call_workflow_api(
-                    base_url=base_url,
-                    method=call_method,
-                    path=route_path,
-                    headers=req_headers,
-                    json_data=json_data
-                )
-            )
-
-            self._logger.debug(f"[{job_id}] Job completed, result: {result}")
-            result_message = result.get('result', {})
-            if isinstance(result_message, dict):
-                result_state = result_message.get('status')
-                if result_state in ['success']:
-                    result_file_path = result_message.get('result')
-                    status_code = 0
-                    status_text = result_state
-                    result_data = read_file(result_file_path)
-                else:
-                    error_message = result_message.get('error')
-                    status_code = -1
-                    status_text = error_message
-                    self._remote_adapter_service.set_job_state(job_id, state='ERROR', error_msg=error_message)
-            else:
-                status_text = 'ValidError: result format is not valid'
-        except FileNotFoundError as e:
-            self._logger.warn(f"[{job_id}]: file not found error, result: {result}")
-            status_code = -1
-            status_text = f"{type(e).__name__}: {e}"
-        except Exception as e:
-            self._logger.warn(f"[{job_id}]: Unknown Error, result: {result}")
-            self._remote_adapter_service.set_job_state(job_id, state='ERROR', error_msg=str(e))
-            status_code = -1
-            status_text = f"{type(e).__name__}: {e}"
-        result_pack = {
-            'status_code': status_code,
-            'status_text': status_text,
-            'result_data': result_data
-        }
-        self._callback_requester.call_back_result(callback_header, callback_data_info, result_pack)
 
     def _cvt_to_json(self, data):
         try:
@@ -181,73 +56,36 @@ class EngineAdapter(BaseRouter):
             self._logger.warn(f"Invalid JSON in data field: {str(e)}")
             return data
 
+    def _cvt_params(self, request, body={}):
+        params = {}
+        if request and request.headers:
+            params.update(dict(request.headers))
+        if body:
+            params.update(dict(body))
+        self._logger.debug("Input Params")
+        for k, v in params.items():
+            self._logger.debug(f" - {k}: {v}")
+        return params
+
     def setup_routes(self):
         @self.router.post(path='/predict/async/web', response_model=schema.ResAdaptWorkflow)
         async def predict_file(request: Request
                                , headers: FileHeaderModel = Depends(get_file_headers)
                                , data: str = Form(...)
                                , file: list[UploadFile] = File(...)
-                               , bg: BackgroundTasks = None):
+                               , bg: BackgroundTasks = None
+                               ):
             self._logger.info("################################################################")
             self._logger.info("#                 < Adapter: Call Prediction >                 #")
             self._logger.info("################################################################")
             job_id = None
 
             try:
-                self._logger.info(f"request client ip: {request.client.host}")
-                self._logger.info(f" - HEADER: {headers}")
-
+                client_host = request.client.host
                 job_id = headers.x_sampl_job_id
-                call_back_url = unquote(headers.x_sampl_callback)
-                call_back_error_url = unquote(headers.x_sampl_err_callback)
-                member_id = headers.x_sampl_member_id
-                user_callback_data = headers.x_sampl_user_data
-
-                json_data_body = self._cvt_to_json(data)
-                tags = json_data_body.get('tags', {})
-                data_info = json_data_body.get('data', {})
-                tar_path_list = await self._engine_adaptor_service.upload_files(file)
-
-                engine_url = getEngineUrl()
-                route_path = "/api/v1/workflow/inference"
-                call_method = "POST"
-
-                self._logger.debug(f" - [{job_id}] engine_url   : {engine_url}")
-                self._logger.debug(f" - [{job_id}] client ip    : {request.client.host}")
-                self._logger.debug(f" - [{job_id}] call_back_url      : {call_back_url}")
-                self._logger.debug(f" - [{job_id}] call_back_error_url: {call_back_error_url}")
-                self._logger.debug(f" - [{job_id}] member_id    : {member_id}")
-                self._logger.debug(f" - [{job_id}] user_data    : {user_callback_data}")
-                self._logger.debug(f" - [{job_id}] tar_path_list: {tar_path_list}")
-                self._logger.debug(f" - [{job_id}] tags         : {tags}")
-                self._logger.debug(f" - [{job_id}] data_info    : {data_info}")
-
-                req_headers = {
-                    "Content-Type": "application/json",
-                    "secret_key": "",
-                    "job_id": f"{job_id}",
-                    "user_id": f"{member_id}",
-                    "user_callback_data": f"{user_callback_data}",
-                    "file_path_list": json.dumps(tar_path_list),
-                    "request-id": str(job_id),
-                    "session-id": str(job_id),
-                    "call_back_error_url": call_back_error_url,
-                    "call_back_url": call_back_url,
-                    "call_back_data_body": base64.b64encode(json.dumps(json_data_body).encode()).decode(),
-                    "x_sampl_job_id": job_id,
-                    "x_sampl_callback": headers.x_sampl_callback,
-                    "x_sampl_err_callback": headers.x_sampl_err_callback,
-                    "x_sampl_member_id": member_id,
-                    "x_sampl_user_data": user_callback_data
-                }
-                json_data = {"tar_path": tar_path_list}
-                self._remote_adapter_service.set_job_info(job_id, req_headers, tar_path_list, state='ACCEPTED')
-                bg.add_task(self.call_back_response, engine_url, route_path, call_method, req_headers, json_data, headers, json_data_body)
-                response = {
-                    "data": {},
-                    "status": 0,
-                    "statusText": "success"
-                }
+                self._logger.info(f" - request client ip: {client_host}")
+                self._logger.info(f" - HEADER: {headers}")
+                response = await self._prediction_service.run_dtm_prediction(request, headers, data, file, bg)
             except Exception as e:
                 self._logger.error(e)
                 self._remote_adapter_service.set_job_state(job_id, state='ERROR', error_msg=str(e))
@@ -263,38 +101,11 @@ class EngineAdapter(BaseRouter):
             self._logger.info("################################################################")
             self._logger.info("#                   < Adapter: Is Working >                    #")
             self._logger.info("################################################################")
-            self._logger.info(f"request client ip: {request.client.host}")
+            self._logger.info(f" - request client ip: {request.client.host}")
 
-            try:
-                engine_url = getEngineUrl()
-                result_map = await asyncio.create_task(self._call_workflow_api(
-                        base_url=str(engine_url),
-                        method="GET",
-                        path="/api/v1/workflow/working_state",
-                        headers={
-                            "Content-Type": "application/json"
-                        }
-                    )
-                )
-            except Exception as e:
-                result_map = {}
-                self._logger.error(e)
+            response = await self._job_status_service.get_is_working()
 
-            status_info = result_map.get('status_map', {})
-            if all(self._is_available(status_map) for node_id, status_map in status_info.items()):
-                is_working = False
-            else:
-                is_working = True
-            response = {
-                "data": {
-                    "isworking": is_working,
-                    "async_queue_count": 0,
-                    "job_list": []
-                },
-                "status": result_map.get('state'),
-                "statusText": result_map.get('message')
-            }
-            self._logger.debug(response)
+            self._logger.info(f" - response: {response}")
             return response
 
         @self.router.post(path='/joblist', response_model=schema.ResAdaptWorkflow)
@@ -302,94 +113,28 @@ class EngineAdapter(BaseRouter):
             self._logger.info("################################################################")
             self._logger.info("#                   < Adapter: Job List >                      #")
             self._logger.info("################################################################")
-            self._logger.info(f"request client ip: {request.client.host}")
+            self._logger.info(f" - request client ip: {request.client.host}")
             job_id = headers.x_sampl_job_id
             self._logger.info(f" - job_id: {job_id}")
-            result = None
-            try:
-                engine_url = getEngineUrl()
-                result = await asyncio.create_task(self._call_workflow_api(
-                        base_url=engine_url,
-                        method="GET",
-                        path="/api/v1/workflow/job_state",
-                        headers={
-                            "Content-Type": "application/json",
-                            "secret_key": "",
-                            "job_id": f"{job_id}",
-                        }
-                    )
-                )
-            except Exception as e:
-                self._logger.error(e)
 
-            if not result:
-                completion_yn = 'N'
-                reg_datetime = "0"
-                start_datetime = "0"
-                end_datetime = "0"
-                engine_status = 'RUNNING'
-                call_back_url = None
-                call_back_error_url = None
-                error_yn = 'N'
+            response = await self._job_status_service.get_job_list(job_id)
+
+            self._logger.info(f" - response: {response}")
+            return response
+
+        @self.router.post(path='/rerun')
+        async def get_job_list(request: Request, bg: BackgroundTasks = None):
+            self._logger.warn("################################################################")
+            self._logger.warn("#                    < Adapter: Re-Run >                       #")
+            self._logger.warn("# WARNNING: It use this only test!!                            #")
+            self._logger.warn("################################################################")
+            self._logger.warn(f" - request client ip: {request.client.host}")
+            params = self._cvt_params(request)
+            job_id = params.get('job-id')
+            callbackable = params.get('x-callbackable', "false")
+            if not job_id:
+                response = {"result": None, "state": "faile", " message": "not exist job_id"}
             else:
-                processing_time = result.get('processing_time')
-                reg_datetime = processing_time.get('assigned_dt', "0")
-                start_datetime = processing_time.get('start_dt', "0")
-                end_datetime = processing_time.get('end_dt', "0")
-                engine_status = result.get('status')
-                user_params = result.get('user_params', {})
-
-                if user_params:
-                    call_back_url = user_params.get('call_back_url', None)
-                    call_back_error_url = user_params.get('call_back_error_url', None)
-                else:
-                    call_back_url = None
-                    call_back_error_url = None
-
-                job_status = self._remote_adapter_service.get_job_status(job_id)
-
-                if engine_status == 'COMPLETED':
-                    if job_status.get('state') == 'COMPLETED':
-                        completion_yn = 'Y'
-                        error_yn = "N"
-                    elif job_status.get('state') == 'ERROR':
-                        completion_yn = 'Y'
-                        error_yn = "Y"
-                    else:
-                        completion_yn = 'N'
-                        error_yn = "N"
-                elif engine_status == 'FAILED':
-                    completion_yn = 'Y'
-                    error_yn = "Y"
-                else:
-                    completion_yn = 'N'
-                    error_yn = 'N'
-
-            response = {
-                "data": {
-                    "cnt": 0,
-                    "data": [{
-                        "call_back_error_url": call_back_error_url,
-                        "call_back_url": call_back_url,
-                        "completion_yn": completion_yn,
-                        "conveyor": "ocr_online",
-                        "data": {},
-                        "end_datetime": end_datetime,
-                        "error_yn": error_yn,
-                        "job_id": job_id,
-                        "member_id": self._member_id,
-                        "message": "Success",
-                        "notified": "",
-                        "pid": 0,
-                        "pid_created_time": 0,
-                        "reg_datetime": reg_datetime,
-                        "start_datetime": start_datetime,
-                        "status": engine_status,
-                        "thread_id": 0,
-                        "uid": ""
-                    }]
-                },
-                "status": 0,
-                "statusText": "success"
-            }
+                job_info = self._remote_adapter_service.get_job_info(job_id)
+                response = await self._prediction_service.rerun_dtm_prediction(job_id, callbackable, job_info, bg)
             return response

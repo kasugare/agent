@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 
 class RouteMetaAccessInterface(ABC):
     @abstractmethod
-    def set_route_meta_access(self) -> None:
+    def set_route_meta_access(self, prefix, module_name, class_name) -> None:
         pass
 
     @abstractmethod

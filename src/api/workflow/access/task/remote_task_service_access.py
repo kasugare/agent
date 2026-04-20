@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from common.conf_workflow import getTaskPoolDB
 from api.workflow.common.redis.redis_access import RedisAccess
 
 
 class RemoteTaskServiceAccess(RedisAccess):
     def __init__(self, logger, cache_key=None):
-        super().__init__(logger, db=2, ttl=2592000)
+        super().__init__(logger, db=getTaskPoolDB(), ttl=2592000)
         self._cache_key = cache_key
 
     def set_cache_key_access(self, cache_key):
